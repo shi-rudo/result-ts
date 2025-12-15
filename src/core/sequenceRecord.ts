@@ -1,0 +1,31 @@
+import type { Result } from './result';
+import { ok } from './result';
+
+type OkValueOf<R> = R extends Result<infer T, any> ? T : never;
+type ErrValueOf<R> = R extends Result<any, infer E> ? E : never;
+
+/**
+ * Wie `sequence`, aber für Records/Objekte.
+ * Short-circuits beim ersten Err.
+ */
+export function sequenceRecord<const R extends Record<string, Result<any, any>>>(
+    record: R
+): Result<{ [K in keyof R]: OkValueOf<R[K]> }, ErrValueOf<R[keyof R]>> {
+    type Out = { [K in keyof R]: OkValueOf<R[K]> };
+    type E = ErrValueOf<R[keyof R]>;
+
+    const out: Partial<Out> = {};
+
+    for (const key of Object.keys(record) as Array<keyof R>) {
+        const result = record[key];
+        if (result.isOk()) {
+            out[key] = result.value as Out[typeof key];
+            continue;
+        }
+        if (result.isErr()) return result as unknown as Result<Out, E>;
+        throw new Error('Unreachable: Result is neither Ok nor Err');
+    }
+
+    return ok<Out, E>(out as Out);
+}
+
