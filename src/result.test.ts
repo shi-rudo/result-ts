@@ -97,7 +97,6 @@ describe('Result class', () => {
             it('throws error when called on Ok', () => {
                 const result = ok(42);
                 expect(() => {
-                    // @ts-expect-error - matchErr() should only be called on Err
                     result.matchErr();
                 }).toThrow('matchErr() can only be called on Err results. Use `if (result.isErr()) { ... }` first.');
             });
@@ -415,7 +414,7 @@ describe('Result class', () => {
                     throw new Error('Property descriptor failed');
                 }
             });
-            
+
             const result = err(unstringifiable);
             const friendly = result.toUserFriendly();
             expect(friendly.isSuccess).toBe(false);
@@ -598,7 +597,7 @@ describe('Result class', () => {
                         throw new Error('Property descriptor failed');
                     }
                 });
-                
+
                 const result = err(unstringifiable);
                 // Should throw with '[unstringifiable error]' fallback
                 expect(() => result.unwrap()).toThrow(/Called unwrap\(\) on Err/);
@@ -670,7 +669,7 @@ describe('Result class', () => {
                         throw new Error('Property descriptor failed');
                     }
                 });
-                
+
                 const result = ok(unstringifiable);
                 // Should throw with '[unstringifiable value]' fallback
                 expect(() => result.unwrapErr()).toThrow(/Called unwrapErr\(\) on Ok/);
@@ -781,8 +780,8 @@ describe('Result class', () => {
         it('can return complex types', () => {
             const result: Result<string, number> = err(404);
             const response = result.fold(
-                data => ({ success: true, data }),
-                code => ({ success: false, code })
+                data => ({ success: true as const, data }),
+                code => ({ success: false as const, code })
             );
             expect(response).toEqual({ success: false, code: 404 });
         });

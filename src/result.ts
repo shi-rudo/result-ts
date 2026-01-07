@@ -453,8 +453,19 @@ export class Result<T, E> extends Pipeable {
      * );
      * // message = "Success: 42"
      * ```
+     * 
+     * @example
+     * ```ts
+     * // Works with discriminated unions
+     * const result: Result<string, number> = err(404);
+     * const response = result.fold(
+     *     data => ({ success: true as const, data }),
+     *     code => ({ success: false as const, code })
+     * );
+     * // response: { success: true; data: string } | { success: false; code: number }
+     * ```
      */
-    fold<R>(onOk: (value: T) => R, onErr: (error: E) => R): R {
+    fold<R1, R2 = R1>(onOk: (value: T) => R1, onErr: (error: E) => R2): R1 | R2 {
         if (this.isOk()) {
             return onOk(this.value);
         }
