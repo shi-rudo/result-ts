@@ -464,6 +464,3 @@ secrets/
 *.map
 source-map-resolve-*.json
 build/
-
-
-repomix-output.xml

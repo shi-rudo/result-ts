@@ -2,30 +2,46 @@
     "compilerOptions": {
       // Base Options recommended for all projects
       "esModuleInterop": true,
+      // Skip type-checking for .d.ts files to speed up builds
       "skipLibCheck": true,
+      // Emit modern JS for current runtimes
       "target": "es2022",
+      // Allow JS inputs for gradual migration
       "allowJs": true,
+      // Enable JSON imports
       "resolveJsonModule": true,
+      // Treat files as modules to avoid global scope issues
       "moduleDetection": "force",
+      // Ensure each file can be safely transpiled in isolation
       "isolatedModules": true,
+      // Preserve import/export syntax for downstream tools
       "verbatimModuleSyntax": true,
       // Enable strict type checking so you can catch bugs early
       "strict": true,
+      // Make indexed access safer (adds undefined)
       "noUncheckedIndexedAccess": true,
+      // Require explicit override on class methods
       "noImplicitOverride": true,
       // We are not transpiling, so preserve our source code and do not emit files
       "module": "preserve",
+      // Do not emit JS, this config is for type-checking only
       "noEmit": true,
+      // Runtime libraries available in the type system
       "lib": [
         "es2022"
-      ]
+      ],
+      // Include Node.js globals for tooling/tests
+      "types": ["node"]
     },
-    // Include the necessary files for your project
+    // Include source files
     "include": [
       "**/*.ts",
       "**/*.tsx"
     ],
+    // Exclude dependencies and tests from the base build
     "exclude": [
-      "node_modules"
+      "node_modules",
+      "**/*.test.ts",
+      "**/*.test.tsx"
     ]
   }

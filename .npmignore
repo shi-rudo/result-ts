@@ -1,0 +1,27 @@
+# Development and tooling
+node_modules/
+.DS_Store
+*.log
+*.tsbuildinfo
+.env
+.env.*
+.nvmrc
+.editorconfig
+.vscode/
+.github/
+
+# Source and tests
+src/
+test/
+tests/
+**/*.test.*
+**/*.spec.*
+
+# Tooling config
+tsconfig*.json
+vitest.config.*
+eslint.config.*
+.eslintrc*
+prettier.config.*
+.prettierrc*
+

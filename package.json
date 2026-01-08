@@ -1,21 +1,51 @@
 {
   "name": "@shirudo/result",
   "version": "0.0.1",
+  "description": "Robust, type-safe error handling for TypeScript using the Result pattern (Monad)",
   "type": "module",
+  "main": "./dist/index.cjs",
+  "module": "./dist/index.mjs",
+  "types": "./dist/index.d.mts",
   "exports": {
-    ".": "./src/index.ts"
+    ".": {
+      "types": "./dist/index.d.mts",
+      "import": "./dist/index.mjs",
+      "require": "./dist/index.cjs"
+    }
+  },
+  "files": [
+    "dist"
+  ],
+  "keywords": [
+    "result",
+    "monad",
+    "error-handling",
+    "typescript",
+    "functional-programming",
+    "either",
+    "option",
+    "maybe",
+    "type-safe",
+    "pipe",
+    "async"
+  ],
+  "author": "shirudo",
+  "license": "MIT",
+  "engines": {
+    "node": ">=20"
   },
   "scripts": {
     "typecheck": "tsc --noEmit --emitDeclarationOnly false",
     "test": "vitest",
     "test:coverage": "vitest run --coverage",
-     "build": "tsdown"
+    "build": "tsdown"
   },
   "devDependencies": {
+    "@types/node": "^25.0.2",
     "@vitest/coverage-v8": "^4.0.15",
     "tsdown": "^0.17.4",
+    "tsx": "^4.21.0",
     "typescript": "^5.7.3",
     "vitest": "^4.0.15"
-  },
-  "dependencies": {}
+  }
 }
