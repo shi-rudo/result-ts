@@ -176,7 +176,7 @@ const response = result.fold(
 
 ### Pattern Matching
 
-Handle errors exhaustively using the fluent matching API for complex error types.
+Handle errors exhaustively using the fluent matching API for complex error types. You can match by Error class (`.err`) or by primitive value (`.errVal`).
 
 ```ts
 import { Result } from "@shirudo/result";
@@ -190,6 +190,7 @@ const message = result
   .match()
   .err(NetworkError, (e) => `Retry later: ${e.message}`)
   .err(ValidationError, (e) => `Invalid input: ${e.message}`)
+  .errVal("TIMEOUT_CODE", () => "Operation timed out") // Match primitive values
   .ok((val) => `Success: ${val}`)
   .run();
 ```
@@ -218,12 +219,15 @@ const message = result
 - `.isOk()`: Type guard for success.
 - `.isErr()`: Type guard for failure.
 - `.unwrap()`: Get value or throw (use carefully).
+- `.unwrapErr()`: Get error or throw (use carefully).
 - `.unwrapOr(default)`: Get value or return default.
 - `.unwrapOrElse(fn)`: Get value or generate default from error.
 - `.expect(msg)`: Get value or throw with specific message.
+- `.expectErr(msg)`: Get error or throw with specific message.
 - `.fold(onOk, onErr)`: Handle both cases and return a single value.
 - `.pipe(...)`: Chain operators synchronously.
 - `.pipeAsync(...)`: Chain operators asynchronously.
+- `.match()`: Start a fluent pattern matching builder.
 
 ### Pipeable Operators
 
@@ -247,8 +251,11 @@ Import these from the root package to use inside `.pipe()`.
 ### Collections
 
 - `sequence(results)`: Turn `Result[]` into `Result<T[]>`. First error stops the process.
+- `sequenceRecord(record)`: Like `sequence`, but for objects (`{ a: Result, b: Result }` → `Result<{ a, b }>`).
 - `collectFirstOk(results)`: Find the first success, or return all errors.
+- `collectAllErrors(results)`: Returns `Ok(values)` only if all are Ok, otherwise collects _all_ errors.
 - `partition(results)`: Separate a list into arrays of `[oks, errs]`.
+- `flatten(result)`: Flattens a nested `Result<Result<T, E>, E>` into `Result<T, E>`.
 - `zip(r1, r2)`: Combine two results into a tuple.
 
 ---
