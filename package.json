@@ -35,6 +35,9 @@
   "engines": {
     "node": ">=20"
   },
+  "publishConfig": {
+    "access": "public"
+  },
   "scripts": {
     "typecheck": "tsc --noEmit --emitDeclarationOnly false",
     "lint": "tsc --noEmit --emitDeclarationOnly false",
@@ -42,7 +45,8 @@
     "test:coverage": "vitest run --coverage",
     "prebuild": "pnpm lint && pnpm test run",
     "build": "tsdown",
-    "prepublishOnly": "pnpm lint && pnpm test run && pnpm build"
+    "prepublishOnly": "pnpm lint && pnpm test run && pnpm build",
+    "publish": "npm publish --access public"
   },
   "devDependencies": {
     "@types/node": "^25.0.2",
