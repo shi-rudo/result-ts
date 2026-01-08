@@ -18,6 +18,7 @@ export function sequenceRecord<const R extends Record<string, Result<any, any>>>
 
     for (const key of Object.keys(record) as Array<keyof R>) {
         const result = record[key];
+        if (!result) continue;
         if (result.isOk()) {
             out[key] = result.value as Out[typeof key];
             continue;

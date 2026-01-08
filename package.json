@@ -40,7 +40,8 @@
     "test": "vitest",
     "test:coverage": "vitest run --coverage",
     "prebuild": "pnpm lint && pnpm test run",
-    "build": "tsdown"
+    "build": "tsdown",
+    "prepublishOnly": "pnpm lint && pnpm test run && pnpm build"
   },
   "devDependencies": {
     "@types/node": "^25.0.2",
