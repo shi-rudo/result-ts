@@ -1,4 +1,4 @@
-import { Result } from '../result';
+import { err, ok, type Result } from '../result';
 
 /**
  * Executes a function and catches exceptions.
@@ -14,8 +14,8 @@ import { Result } from '../result';
  */
 export function tryFn<T>(fn: () => T): Result<T, unknown> {
     try {
-        return Result.ok(fn());
+        return ok(fn());
     } catch (error) {
-        return Result.err(error);
+        return err(error);
     }
 }

@@ -13,117 +13,24 @@ export type OperatorFunction<T, E, R> = (input: Result<T, E>) => R;
 export type { Awaitable } from './pipeable';
 export type AsyncOperatorFunction<T, E, R> = (input: Result<T, E>) => Promise<R>;
 
-// --- 2. The Result Class ---
+// --- 2. Result Types ---
 
-export type Ok<T> = { readonly _tag: 'Ok'; readonly value: T };
-export type Err<E> = { readonly _tag: 'Err'; readonly error: E };
-export type ResultType<T, E> = Ok<T> | Err<E>;
+export type ResultType<T, E> = { readonly _tag: 'Ok'; readonly value: T } | { readonly _tag: 'Err'; readonly error: E };
 
-export class Result<T, E> extends Pipeable {
-    readonly #state: ResultType<T, E>;
+export type Result<T, E> = Ok<T, E> | Err<T, E>;
 
-    private constructor(state: ResultType<T, E>) {
+abstract class ResultBase<T, E> extends Pipeable {
+    protected readonly _state: ResultType<unknown, unknown>;
+    abstract readonly _tag: 'Ok' | 'Err';
+    abstract readonly value: unknown;
+    abstract readonly error: unknown;
+
+    protected constructor(state: ResultType<unknown, unknown>) {
         super();
         Object.freeze(state);
-        this.#state = state;
-        Object.freeze(this);
+        this._state = state;
     }
 
-    /**
-     * Creates an Ok Result with the given value.
-     * 
-     * **Note**: `null` and `undefined` are allowed as values.
-     * If you want to convert `null`/`undefined` to an Err, use `fromNullable()`.
-     * 
-     * @param value The value for the Ok Result
-     * @returns An Ok Result with the given value
-     * 
-     * @example
-     * ```ts
-     * const result = Result.ok(42);
-     * const nullResult = Result.ok(null); // Allowed!
-     * ```
-     */
-    static ok<T, E = never>(value: T): Result<T, E> {
-        return new Result<T, E>({ _tag: 'Ok', value });
-    }
-
-    /**
-     * Creates an Err Result with the given error.
-     * 
-     * **Note**: `null` and `undefined` are allowed as errors.
-     * 
-     * @param error The error for the Err Result
-     * @returns An Err Result with the given error
-     * 
-     * @example
-     * ```ts
-     * const result = Result.err('error message');
-     * const nullError = Result.err(null); // Allowed!
-     * ```
-     */
-    static err<E, T = never>(error: E): Result<T, E> {
-        return new Result<T, E>({ _tag: 'Err', error });
-    }
-
-    /**
-     * Converts `null | undefined` to `Err`, everything else to `Ok`.
-     * 
-     * **Type Safety**: The type assertion `as NonNullable<T>` is safe,
-     * as the runtime check guarantees that the value is not null/undefined.
-     * 
-     * @param value The value to check
-     * @param error The error to use if value is null/undefined
-     * @returns An Ok Result with the NonNullable value, or an Err Result with the error
-     * 
-     * @example
-     * ```ts
-     * Result.fromNullable(user, 'User not found')
-     * // Ok(user) or Err('User not found')
-     * ```
-     */
-    static fromNullable<T, E>(value: T, error: E): Result<NonNullable<T>, E> {
-        return fromNullableFn(value, error);
-    }
-
-    /**
-     * Converts a Promise to a Result-Promise.
-     * Exceptions are converted to Err.
-     * 
-     * This static method delegates to the standalone `fromPromise()` function.
-     * 
-     * @example
-     * ```ts
-     * const result = await Result.fromPromise(fetch('/api/user'));
-     * // Ok(response) or Err(error)
-     * 
-     * // With custom error mapper
-     * const result = await Result.fromPromise(
-     *     fetch('/api/user'),
-     *     (e) => `Network error: ${e}`
-     * );
-     * ```
-     */
-    static fromPromise<T>(promise: Promise<T>): Promise<Result<T, unknown>>;
-    static fromPromise<T, E>(promise: Promise<T>, errorMapper?: (error: unknown) => E): Promise<Result<T, E>>;
-    static fromPromise<T, E>(promise: Promise<T>, errorMapper?: (error: unknown) => E): Promise<Result<T, E>> {
-        return fromPromiseFn(promise, errorMapper);
-    }
-
-    /**
-     * Executes a function and catches exceptions.
-     * 
-     * @example
-     * ```ts
-     * const result = Result.try(() => JSON.parse(input));
-     * // Ok(parsed) or Err(SyntaxError)
-     * ```
-     */
-    static try<T>(fn: () => T): Result<T, unknown> {
-        return tryFn(fn);
-    }
-
-    // Basic helpers for internal access in operators
     /**
      * Checks if the Result is Ok.
      * 
@@ -136,8 +43,8 @@ export class Result<T, E> extends Pipeable {
      * }
      * ```
      */
-    isOk(): this is Result<T, E> & { readonly value: T; readonly error: undefined } {
-        return this.#state._tag === 'Ok';
+    isOk(): this is Ok<T, never> {
+        return this._tag === 'Ok';
     }
 
     /**
@@ -152,16 +59,8 @@ export class Result<T, E> extends Pipeable {
      * }
      * ```
      */
-    isErr(): this is Result<T, E> & { readonly value: undefined; readonly error: E } {
-        return this.#state._tag === 'Err';
-    }
-
-    get value(): T | undefined {
-        return this.#state._tag === 'Ok' ? this.#state.value : undefined;
-    }
-
-    get error(): E | undefined {
-        return this.#state._tag === 'Err' ? this.#state.error : undefined;
+    isErr(): this is Err<never, E> {
+        return this._tag === 'Err';
     }
 
     /**
@@ -182,13 +81,13 @@ export class Result<T, E> extends Pipeable {
      * ```
      */
     unwrap(): T {
-        if (this.#state._tag === 'Ok') {
-            return this.#state.value;
+        if (this._tag === 'Ok') {
+            return (this as Ok<T, E>).value;
         }
         // Safe string conversion for error messages
         const errorStr = (() => {
             try {
-                const error = this.#state.error;
+                const error = this.error;
                 if (error === null) return 'null';
                 if (error === undefined) return 'undefined';
                 if (typeof error === 'string') return error;
@@ -226,13 +125,13 @@ export class Result<T, E> extends Pipeable {
      * ```
      */
     unwrapErr(): E {
-        if (this.#state._tag === 'Err') {
-            return this.#state.error;
+        if (this._tag === 'Err') {
+            return (this as Err<T, E>).error;
         }
         // Safe string conversion for error messages
         const valueStr = (() => {
             try {
-                const value = this.#state.value;
+                const value = this.value;
                 if (value === null) return 'null';
                 if (value === undefined) return 'undefined';
                 if (typeof value === 'string') return value;
@@ -271,8 +170,8 @@ export class Result<T, E> extends Pipeable {
      * ```
      */
     expect(message: string): T {
-        if (this.#state._tag === 'Ok') {
-            return this.#state.value;
+        if (this._tag === 'Ok') {
+            return (this as Ok<T, E>).value;
         }
         throw new Error(message);
     }
@@ -298,14 +197,14 @@ export class Result<T, E> extends Pipeable {
      * ```
      */
     expectErr(message: string): E {
-        if (this.#state._tag === 'Err') {
-            return this.#state.error;
+        if (this._tag === 'Err') {
+            return (this as Err<T, E>).error;
         }
         throw new Error(message);
     }
 
     unwrapOr<D = T>(defaultValue: D): T | D {
-        return this.#state._tag === 'Ok' ? this.#state.value : defaultValue;
+        return this._tag === 'Ok' ? (this as Ok<T, E>).value : defaultValue;
     }
 
     /**
@@ -331,7 +230,7 @@ export class Result<T, E> extends Pipeable {
      * ```
      */
     toPromise(): Promise<T> {
-        return toPromiseFn(this);
+        return toPromiseFn(this as Result<T, E>);
     }
 
     /**
@@ -352,7 +251,7 @@ export class Result<T, E> extends Pipeable {
      * ```
      */
     toNullable(): T | null {
-        return toNullableFn(this);
+        return toNullableFn(this as Result<T, E>);
     }
 
     /**
@@ -363,7 +262,7 @@ export class Result<T, E> extends Pipeable {
      * - Err → aborts and returns the Err Result
      */
     *[Symbol.iterator](): Generator<Result<T, E>, T, unknown> {
-        return (yield this) as T;
+        return (yield (this as Result<T, E>)) as T;
     }
 
     /**
@@ -383,7 +282,7 @@ export class Result<T, E> extends Pipeable {
      * ```
      */
     match(): ResultMatchBuilder<T, E, never> {
-        return ResultMatchBuilder.fromResult(this);
+        return ResultMatchBuilder.fromResult(this as Result<T, E>);
     }
 
     /**
@@ -403,10 +302,8 @@ export class Result<T, E> extends Pipeable {
      * }
      * ```
      */
-    matchErr(this: Result<T, E> & { readonly error: E }): ErrorMatchBuilder<E, never>;
-    matchErr(this: Result<T, E>): never;
-    matchErr(): unknown {
-        if (this.isErr()) return new ErrorMatchBuilder(this.error);
+    matchErr(): ErrorMatchBuilder<E, never> {
+        if (this._tag === 'Err') return new ErrorMatchBuilder((this as Err<T, E>).error);
         throw new Error('matchErr() can only be called on Err results. Use `if (result.isErr()) { ... }` first.');
     }
 
@@ -416,8 +313,8 @@ export class Result<T, E> extends Pipeable {
      * - or an error value (wrapped to `Err(error)`)
      */
     matchErrResult(): ErrMatchBuilder<T, E, never, never> {
-        const makeErr = <Err>(error: Err) => Result.err<Err, never>(error);
-        return ErrMatchBuilder.fromResult(this, makeErr);
+        const makeErr = <ErrValue>(error: ErrValue) => err<ErrValue, never>(error);
+        return ErrMatchBuilder.fromResult(this as Result<T, E>, makeErr);
     }
 
     /**
@@ -466,11 +363,11 @@ export class Result<T, E> extends Pipeable {
      * ```
      */
     fold<R1, R2 = R1>(onOk: (value: T) => R1, onErr: (error: E) => R2): R1 | R2 {
-        if (this.isOk()) {
-            return onOk(this.value);
+        if (this._tag === 'Ok') {
+            return onOk((this as Ok<T, E>).value);
         }
-        if (this.isErr()) {
-            return onErr(this.error);
+        if (this._tag === 'Err') {
+            return onErr((this as Err<T, E>).error);
         }
         throw new Error('Unreachable: Result is neither Ok nor Err');
     }
@@ -480,7 +377,7 @@ export class Result<T, E> extends Pipeable {
      * Useful for libraries like `ts-pattern` that match on plain object unions.
      */
     toUnion(): ResultType<T, E> {
-        return this.#state;
+        return (this as ResultBase<T, E>)._state as ResultType<T, E>;
     }
 
     /**
@@ -488,8 +385,8 @@ export class Result<T, E> extends Pipeable {
      * Preserves the original types.
      */
     serialize(): { isSuccess: boolean; data?: T; error?: E } {
-        if (this.#state._tag === 'Ok') return { isSuccess: true, data: this.#state.value };
-        return { isSuccess: false, error: this.#state.error };
+        if (this._tag === 'Ok') return { isSuccess: true, data: (this as Ok<T, E>).value };
+        return { isSuccess: false, error: (this as Err<T, E>).error };
     }
 
     /**
@@ -497,9 +394,9 @@ export class Result<T, E> extends Pipeable {
      * Converts errors to readable strings.
      */
     toUserFriendly(): { isSuccess: boolean; data?: T; error?: string } {
-        if (this.#state._tag === 'Ok') return { isSuccess: true, data: this.#state.value };
+        if (this._tag === 'Ok') return { isSuccess: true, data: (this as Ok<T, E>).value };
 
-        const error = this.#state.error;
+        const error = (this as Err<T, E>).error;
         const toSafeString = (value: unknown): string => {
             try {
                 return String(value);
@@ -517,48 +414,115 @@ export class Result<T, E> extends Pipeable {
 
         return { isSuccess: false, error: errorMessage };
     }
-
 }
 
-// Helper constructors
-export const ok = Result.ok;
-export const err = Result.err;
+export class Ok<T, E = never> extends ResultBase<T, E> {
+    readonly _tag = 'Ok' as const;
+    readonly value: T;
+    readonly error = undefined;
+
+    constructor(value: T) {
+        const state: { readonly _tag: 'Ok'; readonly value: T } = { _tag: 'Ok', value };
+        super(state);
+        this.value = value;
+        Object.freeze(this);
+    }
+}
+
+export class Err<T = never, E = never> extends ResultBase<T, E> {
+    readonly _tag = 'Err' as const;
+    readonly value = undefined;
+    readonly error: E;
+
+    constructor(error: E) {
+        const state: { readonly _tag: 'Err'; readonly error: E } = { _tag: 'Err', error };
+        super(state);
+        this.error = error;
+        Object.freeze(this);
+    }
+}
 
 /**
- * Helper for conditional Result creation.
- * Avoids type inference issues with ternary operators.
+ * Creates an Ok Result with the given value.
+ * 
+ * **Note**: `null` and `undefined` are allowed as values.
+ * If you want to convert `null`/`undefined` to an Err, use `fromNullable()`.
+ * 
+ * @param value The value for the Ok Result
+ * @returns An Ok Result with the given value
  * 
  * @example
  * ```ts
- * const result = okIf(value > 5, value, 'too small');
- * // instead of: value > 5 ? ok(value) : err('too small')
+ * const result = Result.ok(42);
+ * const nullResult = Result.ok(null); // Allowed!
  * ```
  */
+export function ok<T, E = never>(value: T): Result<T, E> {
+    return new Ok<T, E>(value);
+}
+
+/**
+ * Creates an Err Result with the given error.
+ * 
+ * **Note**: `null` and `undefined` are allowed as errors.
+ * 
+ * @param error The error for the Err Result
+ * @returns An Err Result with the given error
+ * 
+ * @example
+ * ```ts
+ * const result = Result.err('error message');
+ * const nullError = Result.err(null); // Allowed!
+ * ```
+ */
+export function err<E, T = never>(error: E): Result<T, E> {
+    return new Err<T, E>(error);
+}
+
+function fromNullable<T, E>(value: T, error: E): Result<NonNullable<T>, E> {
+    return fromNullableFn(value, error);
+}
+
+function fromPromise<T>(promise: Promise<T>): Promise<Result<T, unknown>>;
+function fromPromise<T, E>(promise: Promise<T>, errorMapper?: (error: unknown) => E): Promise<Result<T, E>>;
+function fromPromise<T, E>(promise: Promise<T>, errorMapper?: (error: unknown) => E): Promise<Result<T, E>> {
+    return fromPromiseFn(promise, errorMapper);
+}
+
+/**
+ * Executes a function and catches exceptions.
+ * 
+ * @example
+ * ```ts
+ * const result = Result.try(() => JSON.parse(input));
+ * // Ok(parsed) or Err(SyntaxError)
+ * ```
+ */
+function resultTry<T>(fn: () => T): Result<T, unknown> {
+    return tryFn(fn);
+}
+
+export const Result = {
+    ok,
+    err,
+    fromNullable,
+    fromPromise,
+    try: resultTry,
+};
+
 export function okIf<T, E>(
     condition: boolean,
     okValue: T,
     errValue: E
 ): Result<T, E> {
-    return condition ? ok(okValue) : err(errValue);
+    return condition ? ok<T, E>(okValue) : err<E, T>(errValue);
 }
 
-/**
- * Helper for conditional Result creation with lazy evaluation.
- * Evaluates values only when they are needed.
- * 
- * @example
- * ```ts
- * const result = okIfLazy(
- *     value > 5,
- *     () => expensiveComputation(value),
- *     () => 'too small'
- * );
- * ```
- */
 export function okIfLazy<T, E>(
     condition: boolean,
     okFn: () => T,
     errFn: () => E
 ): Result<T, E> {
-    return condition ? ok(okFn()) : err(errFn());
+    if (condition) return ok<T, E>(okFn());
+    return err<E, T>(errFn());
 }

@@ -33,49 +33,28 @@ export type OperatorFunction<T, E, R> = (input: Result<T, E>) => R;
 export type { Awaitable } from './pipeable';
 export type AsyncOperatorFunction<T, E, R> = (input: Result<T, E>) => Promise<R>;
 
-// --- 2. Die Klasse Result ---
+// --- 2. Result Types ---
 
-export type Ok<T> = { readonly _tag: 'Ok'; readonly value: T };
-export type Err<E> = { readonly _tag: 'Err'; readonly error: E };
-export type ResultType<T, E> = Ok<T> | Err<E>;
+export type ResultType<T, E> = { readonly _tag: 'Ok'; readonly value: T } | { readonly _tag: 'Err'; readonly error: E };
 
-export class Result<T, E> extends Pipeable {
-    readonly #state: ResultType<T, E>;
+export type Result<T, E> = Ok<T, E> | Err<T, E>;
 
-    private constructor(state: ResultType<T, E>) {
-        super();
-        Object.freeze(state);
-        this.#state = state;
-        Object.freeze(this);
-    }
-
-    static ok<T, E = never>(value: T): Result<T, E> {
-        return new Result<T, E>({ _tag: 'Ok', value });
-    }
-
-    static err<E, T = never>(error: E): Result<T, E> {
-        return new Result<T, E>({ _tag: 'Err', error });
-    }
+abstract class ResultBase extends Pipeable {
+    abstract readonly _tag: 'Ok' | 'Err';
+    abstract readonly value: unknown;
+    abstract readonly error: unknown;
 
     // Basic helpers für internen Zugriff in Operatoren
-    isOk(): this is Result<T, E> & { readonly value: T; readonly error: undefined } {
-        return this.#state._tag === 'Ok';
+    isOk<T, E>(this: Result<T, E>): this is Ok<T, E> {
+        return this._tag === 'Ok';
     }
 
-    isErr(): this is Result<T, E> & { readonly value: undefined; readonly error: E } {
-        return this.#state._tag === 'Err';
+    isErr<T, E>(this: Result<T, E>): this is Err<T, E> {
+        return this._tag === 'Err';
     }
 
-    get value(): T | undefined {
-        return this.#state._tag === 'Ok' ? this.#state.value : undefined;
-    }
-
-    get error(): E | undefined {
-        return this.#state._tag === 'Err' ? this.#state.error : undefined;
-    }
-
-    unwrapOr(defaultValue: T): T {
-        return this.#state._tag === 'Ok' ? this.#state.value : defaultValue;
+    unwrapOr<T, E>(this: Result<T, E>, defaultValue: T): T {
+        return this._tag === 'Ok' ? this.value : defaultValue;
     }
 
     /**
@@ -84,10 +63,8 @@ export class Result<T, E> extends Pipeable {
      * Hinweis: aus Type-Safety-Gründen ist `.match()` nur auf einem bereits zu `Err` verengten Result aufrufbar,
      * z.B. innerhalb von `if (result.isErr()) { ... }`.
      */
-    match(this: Result<T, E> & { readonly error: E }): ErrorMatchBuilder<E, never>;
-    match(this: Result<T, E>): never;
-    match(): unknown {
-        if (this.isErr()) return new ErrorMatchBuilder(this.error);
+    match<T, E>(this: Result<T, E>): ErrorMatchBuilder<E, never> {
+        if (this._tag === 'Err') return new ErrorMatchBuilder(this.error);
         throw new Error('match() can only be called on Err results. Use `if (result.isErr()) { ... }` first.');
     }
 
@@ -96,8 +73,8 @@ export class Result<T, E> extends Pipeable {
      * - Handler dürfen ein `Result` zurückgeben (wird direkt returned)
      * - oder einen Error-Wert (wird zu `Err(error)` gewrappt)
      */
-    matchErr(): ErrMatchBuilder<T, E, never, never> {
-        const makeErr = <Err>(error: Err) => Result.err<Err, never>(error);
+    matchErr<T, E>(this: Result<T, E>): ErrMatchBuilder<T, E, never, never> {
+        const makeErr = <ErrValue>(error: ErrValue) => err<ErrValue, never>(error);
         return ErrMatchBuilder.fromResult(this, makeErr);
     }
 
@@ -105,27 +82,59 @@ export class Result<T, E> extends Pipeable {
      * Serialisiert das Result in ein einfaches Objekt-Format.
      * Behält die ursprünglichen Typen bei.
      */
-    serialize(): { isSuccess: boolean; data?: T; error?: E } {
-        if (this.#state._tag === 'Ok') return { isSuccess: true, data: this.#state.value };
-        return { isSuccess: false, error: this.#state.error };
+    serialize<T, E>(this: Result<T, E>): { isSuccess: boolean; data?: T; error?: E } {
+        if (this._tag === 'Ok') return { isSuccess: true, data: this.value };
+        return { isSuccess: false, error: this.error };
     }
 
     /**
      * Serialisiert das Result in ein user-friendly Format.
      * Konvertiert Errors zu lesbaren Strings.
      */
-    toUserFriendly(): { isSuccess: boolean; data?: T; error?: string } {
-        if (this.#state._tag === 'Ok') return { isSuccess: true, data: this.#state.value };
+    toUserFriendly<T, E>(this: Result<T, E>): { isSuccess: boolean; data?: T; error?: string } {
+        if (this._tag === 'Ok') return { isSuccess: true, data: this.value };
 
-        const error = this.#state.error;
+        const error = this.error;
         const errorMessage =
             error && typeof error === 'object' && 'message' in error ? (error as any).message : String(error);
 
         return { isSuccess: false, error: errorMessage };
     }
-
 }
 
-// Helper Konstruktoren
-export const ok = Result.ok;
-export const err = Result.err;
+export class Ok<T, E = never> extends ResultBase {
+    readonly _tag = 'Ok' as const;
+    readonly value: T;
+    readonly error = undefined;
+
+    constructor(value: T) {
+        super();
+        this.value = value;
+        Object.freeze(this);
+    }
+}
+
+export class Err<T = never, E = never> extends ResultBase {
+    readonly _tag = 'Err' as const;
+    readonly value = undefined;
+    readonly error: E;
+
+    constructor(error: E) {
+        super();
+        this.error = error;
+        Object.freeze(this);
+    }
+}
+
+export function ok<T, E = never>(value: T): Result<T, E> {
+    return new Ok<T, E>(value);
+}
+
+export function err<E, T = never>(error: E): Result<T, E> {
+    return new Err<T, E>(error);
+}
+
+export const Result = {
+    ok,
+    err,
+};

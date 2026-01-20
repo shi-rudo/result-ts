@@ -6,20 +6,20 @@ export abstract class Pipeable {
     // PIPE (Synchron)
     // -------------------------------------------------------------------------
 
-    pipe(): this;
-    pipe<B>(ab: UnaryFunction<this, B>): B;
-    pipe<B, C>(ab: UnaryFunction<this, B>, bc: UnaryFunction<B, C>): C;
-    pipe<B, C, D>(ab: UnaryFunction<this, B>, bc: UnaryFunction<B, C>, cd: UnaryFunction<C, D>): D;
+    pipe<A>(this: A): A;
+    pipe<A, B>(this: A, ab: UnaryFunction<A, B>): B;
+    pipe<A, B, C>(this: A, ab: UnaryFunction<A, B>, bc: UnaryFunction<B, C>): C;
+    pipe<A, B, C, D>(this: A, ab: UnaryFunction<A, B>, bc: UnaryFunction<B, C>, cd: UnaryFunction<C, D>): D;
     pipe<A, B, C, D, E>(
         this: A,
-        ab: UnaryFunction<this, B>,
+        ab: UnaryFunction<A, B>,
         bc: UnaryFunction<B, C>,
         cd: UnaryFunction<C, D>,
         de: UnaryFunction<D, E>
     ): E;
     pipe<A, B, C, D, E, F>(
         this: A,
-        ab: UnaryFunction<this, B>,
+        ab: UnaryFunction<A, B>,
         bc: UnaryFunction<B, C>,
         cd: UnaryFunction<C, D>,
         de: UnaryFunction<D, E>,
@@ -27,7 +27,7 @@ export abstract class Pipeable {
     ): F;
     pipe<A, B, C, D, E, F, G>(
         this: A,
-        ab: UnaryFunction<this, B>,
+        ab: UnaryFunction<A, B>,
         bc: UnaryFunction<B, C>,
         cd: UnaryFunction<C, D>,
         de: UnaryFunction<D, E>,
@@ -36,7 +36,7 @@ export abstract class Pipeable {
     ): G;
     pipe<A, B, C, D, E, F, G, H>(
         this: A,
-        ab: UnaryFunction<this, B>,
+        ab: UnaryFunction<A, B>,
         bc: UnaryFunction<B, C>,
         cd: UnaryFunction<C, D>,
         de: UnaryFunction<D, E>,
@@ -46,7 +46,7 @@ export abstract class Pipeable {
     ): H;
     pipe<A, B, C, D, E, F, G, H, I>(
         this: A,
-        ab: UnaryFunction<this, B>,
+        ab: UnaryFunction<A, B>,
         bc: UnaryFunction<B, C>,
         cd: UnaryFunction<C, D>,
         de: UnaryFunction<D, E>,
@@ -57,7 +57,7 @@ export abstract class Pipeable {
     ): I;
     pipe<A, B, C, D, E, F, G, H, I, J>(
         this: A,
-        ab: UnaryFunction<this, B>,
+        ab: UnaryFunction<A, B>,
         bc: UnaryFunction<B, C>,
         cd: UnaryFunction<C, D>,
         de: UnaryFunction<D, E>,
@@ -69,7 +69,7 @@ export abstract class Pipeable {
     ): J;
     pipe<A, B, C, D, E, F, G, H, I, J, K>(
         this: A,
-        ab: UnaryFunction<this, B>,
+        ab: UnaryFunction<A, B>,
         bc: UnaryFunction<B, C>,
         cd: UnaryFunction<C, D>,
         de: UnaryFunction<D, E>,
@@ -82,7 +82,7 @@ export abstract class Pipeable {
     ): K;
     pipe<A, B, C, D, E, F, G, H, I, J, K, L>(
         this: A,
-        ab: UnaryFunction<this, B>,
+        ab: UnaryFunction<A, B>,
         bc: UnaryFunction<B, C>,
         cd: UnaryFunction<C, D>,
         de: UnaryFunction<D, E>,
@@ -96,7 +96,7 @@ export abstract class Pipeable {
     ): L;
     pipe<A, B, C, D, E, F, G, H, I, J, K, L, M>(
         this: A,
-        ab: UnaryFunction<this, B>,
+        ab: UnaryFunction<A, B>,
         bc: UnaryFunction<B, C>,
         cd: UnaryFunction<C, D>,
         de: UnaryFunction<D, E>,
@@ -111,7 +111,7 @@ export abstract class Pipeable {
     ): M;
     pipe<A, B, C, D, E, F, G, H, I, J, K, L, M, N>(
         this: A,
-        ab: UnaryFunction<this, B>,
+        ab: UnaryFunction<A, B>,
         bc: UnaryFunction<B, C>,
         cd: UnaryFunction<C, D>,
         de: UnaryFunction<D, E>,
@@ -127,7 +127,7 @@ export abstract class Pipeable {
     ): N;
     pipe<A, B, C, D, E, F, G, H, I, J, K, L, M, N, O>(
         this: A,
-        ab: UnaryFunction<this, B>,
+        ab: UnaryFunction<A, B>,
         bc: UnaryFunction<B, C>,
         cd: UnaryFunction<C, D>,
         de: UnaryFunction<D, E>,
@@ -144,7 +144,7 @@ export abstract class Pipeable {
     ): O;
     pipe<A, B, C, D, E, F, G, H, I, J, K, L, M, N, O, P>(
         this: A,
-        ab: UnaryFunction<this, B>,
+        ab: UnaryFunction<A, B>,
         bc: UnaryFunction<B, C>,
         cd: UnaryFunction<C, D>,
         de: UnaryFunction<D, E>,
@@ -162,7 +162,7 @@ export abstract class Pipeable {
     ): P;
     pipe<A, B, C, D, E, F, G, H, I, J, K, L, M, N, O, P, Q>(
         this: A,
-        ab: UnaryFunction<this, B>,
+        ab: UnaryFunction<A, B>,
         bc: UnaryFunction<B, C>,
         cd: UnaryFunction<C, D>,
         de: UnaryFunction<D, E>,
@@ -181,7 +181,7 @@ export abstract class Pipeable {
     ): Q;
     pipe<A, B, C, D, E, F, G, H, I, J, K, L, M, N, O, P, Q, R>(
         this: A,
-        ab: UnaryFunction<this, B>,
+        ab: UnaryFunction<A, B>,
         bc: UnaryFunction<B, C>,
         cd: UnaryFunction<C, D>,
         de: UnaryFunction<D, E>,
@@ -201,7 +201,7 @@ export abstract class Pipeable {
     ): R;
     pipe<A, B, C, D, E, F, G, H, I, J, K, L, M, N, O, P, Q, R, S>(
         this: A,
-        ab: UnaryFunction<this, B>,
+        ab: UnaryFunction<A, B>,
         bc: UnaryFunction<B, C>,
         cd: UnaryFunction<C, D>,
         de: UnaryFunction<D, E>,
@@ -222,7 +222,7 @@ export abstract class Pipeable {
     ): S;
     pipe<A, B, C, D, E, F, G, H, I, J, K, L, M, N, O, P, Q, R, S, T>(
         this: A,
-        ab: UnaryFunction<this, B>,
+        ab: UnaryFunction<A, B>,
         bc: UnaryFunction<B, C>,
         cd: UnaryFunction<C, D>,
         de: UnaryFunction<D, E>,
@@ -244,7 +244,7 @@ export abstract class Pipeable {
     ): T;
     pipe<A, B, C, D, E, F, G, H, I, J, K, L, M, N, O, P, Q, R, S, T, U>(
         this: A,
-        ab: UnaryFunction<this, B>,
+        ab: UnaryFunction<A, B>,
         bc: UnaryFunction<B, C>,
         cd: UnaryFunction<C, D>,
         de: UnaryFunction<D, E>,
@@ -279,24 +279,24 @@ export abstract class Pipeable {
     // -------------------------------------------------------------------------
 
     pipeAsync<A>(this: A): Promise<A>;
-    pipeAsync<A, B>(this: A, ab: UnaryFunction<this, B>): Promise<Awaited<B>>;
-    pipeAsync<A, B, C>(this: A, ab: UnaryFunction<this, B>, bc: UnaryFunction<Awaited<B>, C>): Promise<Awaited<C>>;
+    pipeAsync<A, B>(this: A, ab: UnaryFunction<A, B>): Promise<Awaited<B>>;
+    pipeAsync<A, B, C>(this: A, ab: UnaryFunction<A, B>, bc: UnaryFunction<Awaited<B>, C>): Promise<Awaited<C>>;
     pipeAsync<A, B, C, D>(
         this: A,
-        ab: UnaryFunction<this, B>,
+        ab: UnaryFunction<A, B>,
         bc: UnaryFunction<Awaited<B>, C>,
         cd: UnaryFunction<Awaited<C>, D>
     ): Promise<Awaited<D>>;
     pipeAsync<A, B, C, D, E>(
         this: A,
-        ab: UnaryFunction<this, B>,
+        ab: UnaryFunction<A, B>,
         bc: UnaryFunction<Awaited<B>, C>,
         cd: UnaryFunction<Awaited<C>, D>,
         de: UnaryFunction<Awaited<D>, E>
     ): Promise<Awaited<E>>;
     pipeAsync<A, B, C, D, E, F>(
         this: A,
-        ab: UnaryFunction<this, B>,
+        ab: UnaryFunction<A, B>,
         bc: UnaryFunction<Awaited<B>, C>,
         cd: UnaryFunction<Awaited<C>, D>,
         de: UnaryFunction<Awaited<D>, E>,
@@ -304,7 +304,7 @@ export abstract class Pipeable {
     ): Promise<Awaited<F>>;
     pipeAsync<A, B, C, D, E, F, G>(
         this: A,
-        ab: UnaryFunction<this, B>,
+        ab: UnaryFunction<A, B>,
         bc: UnaryFunction<Awaited<B>, C>,
         cd: UnaryFunction<Awaited<C>, D>,
         de: UnaryFunction<Awaited<D>, E>,
@@ -313,7 +313,7 @@ export abstract class Pipeable {
     ): Promise<Awaited<G>>;
     pipeAsync<A, B, C, D, E, F, G, H>(
         this: A,
-        ab: UnaryFunction<this, B>,
+        ab: UnaryFunction<A, B>,
         bc: UnaryFunction<Awaited<B>, C>,
         cd: UnaryFunction<Awaited<C>, D>,
         de: UnaryFunction<Awaited<D>, E>,
@@ -323,7 +323,7 @@ export abstract class Pipeable {
     ): Promise<Awaited<H>>;
     pipeAsync<A, B, C, D, E, F, G, H, I>(
         this: A,
-        ab: UnaryFunction<this, B>,
+        ab: UnaryFunction<A, B>,
         bc: UnaryFunction<Awaited<B>, C>,
         cd: UnaryFunction<Awaited<C>, D>,
         de: UnaryFunction<Awaited<D>, E>,
@@ -334,7 +334,7 @@ export abstract class Pipeable {
     ): Promise<Awaited<I>>;
     pipeAsync<A, B, C, D, E, F, G, H, I, J>(
         this: A,
-        ab: UnaryFunction<this, B>,
+        ab: UnaryFunction<A, B>,
         bc: UnaryFunction<Awaited<B>, C>,
         cd: UnaryFunction<Awaited<C>, D>,
         de: UnaryFunction<Awaited<D>, E>,
@@ -346,7 +346,7 @@ export abstract class Pipeable {
     ): Promise<Awaited<J>>;
     pipeAsync<A, B, C, D, E, F, G, H, I, J, K>(
         this: A,
-        ab: UnaryFunction<this, B>,
+        ab: UnaryFunction<A, B>,
         bc: UnaryFunction<Awaited<B>, C>,
         cd: UnaryFunction<Awaited<C>, D>,
         de: UnaryFunction<Awaited<D>, E>,
@@ -359,7 +359,7 @@ export abstract class Pipeable {
     ): Promise<Awaited<K>>;
     pipeAsync<A, B, C, D, E, F, G, H, I, J, K, L>(
         this: A,
-        ab: UnaryFunction<this, B>,
+        ab: UnaryFunction<A, B>,
         bc: UnaryFunction<Awaited<B>, C>,
         cd: UnaryFunction<Awaited<C>, D>,
         de: UnaryFunction<Awaited<D>, E>,
@@ -373,7 +373,7 @@ export abstract class Pipeable {
     ): Promise<Awaited<L>>;
     pipeAsync<A, B, C, D, E, F, G, H, I, J, K, L, M>(
         this: A,
-        ab: UnaryFunction<this, B>,
+        ab: UnaryFunction<A, B>,
         bc: UnaryFunction<Awaited<B>, C>,
         cd: UnaryFunction<Awaited<C>, D>,
         de: UnaryFunction<Awaited<D>, E>,
@@ -388,7 +388,7 @@ export abstract class Pipeable {
     ): Promise<Awaited<M>>;
     pipeAsync<A, B, C, D, E, F, G, H, I, J, K, L, M, N>(
         this: A,
-        ab: UnaryFunction<this, B>,
+        ab: UnaryFunction<A, B>,
         bc: UnaryFunction<Awaited<B>, C>,
         cd: UnaryFunction<Awaited<C>, D>,
         de: UnaryFunction<Awaited<D>, E>,
@@ -404,7 +404,7 @@ export abstract class Pipeable {
     ): Promise<Awaited<N>>;
     pipeAsync<A, B, C, D, E, F, G, H, I, J, K, L, M, N, O>(
         this: A,
-        ab: UnaryFunction<this, B>,
+        ab: UnaryFunction<A, B>,
         bc: UnaryFunction<Awaited<B>, C>,
         cd: UnaryFunction<Awaited<C>, D>,
         de: UnaryFunction<Awaited<D>, E>,
@@ -421,7 +421,7 @@ export abstract class Pipeable {
     ): Promise<Awaited<O>>;
     pipeAsync<A, B, C, D, E, F, G, H, I, J, K, L, M, N, O, P>(
         this: A,
-        ab: UnaryFunction<this, B>,
+        ab: UnaryFunction<A, B>,
         bc: UnaryFunction<Awaited<B>, C>,
         cd: UnaryFunction<Awaited<C>, D>,
         de: UnaryFunction<Awaited<D>, E>,
@@ -439,7 +439,7 @@ export abstract class Pipeable {
     ): Promise<Awaited<P>>;
     pipeAsync<A, B, C, D, E, F, G, H, I, J, K, L, M, N, O, P, Q>(
         this: A,
-        ab: UnaryFunction<this, B>,
+        ab: UnaryFunction<A, B>,
         bc: UnaryFunction<Awaited<B>, C>,
         cd: UnaryFunction<Awaited<C>, D>,
         de: UnaryFunction<Awaited<D>, E>,
@@ -458,7 +458,7 @@ export abstract class Pipeable {
     ): Promise<Awaited<Q>>;
     pipeAsync<A, B, C, D, E, F, G, H, I, J, K, L, M, N, O, P, Q, R>(
         this: A,
-        ab: UnaryFunction<this, B>,
+        ab: UnaryFunction<A, B>,
         bc: UnaryFunction<Awaited<B>, C>,
         cd: UnaryFunction<Awaited<C>, D>,
         de: UnaryFunction<Awaited<D>, E>,
@@ -478,7 +478,7 @@ export abstract class Pipeable {
     ): Promise<Awaited<R>>;
     pipeAsync<A, B, C, D, E, F, G, H, I, J, K, L, M, N, O, P, Q, R, S>(
         this: A,
-        ab: UnaryFunction<this, B>,
+        ab: UnaryFunction<A, B>,
         bc: UnaryFunction<Awaited<B>, C>,
         cd: UnaryFunction<Awaited<C>, D>,
         de: UnaryFunction<Awaited<D>, E>,
@@ -499,7 +499,7 @@ export abstract class Pipeable {
     ): Promise<Awaited<S>>;
     pipeAsync<A, B, C, D, E, F, G, H, I, J, K, L, M, N, O, P, Q, R, S, T>(
         this: A,
-        ab: UnaryFunction<this, B>,
+        ab: UnaryFunction<A, B>,
         bc: UnaryFunction<Awaited<B>, C>,
         cd: UnaryFunction<Awaited<C>, D>,
         de: UnaryFunction<Awaited<D>, E>,
@@ -521,7 +521,7 @@ export abstract class Pipeable {
     ): Promise<Awaited<T>>;
     pipeAsync<A, B, C, D, E, F, G, H, I, J, K, L, M, N, O, P, Q, R, S, T, U>(
         this: A,
-        ab: UnaryFunction<this, B>,
+        ab: UnaryFunction<A, B>,
         bc: UnaryFunction<Awaited<B>, C>,
         cd: UnaryFunction<Awaited<C>, D>,
         de: UnaryFunction<Awaited<D>, E>,

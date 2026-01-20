@@ -1,4 +1,4 @@
-import { Result } from '../result';
+import { err, ok, type Result } from '../result';
 
 /**
  * Converts `null | undefined` to `Err`, everything else to `Ok`.
@@ -18,8 +18,7 @@ import { Result } from '../result';
  */
 export function fromNullable<T, E>(value: T, error: E): Result<NonNullable<T>, E> {
     if (value === null || value === undefined) {
-        return Result.err<E, NonNullable<T>>(error);
+        return err<E, NonNullable<T>>(error);
     }
-    return Result.ok<NonNullable<T>, E>(value as NonNullable<T>);
+    return ok<NonNullable<T>, E>(value as NonNullable<T>);
 }
-

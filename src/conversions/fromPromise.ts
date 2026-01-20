@@ -1,4 +1,4 @@
-import { Result } from '../result';
+import { err, ok, type Result } from '../result';
 
 /**
  * Converts a Promise to a Result-Promise.
@@ -25,13 +25,13 @@ export function fromPromise<T, E>(promise: Promise<T>, errorMapper?: (error: unk
 export async function fromPromise<T, E>(promise: Promise<T>, errorMapper?: (error: unknown) => E): Promise<Result<T, E>> {
     try {
         const value = await promise;
-        return Result.ok<T, E>(value);
+        return ok<T, E>(value);
     } catch (error) {
         try {
-            return Result.err(errorMapper ? errorMapper(error) : error as E);
+            return err(errorMapper ? errorMapper(error) : error as E);
         } catch (mapperError) {
             // If the errorMapper itself throws an error, use that one
-            return Result.err(mapperError as E);
+            return err(mapperError as E);
         }
     }
 }
