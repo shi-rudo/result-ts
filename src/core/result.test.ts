@@ -59,6 +59,26 @@ describe('Result class', () => {
                 expect(Result.err<string, number>('error').unwrapOr(99)).toBe(99);
             });
         });
+
+        describe('fold', () => {
+            it('ruft onOk bei Ok und liefert Rückgabewert', () => {
+                const result = ok(2).fold(
+                    (value) => value * 2,
+                    () => -1
+                );
+
+                expect(result).toBe(4);
+            });
+
+            it('ruft onErr bei Err und liefert Rückgabewert', () => {
+                const result = err('boom').fold(
+                    () => 'ok',
+                    (error) => `err:${error}`
+                );
+
+                expect(result).toBe('err:boom');
+            });
+        });
     });
 
     describe('Result behavior', () => {

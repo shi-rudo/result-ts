@@ -146,6 +146,21 @@ const calculate = task(function* () {
 // calculate is a Promise<Result<number, Error>>
 ```
 
+#### Error Handling with `onThrow`
+
+The `task()` function accepts an optional `onThrow` callback for custom error mapping:
+
+```ts
+const result = await task(
+  function* () {
+    const data = yield* fetchData();
+    return process(data);
+  },
+  (error) => new CustomError(`Failed: ${error}`)  // custom error mapping
+);
+// Returns Result<ProcessedData, CustomError>
+```
+
 ### Folding Results
 
 The simplest way to handle both `Ok` and `Err` cases and return a single value:
@@ -195,6 +210,19 @@ const message = result
   .run();
 ```
 
+#### Async Pattern Matching
+
+For async handlers, use `matchAsync`:
+
+```ts
+import { matchAsync } from "@shirudo/result";
+
+const result = await matchAsync({
+  ok: async (val) => `Success: ${val}`,
+  err: async (e) => `Error: ${e}`
+})(someResult);
+```
+
 **When to use what:**
 
 - Use `.fold()` for simple cases where you handle both Ok and Err
@@ -208,6 +236,8 @@ const message = result
 ### Creation & Conversions
 
 - `ok(value)` / `err(error)`: Create basic instances.
+- `okIf(condition, okValue, errValue)`: Conditionally create `Ok` or `Err`.
+- `okIfLazy(condition, okFn, errFn)`: Lazy conditional creation.
 - `Result.try(fn)`: Execute a sync function; catches exceptions as `Err`.
 - `Result.fromNullable(val, fallback)`: Convert `null | undefined` to `Err`.
 - `Result.fromPromise(promise)`: Convert a Promise to `Promise<Result>`.
@@ -222,12 +252,41 @@ const message = result
 - `.unwrapErr()`: Get error or throw (use carefully).
 - `.unwrapOr(default)`: Get value or return default.
 - `.unwrapOrElse(fn)`: Get value or generate default from error.
+- `.unwrapOrThrow()`: Get value or throw original error (preserves stack trace).
 - `.expect(msg)`: Get value or throw with specific message.
 - `.expectErr(msg)`: Get error or throw with specific message.
 - `.fold(onOk, onErr)`: Handle both cases and return a single value.
 - `.pipe(...)`: Chain operators synchronously.
 - `.pipeAsync(...)`: Chain operators asynchronously.
-- `.match()`: Start a fluent pattern matching builder.
+- `.match()`: Start a fluent pattern matching builder (Err only).
+- `.matchErr()`: Pattern matching builder for Err cases.
+- `.serialize()`: Convert to `{ isSuccess, data?, error? }`.
+- `.toUserFriendly()`: User-friendly serialization with error messages.
+
+### Utilities
+
+Type guards and helper functions:
+
+- `isResult(value)`: Type guard to check if a value is a `Result`.
+- `contains(result, value)`: Check if `Ok` contains a specific value.
+- `containsErr(result, error)`: Check if `Err` contains a specific error.
+- `fromResult(fn)`: Execute a function, catching exceptions (Rust `Result::from`).
+
+```ts
+import { isResult, contains, containsErr, fromResult, ok, err } from "@shirudo/result";
+
+isResult(ok(5)); // true
+isResult("not a result"); // false
+
+const result = ok(42);
+contains(result, 42); // true
+contains(result, 100); // false
+
+const errResult = err("not found");
+containsErr(errResult, "not found"); // true
+
+const wrapped = fromResult(() => JSON.parse('{"valid": true}'));
+```
 
 ### Pipeable Operators
 
@@ -248,11 +307,50 @@ Import these from the root package to use inside `.pipe()`.
 
 **Async Variants:** `mapAsync`, `mapErrAsync`, `flatMapAsync`, `filterAsync`, `tapAsync`, `tryCatchAsync`, `tryMapAsync`, `foldAsync`.
 
+### Combinators
+
+Combinators (inspired by Rust) for composing and transforming Results:
+
+| Combinator | Description |
+| :--------- | :---------- |
+| `and(r1, r2)` | Short-circuit AND: returns `r2` only if `r1` is `Ok` |
+| `or(r1, r2)` | Returns `r1` if `Ok`, otherwise `r2` |
+| `orElse(r, fn)` | Returns `r` if `Ok`, otherwise calls `fn(error)` |
+| `mapOr(r, default, fn)` | Maps `Ok` value or returns `default` |
+| `mapOrElse(r, defaultFn, fn)` | Maps `Ok` value or computes `default` from error |
+| `swap(r)` | Swaps Ok and Err: `Result<T, E>` → `Result<E, T>` |
+
+```ts
+import { and, or, orElse, mapOr, mapOrElse, swap, ok, err } from "@shirudo/result";
+
+const a = ok(5);
+const b = ok(10);
+
+// and: returns b only if a is Ok
+and(a, b); // Ok(10)
+
+// or: returns first Ok, otherwise fallback
+or(err("fallback"), ok("success")); // Ok("success")
+
+// orElse: lazy fallback with error context
+orElse(err("error"), (e) => ok(`recovered: ${e}`)); // Ok("recovered: error")
+
+// mapOr: map or use default
+mapOr(ok(5), 0, (n) => n * 2); // 10
+mapOr(err("x"), 0, (n) => n * 2); // 0
+
+// swap: interchange Ok and Err
+swap(ok("value")); // Err("value")
+swap(err("error")); // Ok("error")
+```
+
 ### Collections
 
 - `sequence(results)`: Turn `Result[]` into `Result<T[]>`. First error stops the process.
 - `sequenceRecord(record)`: Like `sequence`, but for objects (`{ a: Result, b: Result }` → `Result<{ a, b }>`).
 - `collectFirstOk(results)`: Find the first success, or return all errors.
+- `collectFirstOkAsync(results)`: Async version - find the first success.
+- `collectFirstOkRaceAsync(results)`: Race variant - first success wins, all rejections continue.
 - `collectAllErrors(results)`: Returns `Ok(values)` only if all are Ok, otherwise collects _all_ errors.
 - `partition(results)`: Separate a list into arrays of `[oks, errs]`.
 - `flatten(result)`: Flattens a nested `Result<Result<T, E>, E>` into `Result<T, E>`.
