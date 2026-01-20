@@ -5,8 +5,7 @@
  * recoverWith: like recover, but the default value is derived from the error
  */
 
-import { Result, ok, err } from '../result';
-import { recover, recoverWith } from '../operators/recover';
+import { err, map, ok, recover, recoverWith, type Result } from '../index';
 
 // ============================================================================
 // Example 1: Simple fallback with recover
@@ -87,7 +86,6 @@ console.log('Port:', config.unwrapOr({ port: 8080 }).port); // 3000
 // Example 4: Chaining with other operators
 // ============================================================================
 
-import { map } from '../operators/map';
 
 function divide(a: number, b: number): Result<number, string> {
     if (b === 0) return err('Division by zero');

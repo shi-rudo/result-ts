@@ -5,7 +5,7 @@
  * Result instances from various sources.
  */
 
-import { Result } from '../result';
+import { Result, flatMap, map, recover, tryFn } from '../index';
 
 // ============================================================================
 // 1. Result.try() - catch exceptions
@@ -96,7 +96,6 @@ console.log('Mapped error:', asyncUser2.error); // 'Failed to fetch user: Error:
 
 console.log('\n=== Combine with operators ===\n');
 
-import { map, flatMap, recover } from '../index';
 
 // Try + map chain
 const parseAndDouble = (input: string) =>
@@ -104,7 +103,7 @@ const parseAndDouble = (input: string) =>
         .pipe(
             map((obj: any) => obj.value),
             map((n: number) => n * 2),
-            recover(() => 0) // Fallback on error
+            recover(0) // Fallback on error
         );
 
 console.log('Parse and double "{"value": 5}":', parseAndDouble('{"value": 5}').value); // 10
@@ -129,7 +128,7 @@ console.log('Get email for user 99:', getUserEmail(99).error); // 'User not foun
 const fetchWithFallback = async (id: number) =>
     (await Result.fromPromise(fetchUser(id)))
         .pipe(
-            recover(() => ({ id: 0, name: 'Guest' }))
+            recover({ id: 0, name: 'Guest' })
         );
 
 console.log('Fetch with fallback (1):', (await fetchWithFallback(1)).value); // { id: 1, name: 'Alice' }
@@ -191,7 +190,6 @@ console.log('Invalid age:', validateForm({
 
 console.log('\n=== Static Methods vs. Standalone Functions ===\n');
 
-import { tryFn, fromNullable as fromNullableFn, fromPromise as fromPromiseFn } from '../index';
 
 // Both variants work the same:
 

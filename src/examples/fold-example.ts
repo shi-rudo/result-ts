@@ -1,4 +1,4 @@
-import { Result, ok, err } from '../index';
+import { err, fold, ok, type Result } from '../index';
 
 // Example 1: Simple fold with string output
 function processNumber(value: number): Result<number, string> {
@@ -25,8 +25,8 @@ console.log(message2); // "Error: Negative numbers are not allowed"
 // Example 2: Fold with side effects (like console.log)
 const result3 = processNumber(10);
 result3.fold(
-    val => console.log("Yay:", val),
-    err => console.error("Nay:", err)
+    val => console.log('Yay:', val),
+    err => console.error('Nay:', err)
 );
 
 // Example 3: Fold to convert to HTTP response
@@ -65,7 +65,6 @@ const userDisplay = userResult.fold(
 console.log(userDisplay); // "User: Alice (ID: 1)"
 
 // Example 5: Fold method vs fold pipe operator
-import { fold } from '../operators/fold';
 
 // Using fold (direct method)
 const foldMethodResult = result1.fold(
@@ -82,4 +81,3 @@ const foldPipeResult = result1.pipe(
 );
 
 console.log(foldMethodResult === foldPipeResult); // true
-

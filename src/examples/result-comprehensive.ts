@@ -5,25 +5,32 @@
  * for working with Result<T, E>.
  */
 
-import { Result, ok, err, okIf, okIfLazy } from '../result';
-import { task } from '../gen';
-import { map } from '../operators/map';
-import { mapErr } from '../operators/mapErr';
-import { flatMap } from '../operators/flatMap';
-import { filter } from '../operators/filter';
-import { tap } from '../operators/tap';
-import { recover, recoverWith } from '../operators/recover';
-import { tryCatch } from '../operators/tryCatch';
-import { tryMap } from '../operators/tryMap';
-import { mapAsync } from '../operators-async/mapAsync';
-import { flatMapAsync } from '../operators-async/flatMapAsync';
-import { tryCatchAsync } from '../operators-async/tryCatchAsync';
-import { fromPromise } from '../conversions/fromPromise';
-import { fromNullable } from '../conversions/fromNullable';
-import { toPromise } from '../conversions/toPromise';
-import { sequence } from '../collections/sequence';
-import { collectFirstOk } from '../collections/collectFirstOk';
-import { zip } from '../combinators/zip';
+import {
+    collectFirstOk,
+    err,
+    filter,
+    flatMap,
+    flatMapAsync,
+    fromNullable,
+    fromPromise,
+    map,
+    mapAsync,
+    mapErr,
+    ok,
+    okIf,
+    okIfLazy,
+    recover,
+    recoverWith,
+    sequence,
+    tap,
+    task,
+    toPromise,
+    tryCatch,
+    tryCatchAsync,
+    tryMap,
+    zip,
+    type Result,
+} from '../index';
 
 // =============================================================================
 // 1. BASICS: create Result
@@ -483,11 +490,14 @@ const processData = (input: string) => {
         map((s) => s.trim().toLowerCase()),
 
         // Parsing with error handling
-        tryMap((s) => {
-            const num = parseInt(s, 10);
-            if (isNaN(num)) throw new Error('Not a number');
-            return num;
-        }),
+        tryMap(
+            (s) => {
+                const num = parseInt(s, 10);
+                if (isNaN(num)) throw new Error('Not a number');
+                return num;
+            },
+            (error) => (error instanceof Error ? error.message : String(error))
+        ),
 
         // Business logic
         flatMap((n) => okIf(n >= 0, n, 'Number must be non-negative')),

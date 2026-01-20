@@ -1,6 +1,6 @@
-import type { Result } from './result';
-import { err, ok } from './result';
-import { isResult } from './utils/isResult';
+import type { Result } from './core/result';
+import { err, ok } from './core/result';
+import { isResult } from './core/isResult';
 
 type AnyGenerator = Generator<any, any, unknown> | AsyncGenerator<any, any, unknown>;
 

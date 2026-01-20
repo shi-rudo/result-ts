@@ -38,6 +38,7 @@ export type AsyncOperatorFunction<T, E, R> = (input: Result<T, E>) => Promise<R>
 export type ResultType<T, E> = { readonly _tag: 'Ok'; readonly value: T } | { readonly _tag: 'Err'; readonly error: E };
 
 export type Result<T, E> = Ok<T, E> | Err<T, E>;
+type OkValue<R> = R extends { readonly _tag: 'Ok'; readonly value: infer T } ? T : never;
 
 abstract class ResultBase extends Pipeable {
     abstract readonly _tag: 'Ok' | 'Err';
@@ -55,6 +56,26 @@ abstract class ResultBase extends Pipeable {
 
     unwrapOr<T, E>(this: Result<T, E>, defaultValue: T): T {
         return this._tag === 'Ok' ? this.value : defaultValue;
+    }
+
+    /**
+     * Folds the Result into a single value by applying one of two functions.
+     */
+    fold<T, E, R1, R2 = R1>(this: Result<T, E>, onOk: (value: T) => R1, onErr: (error: E) => R2): R1 | R2 {
+        if (this._tag === 'Ok') return onOk(this.value);
+        if (this._tag === 'Err') return onErr(this.error);
+        throw new Error('Unreachable: Result is neither Ok nor Err');
+    }
+
+    /**
+     * Enables `yield* result` in generators (Do-notation).
+     *
+     * The iterator yields the `Result` itself; the runner (see `task`) decides:
+     * - Ok  → sends back the Ok value (`next(value)`), `yield*` yields `T`
+     * - Err → aborts and returns the Err Result
+     */
+    *[Symbol.iterator](): Generator<unknown, OkValue<this>, unknown> {
+        return (yield this) as OkValue<this>;
     }
 
     /**
@@ -126,15 +147,58 @@ export class Err<T = never, E = never> extends ResultBase {
     }
 }
 
-export function ok<T, E = never>(value: T): Result<T, E> {
-    return new Ok<T, E>(value);
+export function ok(): Result<void, never>;
+export function ok<T, E = never>(value: T): Result<T, E>;
+export function ok<T, E = never>(value?: T): Result<T, E> {
+    return new Ok<T, E>(value as T);
 }
 
 export function err<E, T = never>(error: E): Result<T, E> {
     return new Err<T, E>(error);
 }
 
+export function okIf<T, E>(condition: boolean, okValue: T, errValue: E): Result<T, E> {
+    return condition ? ok<T, E>(okValue) : err<E, T>(errValue);
+}
+
+export function okIfLazy<T, E>(condition: boolean, okFn: () => T, errFn: () => E): Result<T, E> {
+    return condition ? ok<T, E>(okFn()) : err<E, T>(errFn());
+}
+
+export function fromNullable<T, E>(value: T, error: E): Result<NonNullable<T>, E> {
+    if (value === null || value === undefined) {
+        return err<E, NonNullable<T>>(error);
+    }
+    return ok<NonNullable<T>, E>(value as NonNullable<T>);
+}
+
+export function fromPromise<T>(promise: Promise<T>): Promise<Result<T, unknown>>;
+export function fromPromise<T, E>(promise: Promise<T>, errorMapper?: (error: unknown) => E): Promise<Result<T, E>>;
+export async function fromPromise<T, E>(promise: Promise<T>, errorMapper?: (error: unknown) => E): Promise<Result<T, E>> {
+    try {
+        const value = await promise;
+        return ok(value);
+    } catch (error) {
+        try {
+            return err(errorMapper ? errorMapper(error) : (error as E));
+        } catch (mapperError) {
+            return err(mapperError as E);
+        }
+    }
+}
+
+export function tryFn<T>(fn: () => T): Result<T, unknown> {
+    try {
+        return ok(fn());
+    } catch (error) {
+        return err(error);
+    }
+}
+
 export const Result = {
     ok,
     err,
+    fromNullable,
+    fromPromise,
+    try: tryFn,
 };
