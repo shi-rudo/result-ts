@@ -464,3 +464,4 @@ secrets/
 *.map
 source-map-resolve-*.json
 build/
+src/examples/
