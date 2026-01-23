@@ -2,29 +2,15 @@ import type { Result } from './core/result';
 import { err, ok } from './core/result';
 import { isResult } from './core/isResult';
 
-type AnyGenerator = Generator<any, any, unknown> | AsyncGenerator<any, any, unknown>;
-
-type YieldOf<G> = G extends Generator<infer Y, any, any>
-    ? Y
-    : G extends AsyncGenerator<infer Y, any, any>
-    ? Y
-    : never;
-
-type ReturnOf<G> = G extends Generator<any, infer R, any>
-    ? R
-    : G extends AsyncGenerator<any, infer R, any>
-    ? R
-    : never;
+type AnyGenerator<Y = unknown, R = unknown, N = unknown> = Generator<Y, R, N> | AsyncGenerator<Y, R, N>;
 
 type ErrorOfYield<Y> = Y extends Result<any, infer E> ? E : never;
 
-type ErrorOfGenerator<G> = ErrorOfYield<YieldOf<G>>;
-
 type OnThrow<E> = (error: unknown) => E;
 
-type AwaitedReturnOf<G> = Awaited<ReturnOf<G>>;
-type OkOfReturn<G> = AwaitedReturnOf<G> extends Result<infer T, any> ? T : AwaitedReturnOf<G>;
-type ErrOfReturn<G> = AwaitedReturnOf<G> extends Result<any, infer E> ? E : never;
+type AwaitedReturn<R> = Awaited<R>;
+type OkOfReturn<R> = AwaitedReturn<R> extends Result<infer T, any> ? T : AwaitedReturn<R>;
+type ErrOfReturn<R> = AwaitedReturn<R> extends Result<any, infer E> ? E : never;
 
 /**
  * Generator-based do-notation for `Result`.
@@ -38,39 +24,39 @@ type ErrOfReturn<G> = AwaitedReturnOf<G> extends Result<any, infer E> ? E : neve
  * });
  * ```
  */
-export async function task<const G extends AnyGenerator>(
-    makeGenerator: () => G
-): Promise<Result<OkOfReturn<G>, ErrorOfGenerator<G> | ErrOfReturn<G>>>;
-export async function task<const G extends AnyGenerator, EThrown>(
-    makeGenerator: () => G,
+export async function task<const Y, const R>(
+    makeGenerator: () => AnyGenerator<Y, R, unknown>
+): Promise<Result<OkOfReturn<R>, ErrorOfYield<Y> | ErrOfReturn<R>>>;
+export async function task<const Y, const R, EThrown>(
+    makeGenerator: () => AnyGenerator<Y, R, unknown>,
     onThrow: OnThrow<EThrown>
-): Promise<Result<OkOfReturn<G>, ErrorOfGenerator<G> | ErrOfReturn<G> | EThrown>>;
-export async function task<const G extends AnyGenerator, EThrown>(
-    makeGenerator: () => G,
+): Promise<Result<OkOfReturn<R>, ErrorOfYield<Y> | ErrOfReturn<R> | EThrown>>;
+export async function task<const Y, const R, EThrown>(
+    makeGenerator: () => AnyGenerator<Y, R, unknown>,
     onThrow?: OnThrow<EThrown>
-): Promise<Result<OkOfReturn<G>, ErrorOfGenerator<G> | ErrOfReturn<G> | EThrown>> {
+): Promise<Result<OkOfReturn<R>, ErrorOfYield<Y> | ErrOfReturn<R> | EThrown>> {
     const iterator = makeGenerator();
     let input: unknown = undefined;
 
     while (true) {
-        let step: IteratorResult<Result<any, any>, any>;
+        let step: IteratorResult<Y, R>;
         try {
-            step = await (iterator as any).next(input);
+            step = await iterator.next(input);
         } catch (caught) {
             if (!onThrow) throw caught;
-            return err<ErrorOfGenerator<G> | ErrOfReturn<G> | EThrown, OkOfReturn<G>>(onThrow(caught));
+            return err<ErrorOfYield<Y> | ErrOfReturn<R> | EThrown, OkOfReturn<R>>(onThrow(caught));
         }
 
         if (step.done) {
             try {
-                const awaited = await (step.value as any);
+                const awaited = await step.value;
                 if (isResult(awaited)) {
-                    return awaited as Result<OkOfReturn<G>, ErrorOfGenerator<G> | ErrOfReturn<G> | EThrown>;
+                    return awaited as Result<OkOfReturn<R>, ErrorOfYield<Y> | ErrOfReturn<R> | EThrown>;
                 }
-                return ok<OkOfReturn<G>, ErrorOfGenerator<G> | ErrOfReturn<G> | EThrown>(awaited);
+                return ok<OkOfReturn<R>, ErrorOfYield<Y> | ErrOfReturn<R> | EThrown>(awaited as OkOfReturn<R>);
             } catch (caught) {
                 if (!onThrow) throw caught;
-                return err<ErrorOfGenerator<G> | ErrOfReturn<G> | EThrown, OkOfReturn<G>>(onThrow(caught));
+                return err<ErrorOfYield<Y> | ErrOfReturn<R> | EThrown, OkOfReturn<R>>(onThrow(caught));
             }
         }
 
@@ -86,15 +72,15 @@ export async function task<const G extends AnyGenerator, EThrown>(
 
         if (yielded.isErr()) {
             try {
-                if (typeof (iterator as any).return === 'function') {
-                    await (iterator as any).return(undefined);
+                if (typeof iterator.return === 'function') {
+                    await iterator.return(undefined as unknown as R);
                 }
             } catch (caught) {
                 if (!onThrow) throw caught;
-                return err<ErrorOfGenerator<G> | ErrOfReturn<G> | EThrown, OkOfReturn<G>>(onThrow(caught));
+                return err<ErrorOfYield<Y> | ErrOfReturn<R> | EThrown, OkOfReturn<R>>(onThrow(caught));
             }
 
-            return yielded as Result<OkOfReturn<G>, ErrorOfGenerator<G> | ErrOfReturn<G> | EThrown>;
+            return yielded as Result<OkOfReturn<R>, ErrorOfYield<Y> | ErrOfReturn<R> | EThrown>;
         }
 
         throw new Error('Unreachable: Result is neither Ok nor Err');
