@@ -350,7 +350,7 @@ swap(err("error")); // Ok("error")
 - `sequenceRecord(record)`: Like `sequence`, but for objects (`{ a: Result, b: Result }` → `Result<{ a, b }>`).
 - `collectFirstOk(results)`: Find the first success, or return all errors.
 - `collectFirstOkAsync(results)`: Async version - find the first success.
-- `collectFirstOkRaceAsync(results)`: Race variant - first success wins, all rejections continue.
+- `collectFirstOkParallelAsync(results)`: Parallel variant - first success wins, all rejections continue.
 - `collectAllErrors(results)`: Returns `Ok(values)` only if all are Ok, otherwise collects _all_ errors.
 - `partition(results)`: Separate a list into arrays of `[oks, errs]`.
 - `flatten(result)`: Flattens a nested `Result<Result<T, E>, E>` into `Result<T, E>`.
