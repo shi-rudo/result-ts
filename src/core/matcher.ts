@@ -1,4 +1,5 @@
 import type { Result } from './result';
+import { InvalidResultStateError } from '../errors';
 
 export type Ctor<T> = abstract new (...args: any[]) => T;
 export type TypeGuard<E, A extends E> = (error: E) => error is A;
@@ -101,7 +102,7 @@ export class ErrMatchBuilder<T, E, OutT, OutE> {
     static fromResult<T, E>(result: Result<T, E>, makeErr: ErrFactory): ErrMatchBuilder<T, E, never, never> {
         if (result.isOk()) return new ErrMatchBuilder<T, E, never, never>(makeErr, undefined, result);
         if (result.isErr()) return new ErrMatchBuilder<T, E, never, never>(makeErr, result.error);
-        throw new Error('Unreachable: Result is neither Ok nor Err');
+        throw new InvalidResultStateError('ErrMatchBuilder.fromResult');
     }
 
     when<C extends Ctor<E>, R1>(
@@ -162,4 +163,3 @@ export class ErrMatchBuilder<T, E, OutT, OutE> {
         throw this.#error;
     }
 }
-

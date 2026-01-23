@@ -1,6 +1,7 @@
 import type { Result } from './result';
 import { ok, err } from './result';
 import type { Awaitable } from './pipeable';
+import { InvalidResultStateError } from '../errors';
 
 type CollectFirstOkAsyncInput =
     | Promise<Result<any, any>>
@@ -34,7 +35,7 @@ export async function collectFirstOkAsync<const Inputs extends readonly CollectF
                 errors.push(result.error as ErrValueOfInput<Inputs[number]>);
                 continue;
             }
-            throw new Error('Unreachable: Result is neither Ok nor Err');
+            throw new InvalidResultStateError('collectFirstOkAsync');
         } catch (error) {
             // Wenn das Promise selbst rejected, behandeln wir es als Error
             errors.push(error as ErrValueOfInput<Inputs[number]>);

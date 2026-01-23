@@ -1,6 +1,7 @@
 // Core
 export * from './core/result';
 export * from './gen';
+export * from './errors';
 
 // Pipe Operators (Sync)
 export * from './core/map';

@@ -1,5 +1,6 @@
 import type { Result } from './result';
 import { ok } from './result';
+import { InvalidResultStateError } from '../errors';
 
 type OkValueOf<R> = R extends Result<infer T, any> ? T : never;
 type ErrValueOf<R> = R extends Result<any, infer E> ? E : never;
@@ -24,9 +25,8 @@ export function sequenceRecord<const R extends Record<string, Result<any, any>>>
             continue;
         }
         if (result.isErr()) return result as unknown as Result<Out, E>;
-        throw new Error('Unreachable: Result is neither Ok nor Err');
+        throw new InvalidResultStateError('sequenceRecord');
     }
 
     return ok<Out, E>(out as Out);
 }
-

@@ -1,4 +1,5 @@
 import type { Result } from './result';
+import { InvalidResultStateError, UnwrapErrOnOkError } from '../errors';
 
 /**
  * Gibt den Fehler zurück oder wirft einen Error.
@@ -8,6 +9,6 @@ export function unwrapErr<T, E>(result: Result<T, E>): E {
     if (result.isErr()) {
         return result.error;
     }
-    if (result.isOk()) throw new Error(`Called unwrapErr() on Ok: ${String(result.value)}`);
-    throw new Error('Unreachable: Result is neither Ok nor Err');
+    if (result.isOk()) throw new UnwrapErrOnOkError(result.value);
+    throw new InvalidResultStateError('unwrapErr');
 }

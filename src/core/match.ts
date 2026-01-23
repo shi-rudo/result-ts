@@ -1,4 +1,5 @@
 import type { Result } from './result';
+import { InvalidResultStateError } from '../errors';
 
 /**
  * Löst das Result auf. Das Ende der Pipe.
@@ -10,6 +11,6 @@ export function match<T, E, R>(handlers: { ok: (val: T) => R; err: (e: E) => R }
             return handlers.ok(source.value);
         }
         if (source.isErr()) return handlers.err(source.error);
-        throw new Error('Unreachable: Result is neither Ok nor Err');
+        throw new InvalidResultStateError('match');
     };
 }

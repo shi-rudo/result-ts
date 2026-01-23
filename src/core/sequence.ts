@@ -1,5 +1,6 @@
 import type { Result } from './result';
 import { ok } from './result';
+import { InvalidResultStateError } from '../errors';
 
 /**
  * Kombiniert eine Liste von Results zu einem Result einer Liste.
@@ -15,7 +16,7 @@ export function sequence<T, E>(results: readonly Result<T, E>[]): Result<T[], E>
             continue;
         }
         if (result.isErr()) return result as unknown as Result<T[], E>;
-        throw new Error('Unreachable: Result is neither Ok nor Err');
+        throw new InvalidResultStateError('sequence');
     }
 
     return ok(values);

@@ -263,6 +263,8 @@ const result = await matchAsync({
 - `.serialize()`: Convert to `{ isSuccess, data?, error? }`.
 - `.toUserFriendly()`: User-friendly serialization with error messages.
 
+**Error types:** Methods that throw (e.g., `.unwrap()`, `.unwrapErr()`, `.expect()`, `.expectErr()`, and invalid-state checks) now use custom error classes with stable `code` values like `ERR_UNWRAP_ON_ERR` and `ERR_INVALID_STATE`. These classes and constants are exported from the package for programmatic handling.
+
 ### Utilities
 
 Type guards and helper functions:

@@ -1,4 +1,5 @@
 import type { Result } from './result';
+import { InvalidResultStateError } from '../errors';
 
 /**
  * Async-Version von match.
@@ -9,6 +10,6 @@ export function matchAsync<T, E, R>(handlers: { ok: (val: T) => Promise<R>; err:
             return await handlers.ok(source.value);
         }
         if (source.isErr()) return await handlers.err(source.error);
-        throw new Error('Unreachable: Result is neither Ok nor Err');
+        throw new InvalidResultStateError('matchAsync');
     };
 }

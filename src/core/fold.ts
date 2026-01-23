@@ -1,4 +1,5 @@
 import type { Result } from './result';
+import { InvalidResultStateError } from '../errors';
 
 /**
  * Folds the Result into a single value by applying one of two functions.
@@ -12,6 +13,6 @@ export function fold<T, E, R>(handlers: { ok: (val: T) => R; err: (e: E) => R })
             return handlers.ok(source.value);
         }
         if (source.isErr()) return handlers.err(source.error);
-        throw new Error('Unreachable: Result is neither Ok nor Err');
+        throw new InvalidResultStateError('fold');
     };
 }

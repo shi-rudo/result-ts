@@ -1,4 +1,5 @@
 import type { Result } from './result';
+import { InvalidResultStateError } from '../errors';
 
 /**
  * Async version of `fold`. Folds the Result into a single value asynchronously.
@@ -12,6 +13,6 @@ export function foldAsync<T, E, R>(handlers: { ok: (val: T) => Promise<R>; err: 
             return await handlers.ok(source.value);
         }
         if (source.isErr()) return await handlers.err(source.error);
-        throw new Error('Unreachable: Result is neither Ok nor Err');
+        throw new InvalidResultStateError('foldAsync');
     };
 }

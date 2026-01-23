@@ -1,5 +1,6 @@
 import type { Result } from './result';
 import { err, ok } from './result';
+import { InvalidResultStateError } from '../errors';
 
 /**
  * Tauscht Ok und Err.
@@ -12,6 +13,5 @@ export function swap<T, E>(result: Result<T, E>): Result<E, T> {
     if (result.isErr()) {
         return ok<E, T>(result.error);
     }
-    throw new Error('Unreachable: Result is neither Ok nor Err');
+    throw new InvalidResultStateError('swap');
 }
-

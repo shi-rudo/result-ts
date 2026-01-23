@@ -1,11 +1,12 @@
 import type { Result } from './result';
+import { InvalidResultStateError } from '../errors';
 import { err, ok } from './result';
 
 function zipImpl<A, AE, B, BE>(left: Result<A, AE>, right: Result<B, BE>): Result<[A, B], AE | BE> {
     if (left.isErr()) return left as unknown as Result<[A, B], AE | BE>;
     if (right.isErr()) return right as unknown as Result<[A, B], AE | BE>;
     if (left.isOk() && right.isOk()) return ok<[A, B], AE | BE>([left.value, right.value]);
-    throw new Error('Unreachable: Result is neither Ok nor Err');
+    throw new InvalidResultStateError('zip');
 }
 
 /**

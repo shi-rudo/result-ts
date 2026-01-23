@@ -1,5 +1,6 @@
 import type { Result } from './result';
 import { err, ok } from './result';
+import { InvalidResultStateError } from '../errors';
 
 /**
  * Transformiert sowohl den Ok-Wert als auch den Err-Fehler.
@@ -13,7 +14,7 @@ export function mapBoth<T, E, U, F>(mapOk: (value: T) => U, mapErr: (error: E) =
         if (source.isErr()) {
             return err<F, U>(mapErr(source.error));
         }
-        throw new Error('Unreachable: Result is neither Ok nor Err');
+        throw new InvalidResultStateError('mapBoth');
     };
 }
 
@@ -21,4 +22,3 @@ export function mapBoth<T, E, U, F>(mapOk: (value: T) => U, mapErr: (error: E) =
  * Alias für `mapBoth`.
  */
 export const bimap = mapBoth;
-

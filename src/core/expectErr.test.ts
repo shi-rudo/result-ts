@@ -2,6 +2,7 @@ import { describe, expect, it } from 'vitest';
 
 import { err, ok } from './result';
 import { expectErr } from './expectErr';
+import { ERR_EXPECT_ERR, ExpectErrError } from '../errors';
 
 describe('expectErr', () => {
     it('gibt Error bei Err zurück', () => {
@@ -9,7 +10,15 @@ describe('expectErr', () => {
     });
 
     it('wirft Error bei Ok mit custom Nachricht', () => {
-        expect(() => expectErr(ok(42), 'expected err')).toThrow('expected err');
+        let caughtError: unknown;
+        try {
+            expectErr(ok(42), 'expected err');
+        } catch (error) {
+            caughtError = error;
+        }
+
+        expect(caughtError).toBeInstanceOf(ExpectErrError);
+        expect((caughtError as ExpectErrError).code).toBe(ERR_EXPECT_ERR);
+        expect((caughtError as ExpectErrError).message).toContain('expected err');
     });
 });
-

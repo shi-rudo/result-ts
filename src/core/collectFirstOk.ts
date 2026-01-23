@@ -1,5 +1,6 @@
 import type { Result } from './result';
 import { ok, err } from './result';
+import { InvalidResultStateError } from '../errors';
 
 type OkValueOf<R> = R extends Result<infer T, any> ? T : never;
 type ErrValueOf<R> = R extends Result<any, infer E> ? E : never;
@@ -24,7 +25,7 @@ export function collectFirstOk<const Results extends readonly Result<any, any>[]
             errors.push(result.error as ErrValueOf<Results[number]>);
             continue;
         }
-        throw new Error('Unreachable: Result is neither Ok nor Err');
+        throw new InvalidResultStateError('collectFirstOk');
     }
 
     return err<ErrValueOf<Results[number]>[], OkValueOf<Results[number]>>(errors);

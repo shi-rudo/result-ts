@@ -1,5 +1,6 @@
 import type { Result } from './result';
 import { ok, err } from './result';
+import { InvalidResultStateError } from '../errors';
 
 /**
  * Kombiniert eine Liste von Results.
@@ -18,7 +19,7 @@ export function collectAllErrors<T, E>(results: readonly Result<T, E>[]): Result
             errors.push(result.error);
             continue;
         }
-        throw new Error('Unreachable: Result is neither Ok nor Err');
+        throw new InvalidResultStateError('collectAllErrors');
     }
 
     return errors.length === 0 ? ok(values) : err<E[], T[]>(errors);

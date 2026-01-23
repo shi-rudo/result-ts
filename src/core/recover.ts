@@ -1,5 +1,6 @@
 import type { Result } from './result';
 import { ok } from './result';
+import { InvalidResultStateError } from '../errors';
 
 /**
  * Recover: wandelt Err in Ok(defaultValue) um.
@@ -9,7 +10,7 @@ export function recover<T, E, F>(defaultValue: F) {
     return (source: Result<T, E>): Result<T | F, never> => {
         if (source.isOk()) return source as unknown as Result<T | F, never>;
         if (source.isErr()) return ok(defaultValue);
-        throw new Error('Unreachable: Result is neither Ok nor Err');
+        throw new InvalidResultStateError('recover');
     };
 }
 
@@ -20,6 +21,6 @@ export function recoverWith<T, E, F>(fn: (error: E) => F) {
     return (source: Result<T, E>): Result<T | F, never> => {
         if (source.isOk()) return source as unknown as Result<T | F, never>;
         if (source.isErr()) return ok(fn(source.error));
-        throw new Error('Unreachable: Result is neither Ok nor Err');
+        throw new InvalidResultStateError('recoverWith');
     };
 }

@@ -1,6 +1,7 @@
 import type { Result } from './core/result';
 import { err, ok } from './core/result';
 import { isResult } from './core/isResult';
+import { InvalidResultStateError, TaskYieldNotResultError } from './errors';
 
 type AnyGenerator<Y = unknown, R = unknown, N = unknown> = Generator<Y, R, N> | AsyncGenerator<Y, R, N>;
 
@@ -62,7 +63,7 @@ export async function task<const Y, const R, EThrown>(
 
         const yielded = step.value as unknown;
         if (!isResult(yielded)) {
-            throw new TypeError('task() expected yielded values to be Result. Use `yield*` on a Result.');
+            throw new TaskYieldNotResultError(yielded);
         }
 
         if (yielded.isOk()) {
@@ -83,7 +84,7 @@ export async function task<const Y, const R, EThrown>(
             return yielded as Result<OkOfReturn<R>, ErrorOfYield<Y> | ErrOfReturn<R> | EThrown>;
         }
 
-        throw new Error('Unreachable: Result is neither Ok nor Err');
+        throw new InvalidResultStateError('task');
     }
 }
 

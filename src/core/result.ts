@@ -1,5 +1,6 @@
 import { Pipeable } from './pipeable';
 import { ErrMatchBuilder, ErrorMatchBuilder } from './matcher';
+import { InvalidResultStateError, MatchOnOkError } from '../errors';
 
 // Re-export pipe operators for convenience
 export { map } from './map';
@@ -64,7 +65,7 @@ abstract class ResultBase extends Pipeable {
     fold<T, E, R1, R2 = R1>(this: Result<T, E>, onOk: (value: T) => R1, onErr: (error: E) => R2): R1 | R2 {
         if (this._tag === 'Ok') return onOk(this.value);
         if (this._tag === 'Err') return onErr(this.error);
-        throw new Error('Unreachable: Result is neither Ok nor Err');
+        throw new InvalidResultStateError('Result.fold');
     }
 
     /**
@@ -86,7 +87,7 @@ abstract class ResultBase extends Pipeable {
      */
     match<T, E>(this: Result<T, E>): ErrorMatchBuilder<E, never> {
         if (this._tag === 'Err') return new ErrorMatchBuilder(this.error);
-        throw new Error('match() can only be called on Err results. Use `if (result.isErr()) { ... }` first.');
+        throw new MatchOnOkError();
     }
 
     /**

@@ -1,6 +1,7 @@
 import type { Awaitable } from './pipeable';
 import type { Result } from './result';
 import { err, ok } from './result';
+import { InvalidResultStateError } from '../errors';
 
 type CollectFirstOkAsyncInput = Promise<Result<any, any>> | (() => Awaitable<Result<any, any>>);
 
@@ -55,7 +56,7 @@ export async function collectFirstOkParallelAsync<const Inputs extends readonly 
                 if (result.isErr()) {
                     errors.push(result.error as ErrValue);
                 } else if (!result.isOk()) {
-                    errors.push(new Error('Unreachable: Result is neither Ok nor Err') as ErrValue);
+                    errors.push(new InvalidResultStateError('collectFirstOkParallelAsync') as ErrValue);
                 }
             } else {
                 errors.push(entry.reason as ErrValue);

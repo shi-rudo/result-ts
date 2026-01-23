@@ -3,6 +3,12 @@ import { describe, expect, it } from 'vitest';
 import type { Result } from './index';
 import { err, ok, Result as ResultClass } from './index';
 import { task } from './gen';
+import {
+    ERR_INVALID_STATE,
+    ERR_TASK_YIELD_NOT_RESULT,
+    InvalidResultStateError,
+    TaskYieldNotResultError,
+} from './errors';
 
 describe('task/gen (Do-Notation)', () => {
     describe('Basic functionality', () => {
@@ -367,18 +373,21 @@ describe('task/gen (Do-Notation)', () => {
             }
         });
 
-        it('throws TypeError when yielding non-Result value', async () => {
-            await expect(
-                task(function* () {
+        it('throws TaskYieldNotResultError when yielding non-Result value', async () => {
+            let caughtError: unknown;
+            try {
+                await task(function* () {
                     yield 42; // Not a Result!
-                })
-            ).rejects.toThrow(TypeError);
-            
-            await expect(
-                task(function* () {
-                    yield 42; // Not a Result!
-                })
-            ).rejects.toThrow('task() expected yielded values to be Result. Use `yield*` on a Result.');
+                });
+            } catch (error) {
+                caughtError = error;
+            }
+
+            expect(caughtError).toBeInstanceOf(TaskYieldNotResultError);
+            expect((caughtError as TaskYieldNotResultError).code).toBe(ERR_TASK_YIELD_NOT_RESULT);
+            expect((caughtError as TaskYieldNotResultError).message).toContain(
+                'task() expected yielded values to be Result. Use `yield*` on a Result.'
+            );
         });
 
         it('handles iterator.return() throwing with onThrow', async () => {
@@ -475,11 +484,18 @@ describe('task/gen (Do-Notation)', () => {
             } as unknown as Result<number, string>;
 
             // Create a generator that yields this malformed result
-            await expect(
-                task(function* () {
+            let caughtError: unknown;
+            try {
+                await task(function* () {
                     yield malformedResult as any;
-                })
-            ).rejects.toThrow('Unreachable: Result is neither Ok nor Err');
+                });
+            } catch (error) {
+                caughtError = error;
+            }
+
+            expect(caughtError).toBeInstanceOf(InvalidResultStateError);
+            expect((caughtError as InvalidResultStateError).code).toBe(ERR_INVALID_STATE);
+            expect((caughtError as InvalidResultStateError).message).toContain('Unreachable: Result is neither Ok nor Err');
         });
 
         it('handles iterator without return() method', async () => {

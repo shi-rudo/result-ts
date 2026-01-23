@@ -1,4 +1,5 @@
 import type { Result } from './result';
+import { InvalidResultStateError } from '../errors';
 
 /**
  * Gibt den Wert zurück oder berechnet einen Default-Wert mit einer Funktion.
@@ -7,5 +8,5 @@ import type { Result } from './result';
 export function unwrapOrElse<T, E>(result: Result<T, E>, fn: (error: E) => T): T {
     if (result.isOk()) return result.value;
     if (result.isErr()) return fn(result.error);
-    throw new Error('Unreachable: Result is neither Ok nor Err');
+    throw new InvalidResultStateError('unwrapOrElse');
 }

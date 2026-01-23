@@ -1,5 +1,6 @@
 import type { Result } from './result';
 import { ok, err } from './result';
+import { InvalidResultStateError } from '../errors';
 
 /**
  * Async-Version von tryMap.
@@ -15,7 +16,7 @@ export function tryMapAsync<T, E, U, F = unknown>(
 
         try {
             if (source.isOk()) return ok<U, E | F>(await project(source.value));
-            throw new Error('Unreachable: Result is neither Ok nor Err');
+            throw new InvalidResultStateError('tryMapAsync');
         } catch (error) {
             return err<E | F, U>(errorMapper ? errorMapper(error) : error as F);
         }
