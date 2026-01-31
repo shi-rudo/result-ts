@@ -3,8 +3,8 @@ import { ok, err } from './result';
 import { InvalidResultStateError } from '../errors';
 
 /**
- * Kombiniert eine Liste von Results.
- * Gibt Ok(values) nur zurück wenn alle Ok sind, sonst Err([errors]).
+ * Combines a list of Results.
+ * Return Ok(values) only if all are Ok, otherwise Err([errors]).
  */
 export function collectAllErrors<T, E>(results: readonly Result<T, E>[]): Result<T[], E[]> {
     const values: T[] = [];

@@ -2,8 +2,8 @@ import type { Result } from './result';
 import { err } from './result';
 
 /**
- * Prüft eine Bedingung. Wenn falsch, wird das Result zu Err.
- * Entspricht Rust `filter` (teilweise).
+ * Checks a condition. If false, the Result becomes Err.
+ * Corresponds to Rust `filter` (partially).
  */
 export function filter<T, E>(predicate: (val: T) => boolean, errorFn: () => E) {
     return (source: Result<T, E>): Result<T, E> => {

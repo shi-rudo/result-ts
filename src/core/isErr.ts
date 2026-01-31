@@ -1,8 +1,8 @@
 import type { Err, Result } from './result';
 
 /**
- * Prüft ob ein Result Err ist.
- * Pure function Alternative zur Instanz-Methode.
+ * Checks if a Result is Err.
+ * Pure function alternative to the instance method.
  */
 export function isErr<T, E>(result: Result<T, E>): result is Err<T, E> {
     return result.isErr();

@@ -6,8 +6,8 @@ type OkValueOf<R> = R extends Result<infer T, any> ? T : never;
 type ErrValueOf<R> = R extends Result<any, infer E> ? E : never;
 
 /**
- * Wie `sequence`, aber für Records/Objekte.
- * Short-circuits beim ersten Err.
+ * Like `sequence`, but for Records/Objects.
+ * Short-circuits on the first Err.
  */
 export function sequenceRecord<const R extends Record<string, Result<any, any>>>(
     record: R

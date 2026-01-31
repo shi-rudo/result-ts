@@ -5,11 +5,11 @@ export type Ctor<T> = abstract new (...args: any[]) => T;
 export type TypeGuard<E, A extends E> = (error: E) => error is A;
 
 /**
- * Matcher für Err-Values (liefert einen beliebigen Return-Type, z.B. string messages).
+ * Matcher for Err values (returns an arbitrary return type, e.g. string messages).
  *
- * - `.when(Ctor, handler)` matched via `instanceof`
- * - `.whenGuard(guard, handler)` matched via Type-Guard
- * - `.run()` ist nur erlaubt, wenn alle Error-Cases behandelt wurden (`E` wurde zu `never` reduziert)
+ * - `.when(Ctor, handler)` matches via `instanceof`
+ * - `.whenGuard(guard, handler)` matches via Type-Guard
+ * - `.run()` is only allowed if all error cases have been handled (`E` has been reduced to `never`)
  */
 export class ErrorMatchBuilder<E, R> {
     readonly #error: unknown;
@@ -81,11 +81,11 @@ function isResult(value: unknown): value is Result<any, any> {
 }
 
 /**
- * Matcher für `Result`-Errors, der immer wieder ein `Result` zurückgibt.
+ * Matcher for `Result` Errors, which returns a `Result` again.
  *
- * Handler dürfen:
- * - ein `Result` zurückgeben (wird direkt returned)
- * - einen Error-Wert zurückgeben (wird automatisch zu `Err(error)` gewrappt)
+ * Handlers may:
+ * - return a `Result` (is returned directly)
+ * - return an Error value (is automatically wrapped into `Err(error)`)
  */
 export class ErrMatchBuilder<T, E, OutT, OutE> {
     readonly #makeErr: ErrFactory;

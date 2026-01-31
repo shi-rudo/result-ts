@@ -1,9 +1,9 @@
 import type { Result } from './result';
 
 /**
- * Flacht ein nested Result ab.
+ * Flattens a nested Result.
  * Result<Result<T, E>, E> → Result<T, E>
- * Entspricht Rust `flatten`.
+ * Corresponds to Rust `flatten`.
  */
 export function flatten<T, E>(result: Result<Result<T, E>, E>): Result<T, E> {
     if (result.isOk()) {

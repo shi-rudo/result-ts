@@ -2,8 +2,8 @@ import type { Result } from './result';
 import { InvalidResultStateError, UnwrapErrOnOkError } from '../errors';
 
 /**
- * Gibt den Fehler zurück oder wirft einen Error.
- * Entspricht Rust `unwrap_err`.
+ * Returns the error or throws an Error.
+ * Corresponds to Rust `unwrap_err`.
  */
 export function unwrapErr<T, E>(result: Result<T, E>): E {
     if (result.isErr()) {

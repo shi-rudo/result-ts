@@ -1,8 +1,8 @@
 import type { Result } from './result';
 
 /**
- * Prüft ob das Result einen bestimmten Fehler enthält.
- * Analog zu `contains` für den Err-Fall.
+ * Checks if the Result contains a specific error.
+ * Analogous to `contains` for the Err case.
  */
 export function containsErr<T, E>(result: Result<T, E>, error: E): boolean {
     if (!result.isErr()) return false;

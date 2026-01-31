@@ -2,7 +2,7 @@ import type { Result } from './result';
 import { InvalidResultStateError } from '../errors';
 
 /**
- * Konvertiert ein Result zu einem Promise.
+ * Converts a Result to a Promise.
  * Ok → resolve(value), Err → reject(error)
  */
 export function toPromise<T, E>(result: Result<T, E>): Promise<T> {

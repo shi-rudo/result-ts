@@ -27,9 +27,9 @@ export { matchAsync } from './matchAsync';
 export { tryCatchAsync } from './tryCatchAsync';
 export { tryMapAsync } from './tryMapAsync';
 
-// --- 1. Hilfstypen ---
+// --- 1. Helper Types ---
 
-// Ein Operator ist eine Funktion, die ein Result nimmt und etwas anderes zurückgibt.
+// An operator is a function that takes a Result and returns something else.
 export type OperatorFunction<T, E, R> = (input: Result<T, E>) => R;
 export type { Awaitable } from './pipeable';
 export type AsyncOperatorFunction<T, E, R> = (input: Result<T, E>) => Promise<R>;
@@ -46,7 +46,7 @@ abstract class ResultBase extends Pipeable {
     abstract readonly value: unknown;
     abstract readonly error: unknown;
 
-    // Basic helpers für internen Zugriff in Operatoren
+    // Basic helpers for internal access in operators
     isOk<T, E>(this: Result<T, E>): this is Ok<T, E> {
         return this._tag === 'Ok';
     }
@@ -80,10 +80,10 @@ abstract class ResultBase extends Pipeable {
     }
 
     /**
-     * Matcht auf den Err-Wert via `.when(...)` Kette.
+     * Matches on the Err value via `.when(...)` chain.
      *
-     * Hinweis: aus Type-Safety-Gründen ist `.match()` nur auf einem bereits zu `Err` verengten Result aufrufbar,
-     * z.B. innerhalb von `if (result.isErr()) { ... }`.
+     * Note: for type safety reasons, `.match()` can only be called on a Result already narrowed to `Err`,
+     * e.g. inside `if (result.isErr()) { ... }`.
      */
     match<T, E>(this: Result<T, E>): ErrorMatchBuilder<E, never> {
         if (this._tag === 'Err') return new ErrorMatchBuilder(this.error);
@@ -91,9 +91,9 @@ abstract class ResultBase extends Pipeable {
     }
 
     /**
-     * Matcht auf den Err-Wert, aber normalisiert jeden Branch zu einem `Result`:
-     * - Handler dürfen ein `Result` zurückgeben (wird direkt returned)
-     * - oder einen Error-Wert (wird zu `Err(error)` gewrappt)
+     * Matches on the Err value, but normalizes every branch to a `Result`:
+     * - Handlers may return a `Result` (is returned directly)
+     * - or an Error value (is wrapped into `Err(error)`)
      */
     matchErr<T, E>(this: Result<T, E>): ErrMatchBuilder<T, E, never, never> {
         const makeErr = <ErrValue>(error: ErrValue) => err<ErrValue, never>(error);
@@ -101,8 +101,8 @@ abstract class ResultBase extends Pipeable {
     }
 
     /**
-     * Serialisiert das Result in ein einfaches Objekt-Format.
-     * Behält die ursprünglichen Typen bei.
+     * Serializes the Result into a simple object format.
+     * Preserves the original types.
      */
     serialize<T, E>(this: Result<T, E>): { isSuccess: boolean; data?: T; error?: E } {
         if (this._tag === 'Ok') return { isSuccess: true, data: this.value };
@@ -110,8 +110,8 @@ abstract class ResultBase extends Pipeable {
     }
 
     /**
-     * Serialisiert das Result in ein user-friendly Format.
-     * Konvertiert Errors zu lesbaren Strings.
+     * Serializes the Result into a user-friendly format.
+     * Converts Errors to readable strings.
      */
     toUserFriendly<T, E>(this: Result<T, E>): { isSuccess: boolean; data?: T; error?: string } {
         if (this._tag === 'Ok') return { isSuccess: true, data: this.value };

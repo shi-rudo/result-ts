@@ -5,7 +5,7 @@ type OkValueOf<R> = R extends Result<infer T, any> ? T : never;
 type ErrValueOf<R> = R extends Result<any, infer E> ? E : never;
 
 /**
- * Partitioniert Results in Ok-Werte und Err-Fehler.
+ * Partitions Results into Ok values and Err errors.
  */
 export function partition<const Results extends readonly Result<any, any>[]>(
     results: Results

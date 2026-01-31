@@ -2,9 +2,9 @@ import type { Result } from './result';
 import { ok, err } from './result';
 
 /**
- * Führt eine Funktion aus und fängt Exceptions ab.
- * Wandelt Exceptions in Result<E> um.
- * Entspricht Rust `Result::from` für fallible Operationen.
+ * Executes a function and catches exceptions.
+ * Converts exceptions into Result<E>.
+ * Corresponds to Rust `Result::from` for fallible operations.
  */
 export function tryCatch<T, E = unknown>(fn: () => T, errorMapper?: (error: unknown) => E) {
     return (source: Result<any, any>): Result<T, E> => {

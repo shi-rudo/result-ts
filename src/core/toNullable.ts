@@ -1,7 +1,7 @@
 import type { Result } from './result';
 
 /**
- * Konvertiert ein Result zu `T | null`.
+ * Converts a Result to `T | null`.
  * Ok → value, Err → null
  */
 export function toNullable<T, E>(result: Result<T, E>): T | null {

@@ -2,8 +2,8 @@ import type { Result } from './result';
 import { ok } from './result';
 
 /**
- * Transformiert den Wert (Ok-Fall).
- * Entspricht Rust `map`.
+ * Transforms the value (Ok case).
+ * Corresponds to Rust `map`.
  */
 export function map<T, E, U>(project: (value: T) => U) {
     return (source: Result<T, E>): Result<U, E> => {

@@ -10,8 +10,8 @@ function zipImpl<A, AE, B, BE>(left: Result<A, AE>, right: Result<B, BE>): Resul
 }
 
 /**
- * Kombiniert zwei Results zu einem Result eines Tupels.
- * Short-circuits beim ersten Err (links vor rechts).
+ * Combines two Results into a Result of a tuple.
+ * Short-circuits on the first Err (left before right).
  */
 export function zip<A, AE, B, BE>(left: Result<A, AE>, right: Result<B, BE>): Result<[A, B], AE | BE>;
 export function zip<A, AE, B, BE>(right: Result<B, BE>): (left: Result<A, AE>) => Result<[A, B], AE | BE>;
@@ -40,9 +40,9 @@ function combineImpl<A, AE, B, BE>(
 }
 
 /**
- * Kombiniert zwei Results und sammelt Fehler ein.
- * - Ok nur wenn beide Ok sind
- * - Err([errors]) wenn mindestens ein Err ist (links vor rechts)
+ * Combines two Results and collects errors.
+ * - Ok only if both are Ok
+ * - Err([errors]) if at least one is Err (left before right)
  */
 export function combine<A, AE, B, BE>(
     left: Result<A, AE>,

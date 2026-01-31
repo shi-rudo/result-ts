@@ -1,8 +1,8 @@
 import type { Result } from './result';
 
 /**
- * Führt einen Seiteneffekt aus (Logging, Debugging), ohne das Result zu ändern.
- * Entspricht Rust `inspect` / `inspect_err`.
+ * Executes a side effect (logging, debugging) without changing the Result.
+ * Corresponds to Rust `inspect` / `inspect_err`.
  */
 export function tap<T, E>(observer: { ok?: (val: T) => void; err?: (e: E) => void }) {
     return (source: Result<T, E>): Result<T, E> => {

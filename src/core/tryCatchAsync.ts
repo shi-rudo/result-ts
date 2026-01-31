@@ -2,7 +2,7 @@ import type { Result } from './result';
 import { ok, err } from './result';
 
 /**
- * Async-Version von tryCatch.
+ * Async version of tryCatch.
  */
 export function tryCatchAsync<T, E = unknown>(
     fn: () => Promise<T>,

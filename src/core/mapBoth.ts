@@ -3,8 +3,8 @@ import { err, ok } from './result';
 import { InvalidResultStateError } from '../errors';
 
 /**
- * Transformiert sowohl den Ok-Wert als auch den Err-Fehler.
- * Entspricht FP `bimap` / `mapBoth`.
+ * Transforms both the Ok value and the Err error.
+ * Corresponds to FP `bimap` / `mapBoth`.
  */
 export function mapBoth<T, E, U, F>(mapOk: (value: T) => U, mapErr: (error: E) => F) {
     return (source: Result<T, E>): Result<U, F> => {
@@ -19,6 +19,6 @@ export function mapBoth<T, E, U, F>(mapOk: (value: T) => U, mapErr: (error: E) =
 }
 
 /**
- * Alias für `mapBoth`.
+ * Alias for `mapBoth`.
  */
 export const bimap = mapBoth;

@@ -1,7 +1,7 @@
 import type { Result } from './result';
 
 /**
- * Async-Version von tap.
+ * Async version of tap.
  */
 export function tapAsync<T, E>(observer: { ok?: (val: T) => Promise<void>; err?: (e: E) => Promise<void> }) {
     return async (source: Result<T, E>): Promise<Result<T, E>> => {

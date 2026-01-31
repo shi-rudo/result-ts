@@ -2,8 +2,8 @@ import type { Result } from './result';
 import { ExpectOkError } from '../errors';
 
 /**
- * Gibt den Wert zurück oder wirft einen Error mit custom Nachricht.
- * Entspricht Rust `expect`.
+ * Returns the value or throws an Error with a custom message.
+ * Corresponds to Rust `expect`.
  */
 export function expectResult<T, E>(result: Result<T, E>, message: string): T {
     if (result.isOk()) {

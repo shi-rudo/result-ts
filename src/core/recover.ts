@@ -3,8 +3,8 @@ import { ok } from './result';
 import { InvalidResultStateError } from '../errors';
 
 /**
- * Recover: wandelt Err in Ok(defaultValue) um.
- * Ergebnis ist garantiert Ok → Error-Typ wird `never`.
+ * Recover: converts Err to Ok(defaultValue).
+ * Result is guaranteed to be Ok → Error type becomes `never`.
  */
 export function recover<T, E, F>(defaultValue: F) {
     return (source: Result<T, E>): Result<T | F, never> => {
@@ -15,7 +15,7 @@ export function recover<T, E, F>(defaultValue: F) {
 }
 
 /**
- * Wie `recover`, aber berechnet den Default-Wert anhand des Errors.
+ * Like `recover`, but calculates the default value based on the error.
  */
 export function recoverWith<T, E, F>(fn: (error: E) => F) {
     return (source: Result<T, E>): Result<T | F, never> => {

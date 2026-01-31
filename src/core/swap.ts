@@ -3,7 +3,7 @@ import { err, ok } from './result';
 import { InvalidResultStateError } from '../errors';
 
 /**
- * Tauscht Ok und Err.
+ * Swaps Ok and Err.
  * Result<T, E> → Result<E, T>
  */
 export function swap<T, E>(result: Result<T, E>): Result<E, T> {

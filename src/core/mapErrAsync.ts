@@ -2,7 +2,7 @@ import type { Result } from './result';
 import { err } from './result';
 
 /**
- * Async-Version von mapErr.
+ * Async version of mapErr.
  */
 export function mapErrAsync<T, E, F>(project: (error: E) => Promise<F>) {
     return async (source: Result<T, E>): Promise<Result<T, F>> => {

@@ -10,15 +10,15 @@ type OkValueOfInput<I> = ResolvedResult<I> extends Result<infer T, any> ? T : ne
 type ErrValueOfInput<I> = ResolvedResult<I> extends Result<any, infer E> ? E : never;
 
 /**
- * Parallel-Variante von `collectFirstOkAsync`.
+ * Parallel version of `collectFirstOkAsync`.
  *
- * - Startet alle Inputs sofort (Promises oder Thunks).
- * - Gibt das erste `Ok` zurück, sobald es verfügbar ist.
- * - Wenn kein `Ok` gefunden wird, gibt ein `Err` mit allen Error-Werten (in Input-Reihenfolge) zurück.
- * - Rejections werden als `ErrValue` behandelt (`caught as ErrValue`).
- * - Wenn mehrere Inputs ein `Ok` liefern, gewinnt das zuerst abgeschlossene Ergebnis.
- *   Bei gleichzeitiger Completion gewinnt das zuerst beobachtete Ergebnis.
- * - Wenn kein `Ok` kommt und mindestens ein Input nie settled, bleibt das Promise offen.
+ * - Starts all inputs immediately (Promises or Thunks).
+ * - Returns the first `Ok` as soon as it is available.
+ * - If no `Ok` is found, returns an `Err` with all error values (in input order).
+ * - Rejections are treated as `ErrValue` (`caught as ErrValue`).
+ * - If multiple inputs provide an `Ok`, the one that completes first wins.
+ *   In case of simultaneous completion, the first observed result wins.
+ * - If no `Ok` arrives and at least one input never settles, the Promise remains pending.
  */
 export async function collectFirstOkParallelAsync<const Inputs extends readonly CollectFirstOkAsyncInput[]>(
     inputs: Inputs

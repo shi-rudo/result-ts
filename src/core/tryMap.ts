@@ -3,7 +3,7 @@ import { ok, err } from './result';
 import { InvalidResultStateError } from '../errors';
 
 /**
- * Wie `map`, aber fängt Exceptions ab und wandelt sie in Err um.
+ * Like `map`, but catches exceptions and converts them to Err.
  */
 export function tryMap<T, E, U, F = unknown>(
     project: (value: T) => U,

@@ -2,7 +2,7 @@ import type { Result } from './result';
 import { InvalidResultStateError } from '../errors';
 
 /**
- * Async-Version von match.
+ * Async version of match.
  */
 export function matchAsync<T, E, R>(handlers: { ok: (val: T) => Promise<R>; err: (e: E) => Promise<R> }) {
     return async (source: Result<T, E>): Promise<R> => {

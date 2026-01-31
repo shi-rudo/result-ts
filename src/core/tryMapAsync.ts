@@ -3,7 +3,7 @@ import { ok, err } from './result';
 import { InvalidResultStateError } from '../errors';
 
 /**
- * Async-Version von tryMap.
+ * Async version of tryMap.
  */
 export function tryMapAsync<T, E, U, F = unknown>(
     project: (value: T) => Promise<U>,

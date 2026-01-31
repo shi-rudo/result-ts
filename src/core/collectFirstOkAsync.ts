@@ -12,11 +12,11 @@ type OkValueOfInput<I> = ResolvedResult<I> extends Result<infer T, any> ? T : ne
 type ErrValueOfInput<I> = ResolvedResult<I> extends Result<any, infer E> ? E : never;
 
 /**
- * Async-Version von collectFirstOk.
+ * Async version of collectFirstOk.
  *
- * - Nimmt entweder bereits gestartete Promises oder "Thunks" (`() => Awaitable<Result<...>>`).
- * - Verarbeitet die Inputs strikt sequentiell (wie `for ... of` + `await`).
- * - Gibt das erste `Ok` zurück und sammelt alle Errors wenn kein `Ok` gefunden wird.
+ * - Takes either already started Promises or "Thunks" (`() => Awaitable<Result<...>>`).
+ * - Processes inputs strictly sequentially (like `for ... of` + `await`).
+ * - Returns the first `Ok` and collects all errors if no `Ok` is found.
  */
 export async function collectFirstOkAsync<const Inputs extends readonly CollectFirstOkAsyncInput[]>(
     inputs: Inputs
@@ -37,7 +37,7 @@ export async function collectFirstOkAsync<const Inputs extends readonly CollectF
             }
             throw new InvalidResultStateError('collectFirstOkAsync');
         } catch (error) {
-            // Wenn das Promise selbst rejected, behandeln wir es als Error
+            // If the Promise itself rejects, we treat it as an Error
             errors.push(error as ErrValueOfInput<Inputs[number]>);
         }
     }
