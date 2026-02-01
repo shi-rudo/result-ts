@@ -465,3 +465,13 @@ secrets/
 source-map-resolve-*.json
 build/
 src/examples/
+
+# Ai helper files
+.agents/*
+!/.agents/skills/
+/.agents/skills/*
+!/.agents/skills/result-ts/
+.claude
+.codex
+.gemini
+.opencode
