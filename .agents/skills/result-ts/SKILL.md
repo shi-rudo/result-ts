@@ -1,12 +1,21 @@
 ---
 name: result-ts
 description: A skill to help integrate, refactor, and guide the proper usage of the `@shirudo/result` library. Use this skill when you want to introduce `@shirudo/result` into a project, refactor existing code to use `Result` types, or get guidance on best practices and common patterns.
-version: 1.1
+version: 1.2
 ---
 
 # `@shirudo/result` Skill
 
 This skill helps you effectively use the package `@shirudo/result` in your TypeScript projects.
+
+## What is a `Result`?
+A `Result<T, E>` is a typed return value that represents **either** success **or** failure:
+
+- `Ok<T>`: the operation succeeded and contains a value of type `T`.
+- `Err<E>`: the operation failed and contains an error value of type `E`.
+
+This makes error handling **explicit** in the type system: functions return a `Result` instead of throwing.  
+You then **compose** operations (e.g. via `.pipe()` / `.pipeAsync()`), where failures short-circuit and propagate as `Err`.
 
 ## When to Use
 
