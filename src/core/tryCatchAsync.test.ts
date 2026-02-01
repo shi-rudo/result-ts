@@ -4,7 +4,7 @@ import { Result, ok, err } from './result';
 import { tryCatchAsync } from './tryCatchAsync';
 
 describe('tryCatchAsync', () => {
-    it('führt async Funktion aus und gibt Ok zurück bei Erfolg', async () => {
+    it('executes async function and returns Ok on success', async () => {
         const fn = vi.fn(async () => {
             await Promise.resolve();
             return 42;
@@ -18,7 +18,7 @@ describe('tryCatchAsync', () => {
         expect(fn).toHaveBeenCalled();
     });
 
-    it('fängt Exceptions aus async Funktionen ab', async () => {
+    it('catches exceptions from async functions', async () => {
         const fn = vi.fn(async () => {
             await Promise.resolve();
             throw new Error('async error');
@@ -32,7 +32,7 @@ describe('tryCatchAsync', () => {
         }
     });
 
-    it('fängt sync Exceptions aus async Funktionen ab', async () => {
+    it('catches sync exceptions from async functions', async () => {
         const fn = vi.fn(async () => {
             throw new Error('sync error in async');
         });
@@ -45,7 +45,7 @@ describe('tryCatchAsync', () => {
         }
     });
 
-    it('wendet errorMapper bei async Funktionen an', async () => {
+    it('applies errorMapper for async functions', async () => {
         const fn = vi.fn(async () => {
             throw new Error('async error');
         });
@@ -59,7 +59,7 @@ describe('tryCatchAsync', () => {
         expect(errorMapper).toHaveBeenCalledWith(expect.any(Error));
     });
 
-    it('überspringt tryCatchAsync wenn Source bereits Err ist', async () => {
+    it('skips tryCatchAsync if source is already Err', async () => {
         const fn = vi.fn(async () => 42);
         const source = err('original error');
 
@@ -69,7 +69,7 @@ describe('tryCatchAsync', () => {
         expect(fn).not.toHaveBeenCalled();
     });
 
-    it('funktioniert mit rejected Promises', async () => {
+    it('works with rejected Promises', async () => {
         const fn = vi.fn(async () => {
             await Promise.reject('promise rejection');
             return 42;
@@ -82,7 +82,7 @@ describe('tryCatchAsync', () => {
         }
     });
 
-    it('kann in async Pipe-Ketten verwendet werden', async () => {
+    it('can be used in async pipe chains', async () => {
         const result = await ok('input').pipeAsync(
             tryCatchAsync(async () => {
                 await Promise.resolve();

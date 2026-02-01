@@ -5,7 +5,7 @@ import { Result, ok, err, collectFirstOk } from './result';
 describe('Result class', () => {
     describe('static constructors', () => {
         describe('ok', () => {
-            it('erstellt Ok Result mit Wert', () => {
+            it('creates Ok Result with value', () => {
                 const result = ok(42);
                 expect(result.isOk()).toBe(true);
                 expect(result.isErr()).toBe(false);
@@ -17,7 +17,7 @@ describe('Result class', () => {
         });
 
         describe('err', () => {
-            it('erstellt Err Result mit Fehler', () => {
+            it('creates Err Result with error', () => {
                 const result = Result.err<string>('error message');
                 expect(result.isOk()).toBe(false);
                 expect(result.isErr()).toBe(true);
@@ -31,37 +31,37 @@ describe('Result class', () => {
 
     describe('instance methods', () => {
         describe('isOk', () => {
-            it('gibt true für Ok zurück', () => {
+            it('returns true for Ok', () => {
                 expect(ok(42).isOk()).toBe(true);
             });
 
-            it('gibt false für Err zurück', () => {
+            it('returns false for Err', () => {
                 expect(Result.err<string>('error').isOk()).toBe(false);
             });
         });
 
         describe('isErr', () => {
-            it('gibt false für Ok zurück', () => {
+            it('returns false for Ok', () => {
                 expect(ok(42).isErr()).toBe(false);
             });
 
-            it('gibt true für Err zurück', () => {
+            it('returns true for Err', () => {
                 expect(Result.err<string>('error').isErr()).toBe(true);
             });
         });
 
         describe('unwrapOr', () => {
-            it('gibt Wert bei Ok zurück', () => {
+            it('returns value for Ok', () => {
                 expect(ok(42).unwrapOr(0)).toBe(42);
             });
 
-            it('gibt Default bei Err zurück', () => {
+            it('returns default for Err', () => {
                 expect(Result.err<string, number>('error').unwrapOr(99)).toBe(99);
             });
         });
 
         describe('fold', () => {
-            it('ruft onOk bei Ok und liefert Rückgabewert', () => {
+            it('calls onOk for Ok and returns result', () => {
                 const result = ok(2).fold(
                     (value) => value * 2,
                     () => -1
@@ -70,7 +70,7 @@ describe('Result class', () => {
                 expect(result).toBe(4);
             });
 
-            it('ruft onErr bei Err und liefert Rückgabewert', () => {
+            it('calls onErr for Err and returns result', () => {
                 const result = err('boom').fold(
                     () => 'ok',
                     (error) => `err:${error}`
@@ -82,7 +82,7 @@ describe('Result class', () => {
     });
 
     describe('Result behavior', () => {
-        it('Ok und Err sind unterschiedliche Instanzen', () => {
+        it('Ok and Err are different instances', () => {
             const okResult = ok(42);
             const errResult = err('error');
 
@@ -90,30 +90,30 @@ describe('Result class', () => {
             expect(okResult.serialize()).not.toEqual(errResult.serialize());
         });
 
-        it('gleiche Werte erzeugen gleiche Results', () => {
+        it('equal values create equal Results', () => {
             const result1 = ok(42);
             const result2 = ok(42);
 
-            expect(result1).not.toBe(result2); // Verschiedene Instanzen
+            expect(result1).not.toBe(result2); // Different instances
             expect(result1.serialize()).toEqual(result2.serialize());
         });
 
-        it('Type Guards funktionieren korrekt', () => {
+        it('Type Guards work correctly', () => {
             const okResult = ok(42);
             const errResult = err('error');
 
             if (okResult.isOk()) {
-                // TypeScript weiß, dass es Ok<T> ist
+                // TypeScript knows it is Ok<T>
                 expect(okResult.value).toBe(42);
             }
 
             if (errResult.isErr()) {
-                // TypeScript weiß, dass es Err<E> ist
+                // TypeScript knows it is Err<E>
                 expect(errResult.error).toBe('error');
             }
         });
 
-        it('Result ist immutable', () => {
+        it('Result is immutable', () => {
             const result = ok(42);
             expect(Object.isFrozen(result)).toBe(true);
             expect(Object.isExtensible(result)).toBe(false);
@@ -122,7 +122,7 @@ describe('Result class', () => {
     });
 
     describe('Result types', () => {
-        it('Ok Result hat korrekte Typisierung', () => {
+        it('Ok Result has correct typing', () => {
             const result: Result<number, string> = ok(42);
 
             expect(result.isOk()).toBe(true);
@@ -134,7 +134,7 @@ describe('Result class', () => {
             }
         });
 
-        it('Err Result hat korrekte Typisierung', () => {
+        it('Err Result has correct typing', () => {
             const result: Result<number, string> = err('error');
 
             expect(result.isOk()).toBe(false);
@@ -279,17 +279,17 @@ describe('Result class', () => {
     });
 
     describe('serialize', () => {
-        it('serialisiert Ok Result zu Objekt-Format', () => {
+        it('serializes Ok Result to object format', () => {
             const result = ok(42);
             expect(result.serialize()).toEqual({ isSuccess: true, data: 42 });
         });
 
-        it('serialisiert Err Result und behält ursprüngliche Error-Typen', () => {
+        it('serializes Err Result and preserves original error types', () => {
             const result = err('error message');
             expect(result.serialize()).toEqual({ isSuccess: false, error: 'error message' });
         });
 
-        it('behält Error-Objekte als ursprüngliche Objekte', () => {
+        it('preserves Error objects as original objects', () => {
             const error = new Error('error message');
             const result = err(error);
             const serialized = result.serialize();
@@ -297,35 +297,35 @@ describe('Result class', () => {
             expect(serialized.error).toBe(error); // Ursprüngliches Error-Objekt
         });
 
-        it('behält beliebige Error-Typen', () => {
+        it('preserves any error types', () => {
             const result = err(404);
             expect(result.serialize()).toEqual({ isSuccess: false, error: 404 });
         });
     });
 
     describe('toUserFriendly', () => {
-        it('serialisiert Ok Result zu user-friendly Format', () => {
+        it('serializes Ok Result to user-friendly format', () => {
             const result = ok(42);
             expect(result.toUserFriendly()).toEqual({ isSuccess: true, data: 42 });
         });
 
-        it('konvertiert string Errors zu user-friendly Format', () => {
+        it('converts string errors to user-friendly format', () => {
             const result = err('error message');
             expect(result.toUserFriendly()).toEqual({ isSuccess: false, error: 'error message' });
         });
 
-        it('extrahiert message aus Error-Objekten für user-friendly Format', () => {
+        it('extracts message from Error objects for user-friendly format', () => {
             const error = new Error('error message');
             const result = err(error);
             expect(result.toUserFriendly()).toEqual({ isSuccess: false, error: 'error message' });
         });
 
-        it('konvertiert beliebige Error-Typen zu strings für user-friendly Format', () => {
+        it('converts any error types to strings for user-friendly format', () => {
             const result = err(404);
             expect(result.toUserFriendly()).toEqual({ isSuccess: false, error: '404' });
         });
 
-        it('ist perfekt für APIs und User-Interfaces', () => {
+        it('is perfect for APIs and user interfaces', () => {
             const result = ok({ user: 'alice', balance: 100 });
             const userFriendly = result.toUserFriendly();
             expect(userFriendly).toEqual({

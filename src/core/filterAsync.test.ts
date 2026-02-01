@@ -4,7 +4,7 @@ import { Result, ok, err } from './result';
 import { filterAsync } from './filterAsync';
 
 describe('filterAsync', () => {
-    it('behält Ok bei wenn async predicate true ist', async () => {
+    it('keeps Ok if async predicate is true', async () => {
         const result = ok(42);
         const filtered = await result.pipeAsync(filterAsync(async (v) => v > 40, async () => 'too small'));
 
@@ -12,7 +12,7 @@ describe('filterAsync', () => {
         expect(filtered.isOk()).toBe(true);
     });
 
-    it('wandelt Ok in Err um wenn async predicate false ist', async () => {
+    it('converts Ok to Err if async predicate is false', async () => {
         const result = ok(30);
         const filtered = await result.pipeAsync(filterAsync(async (v) => v > 40, async () => 'too small'));
 
@@ -22,7 +22,7 @@ describe('filterAsync', () => {
         }
     });
 
-    it('behält Err unverändert bei', async () => {
+    it('keeps Err unchanged', async () => {
         const result = err('original error');
         const filtered = await result.pipeAsync(filterAsync(async (v) => v > 40, async () => 'too small'));
 
@@ -30,7 +30,7 @@ describe('filterAsync', () => {
         expect(filtered.isErr()).toBe(true);
     });
 
-    it('wartet auf async predicate', async () => {
+    it('waits for async predicate', async () => {
         let called = false;
         const result = ok(50);
         const filtered = await result.pipeAsync(filterAsync(async (v) => {
@@ -43,7 +43,7 @@ describe('filterAsync', () => {
         expect(filtered.isOk()).toBe(true);
     });
 
-    it('wartet auf async errorFn', async () => {
+    it('waits for async errorFn', async () => {
         let called = false;
         const result = ok(30);
         const filtered = await result.pipeAsync(filterAsync(async (v) => v > 40, async () => {
@@ -59,7 +59,7 @@ describe('filterAsync', () => {
         }
     });
 
-    it('funktioniert in async Pipe-Ketten', async () => {
+    it('works in async pipe chains', async () => {
         const result = await ok(50).pipeAsync(
             filterAsync(async (v) => v > 40, async () => 'too small'),
             filterAsync(async (v) => v < 60, async () => 'too big')

@@ -21,7 +21,7 @@ function deferred<T>(): Deferred<T> {
 }
 
 describe('collectFirstOkParallelAsync', () => {
-    it('gibt das erste Ok nach Completion-Time zurück (race)', async () => {
+    it('returns the first Ok by completion time (race)', async () => {
         const p1 = deferred<Result<number, string>>();
         const p2 = deferred<Result<number, string>>();
 
@@ -39,7 +39,7 @@ describe('collectFirstOkParallelAsync', () => {
         p1.resolve(err('error1'));
     });
 
-    it('bevorzugt das zuerst erfüllte Ok gegenüber Input-Reihenfolge', async () => {
+    it('prefers the first fulfilled Ok over input order', async () => {
         const p1 = deferred<Result<number, string>>();
         const p2 = deferred<Result<number, string>>();
 
@@ -57,7 +57,7 @@ describe('collectFirstOkParallelAsync', () => {
         }
     });
 
-    it('sammelt Errors in Input-Reihenfolge, wenn kein Ok gefunden wird', async () => {
+    it('collects Errors in input order if no Ok is found', async () => {
         const p1 = deferred<Result<number, string>>();
         const p2 = deferred<Result<number, string>>();
         const p3 = deferred<Result<number, string>>();
@@ -76,7 +76,7 @@ describe('collectFirstOkParallelAsync', () => {
         }
     });
 
-    it('unterstützt Thunks', async () => {
+    it('supports Thunks', async () => {
         const result = await collectFirstOkParallelAsync([() => err('error1'), () => Promise.resolve(ok(42))] as const);
         expect(result.isOk()).toBe(true);
         if (result.isOk()) {

@@ -4,7 +4,7 @@ import { Result, ok, err } from './result';
 import { tapAsync } from './tapAsync';
 
 describe('tapAsync', () => {
-    it('führt ok callback bei Ok aus', async () => {
+    it('executes ok callback on Ok', async () => {
         const callback = vi.fn();
         const result = ok(42);
         const tapped = await result.pipeAsync(tapAsync({ ok: callback }));
@@ -13,7 +13,7 @@ describe('tapAsync', () => {
         expect(callback).toHaveBeenCalledWith(42);
     });
 
-    it('führt err callback bei Err aus', async () => {
+    it('executes err callback on Err', async () => {
         const callback = vi.fn();
         const result = err('error');
         const tapped = await result.pipeAsync(tapAsync({ err: callback }));
@@ -22,7 +22,7 @@ describe('tapAsync', () => {
         expect(callback).toHaveBeenCalledWith('error');
     });
 
-    it('führt async callbacks aus', async () => {
+    it('executes async callbacks', async () => {
         const callback = vi.fn(async (value) => {
             await Promise.resolve();
             return value * 2;
@@ -34,7 +34,7 @@ describe('tapAsync', () => {
         expect(callback).toHaveBeenCalledWith(21);
     });
 
-    it('wartet auf async callbacks', async () => {
+    it('waits for async callbacks', async () => {
         let called = false;
         const callback = vi.fn(async () => {
             await Promise.resolve();
@@ -48,7 +48,7 @@ describe('tapAsync', () => {
         expect(callback).toHaveBeenCalledWith(42);
     });
 
-    it('funktioniert in async Pipe-Ketten', async () => {
+    it('works in async pipe chains', async () => {
         const seen: string[] = [];
         const result = await ok(2).pipeAsync(
             tapAsync({ ok: async (v) => { seen.push(`start:${v}`); return Promise.resolve(); } }),
@@ -59,7 +59,7 @@ describe('tapAsync', () => {
         expect(seen).toEqual(['start:2', 'end:2']);
     });
 
-    it('überspringt callbacks wenn nicht definiert', async () => {
+    it('skips callbacks if not defined', async () => {
         const okCallback = vi.fn();
         const errCallback = vi.fn();
 

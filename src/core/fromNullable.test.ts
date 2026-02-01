@@ -3,7 +3,7 @@ import { describe, expect, it } from 'vitest';
 import { fromNullable } from './fromNullable';
 
 describe('fromNullable', () => {
-    it('gibt Ok für nicht-null Werte', () => {
+    it('returns Ok for non-null values', () => {
         const result = fromNullable('x' as string | null, 'missing');
         expect(result.isOk()).toBe(true);
         if (result.isOk()) {
@@ -12,7 +12,7 @@ describe('fromNullable', () => {
         }
     });
 
-    it('gibt Err für null/undefined', () => {
+    it('returns Err for null/undefined', () => {
         const a = fromNullable(null as string | null, 'missing');
         expect(a.isErr()).toBe(true);
         if (a.isErr()) expect(a.error).toBe('missing');

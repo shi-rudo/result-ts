@@ -4,7 +4,7 @@ import { err, ok } from './result';
 import { tryMapAsync } from './tryMapAsync';
 
 describe('tryMapAsync', () => {
-    it('mappt Ok value und gibt Ok zurück', async () => {
+    it('maps Ok value and returns Ok', async () => {
         const project = vi.fn(async (n: number) => n + 1);
 
         const out = await ok<number, string>(1).pipeAsync(tryMapAsync(project));
@@ -16,7 +16,7 @@ describe('tryMapAsync', () => {
         expect(project).toHaveBeenCalledWith(1);
     });
 
-    it('verwendet errorMapper um Exceptions zu transformieren', async () => {
+    it('uses errorMapper to transform exceptions', async () => {
         const project = vi.fn(async (_n: number) => {
             throw new Error('boom');
         });
@@ -33,7 +33,7 @@ describe('tryMapAsync', () => {
         expect(errorMapper).toHaveBeenCalled();
     });
 
-    it('wandelt Exceptions in Err um ohne errorMapper', async () => {
+    it('converts exceptions to Err without errorMapper', async () => {
         const project = vi.fn(async (_n: number) => {
             throw new Error('boom');
         });
@@ -49,7 +49,7 @@ describe('tryMapAsync', () => {
         expect(project).toHaveBeenCalledWith(1);
     });
 
-    it('überspringt project wenn source bereits Err ist', async () => {
+    it('skips project if source is already Err', async () => {
         const project = vi.fn(async (_n: never) => 123);
         const source = err('original error');
 

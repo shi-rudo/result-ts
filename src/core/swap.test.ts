@@ -4,7 +4,7 @@ import { Result, ok } from './result';
 import { swap } from './swap';
 
 describe('swap', () => {
-    it('tauscht Ok und Err', () => {
+    it('swaps Ok and Err', () => {
         const a = swap(ok(42));
         expect(a.isErr()).toBe(true);
         if (a.isErr()) {

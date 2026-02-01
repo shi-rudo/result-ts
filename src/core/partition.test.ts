@@ -4,7 +4,7 @@ import { Result, ok } from './result';
 import { partition } from './partition';
 
 describe('partition', () => {
-    it('teilt Results in Ok-Werte und Err-Fehler', () => {
+    it('splits Results into Ok values and Err errors', () => {
         const [oks, errs] = partition([ok(1), Result.err('e1'), ok(2), Result.err('e2')] as const);
 
         const _okType: number[] = oks;

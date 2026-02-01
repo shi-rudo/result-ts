@@ -4,7 +4,7 @@ import { Result, ok, err } from './result';
 import { flatMap } from './flatMap';
 
 describe('flatMap', () => {
-    it('wendet Funktion auf Ok an und flacht das Result ab', () => {
+    it('applies function to Ok and flattens the Result', () => {
         const result = ok(2);
         const flatMapped = result.pipe(flatMap((v) => ok(v * 3)));
 
@@ -14,7 +14,7 @@ describe('flatMap', () => {
         }
     });
 
-    it('kann Err aus der map-Funktion zurückgeben', () => {
+    it('can return Err from map function', () => {
         const result = ok(2);
         const flatMapped = result.pipe(flatMap((v) => v > 5 ? ok(v) : err('too small')));
 
@@ -24,7 +24,7 @@ describe('flatMap', () => {
         }
     });
 
-    it('behält Err unverändert bei', () => {
+    it('keeps Err unchanged', () => {
         const result = err('original error');
         const flatMapped = result.pipe(flatMap((v) => ok(v * 2)));
 
@@ -32,7 +32,7 @@ describe('flatMap', () => {
         expect(flatMapped.isErr()).toBe(true);
     });
 
-    it('funktioniert mit verschiedenen Result-Typen', () => {
+    it('works with different Result types', () => {
         const result = ok('hello');
         const flatMapped = result.pipe(flatMap((str) => str.length > 3 ? ok(str.toUpperCase()) : err('too short')));
 
@@ -42,7 +42,7 @@ describe('flatMap', () => {
         }
     });
 
-    it('funktioniert in Pipe-Ketten', () => {
+    it('works in pipe chains', () => {
         const result = ok(2).pipe(
             flatMap((v) => ok(v + 1)),      // 3
             flatMap((v) => ok(v * 2)),      // 6

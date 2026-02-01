@@ -4,11 +4,11 @@ import { err, ok } from './result';
 import { toNullable } from './toNullable';
 
 describe('toNullable', () => {
-    it('gibt Wert bei Ok zurück', () => {
+    it('returns value on Ok', () => {
         expect(toNullable(ok(42))).toBe(42);
     });
 
-    it('gibt null bei Err zurück', () => {
+    it('returns null on Err', () => {
         expect(toNullable(err('boom'))).toBeNull();
     });
 });

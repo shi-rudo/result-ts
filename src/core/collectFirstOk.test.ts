@@ -4,7 +4,7 @@ import { Result, ok, err } from './result';
 import { collectFirstOk } from './collectFirstOk';
 
 describe('collectFirstOk', () => {
-    it('gibt erstes Ok Result zurück', () => {
+    it('returns first Ok Result', () => {
         const results = [err('error1'), err('error2'), ok(42), err('error3')];
         const collected = collectFirstOk(results);
 
@@ -14,7 +14,7 @@ describe('collectFirstOk', () => {
         }
     });
 
-    it('sammelt alle Errors wenn kein Ok gefunden wird', () => {
+    it('collects all Errors if no Ok is found', () => {
         const results = [err('error1'), err('error2'), err('error3')];
         const collected = collectFirstOk(results);
 
@@ -24,7 +24,7 @@ describe('collectFirstOk', () => {
         }
     });
 
-    it('gibt leeres Error Array für leeres Result Array zurück', () => {
+    it('returns empty Error array for empty Result array', () => {
         const results: Result<number, string>[] = [];
         const collected = collectFirstOk(results);
 
@@ -34,7 +34,7 @@ describe('collectFirstOk', () => {
         }
     });
 
-    it('funktioniert mit verschiedenen Typen', () => {
+    it('works with different types', () => {
         const results = [
             err('network error'),
             err('auth error'),
@@ -49,7 +49,7 @@ describe('collectFirstOk', () => {
         }
     });
 
-    it('stoppt bei erstem Ok und sammelt vorherige Errors', () => {
+    it('stops at first Ok and collects previous Errors', () => {
         const results = [
             err('first error'),
             err('second error'),
@@ -64,7 +64,7 @@ describe('collectFirstOk', () => {
         }
     });
 
-    it('funktioniert mit mixed Error-Typen', () => {
+    it('works with mixed Error types', () => {
         const results = [
             err('string error'),
             err(404),

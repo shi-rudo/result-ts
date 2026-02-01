@@ -4,7 +4,7 @@ import { Result, ok, err } from './result';
 import { matchAsync } from './matchAsync';
 
 describe('matchAsync', () => {
-    it('wendet ok-Handler bei Ok an', async () => {
+    it('applies ok-Handler to Ok', async () => {
         const result = ok(42);
         const output = await result.pipeAsync(matchAsync({
             ok: async (value) => `success: ${value}`,
@@ -13,7 +13,7 @@ describe('matchAsync', () => {
         expect(output).toBe('success: 42');
     });
 
-    it('wendet err-Handler bei Err an', async () => {
+    it('applies err-Handler to Err', async () => {
         const result = err('something went wrong');
         const output = await result.pipeAsync(matchAsync({
             ok: async (value) => `success: ${value}`,
@@ -22,7 +22,7 @@ describe('matchAsync', () => {
         expect(output).toBe('error: something went wrong');
     });
 
-    it('funktioniert mit wirklich async Handlers', async () => {
+    it('works with truly async handlers', async () => {
         const result = ok(2);
         const output = await result.pipeAsync(matchAsync({
             ok: async (value) => {

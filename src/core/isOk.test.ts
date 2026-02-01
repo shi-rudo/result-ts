@@ -4,15 +4,15 @@ import { Result, ok, err } from './result';
 import { isOk } from './isOk';
 
 describe('isOk', () => {
-    it('gibt true für Ok zurück', () => {
+    it('returns true for Ok', () => {
         expect(isOk(ok(42))).toBe(true);
     });
 
-    it('gibt false für Err zurück', () => {
+    it('returns false for Err', () => {
         expect(isOk(err('error'))).toBe(false);
     });
 
-    it('funktioniert als Type Guard', () => {
+    it('works as a Type Guard', () => {
         const result = ok(42);
         if (isOk(result)) {
             expect(result.value).toBe(42);

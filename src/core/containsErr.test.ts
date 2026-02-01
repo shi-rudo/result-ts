@@ -4,15 +4,15 @@ import { err, ok } from './result';
 import { containsErr } from './containsErr';
 
 describe('containsErr', () => {
-    it('gibt true bei Err mit passendem Fehler', () => {
+    it('returns true for Err with matching error', () => {
         expect(containsErr(err('boom'), 'boom')).toBe(true);
     });
 
-    it('gibt false bei Err mit anderem Fehler', () => {
+    it('returns false for Err with different error', () => {
         expect(containsErr(err('boom'), 'nope')).toBe(false);
     });
 
-    it('gibt false bei Ok', () => {
+    it('returns false for Ok', () => {
         expect(containsErr(ok(42), 'boom')).toBe(false);
     });
 });

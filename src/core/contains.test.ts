@@ -4,15 +4,15 @@ import { Result, ok } from './result';
 import { contains } from './contains';
 
 describe('contains', () => {
-    it('gibt true bei Ok mit passendem Wert', () => {
+    it('returns true for Ok with matching value', () => {
         expect(contains(ok(42), 42)).toBe(true);
     });
 
-    it('gibt false bei Ok mit anderem Wert', () => {
+    it('returns false for Ok with different value', () => {
         expect(contains(ok(42), 43)).toBe(false);
     });
 
-    it('gibt false bei Err', () => {
+    it('returns false for Err', () => {
         expect(contains(Result.err('error'), 42)).toBe(false);
     });
 });

@@ -4,7 +4,7 @@ import { Result, ok, err } from './result';
 import { tap } from './tap';
 
 describe('tap', () => {
-    it('führt ok callback bei Ok aus', () => {
+    it('executes ok callback on Ok', () => {
         const callback = vi.fn();
         const result = ok(42);
         const tapped = result.pipe(tap({ ok: callback }));
@@ -13,7 +13,7 @@ describe('tap', () => {
         expect(callback).toHaveBeenCalledWith(42);
     });
 
-    it('führt err callback bei Err aus', () => {
+    it('executes err callback on Err', () => {
         const callback = vi.fn();
         const result = err('error');
         const tapped = result.pipe(tap({ err: callback }));
@@ -22,7 +22,7 @@ describe('tap', () => {
         expect(callback).toHaveBeenCalledWith('error');
     });
 
-    it('führt beide callbacks aus wenn beide definiert sind', () => {
+    it('executes both callbacks if both are defined', () => {
         const okCallback = vi.fn();
         const errCallback = vi.fn();
 
@@ -39,7 +39,7 @@ describe('tap', () => {
         expect(errCallback).toHaveBeenCalledWith('error');
     });
 
-    it('überspringt callbacks wenn nicht definiert', () => {
+    it('skips callbacks if not defined', () => {
         const okCallback = vi.fn();
         const errCallback = vi.fn();
 
@@ -58,7 +58,7 @@ describe('tap', () => {
         expect(errCallback).toHaveBeenCalledWith('error');
     });
 
-    it('funktioniert in Pipe-Ketten', () => {
+    it('works in pipe chains', () => {
         const seen: string[] = [];
         const result = ok(2).pipe(
             tap({ ok: (v) => seen.push(`start:${v}`) }),

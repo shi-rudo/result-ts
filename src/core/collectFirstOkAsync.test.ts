@@ -4,7 +4,7 @@ import { Result, ok, err } from './result';
 import { collectFirstOkAsync } from './collectFirstOkAsync';
 
 describe('collectFirstOkAsync', () => {
-    it('gibt erstes Ok Result zurück', async () => {
+    it('returns first Ok Result', async () => {
         const promises = [
             Promise.resolve(err('error1')),
             Promise.resolve(err('error2')),
@@ -18,7 +18,7 @@ describe('collectFirstOkAsync', () => {
         }
     });
 
-    it('sammelt alle Errors wenn kein Ok gefunden', async () => {
+    it('collects all Errors if no Ok found', async () => {
         const promises = [
             Promise.resolve(err('error1')),
             Promise.resolve(err('error2')),
@@ -31,7 +31,7 @@ describe('collectFirstOkAsync', () => {
         }
     });
 
-    it('behandelt Promise rejections als Errors', async () => {
+    it('treats Promise rejections as Errors', async () => {
         const promises = [
             Promise.resolve(err('error1')),
             Promise.reject('promise error'),
@@ -44,7 +44,7 @@ describe('collectFirstOkAsync', () => {
         }
     });
 
-    it('gibt leeres Error Array für leeres Promise Array', async () => {
+    it('returns empty Error array for empty Promise array', async () => {
         const promises: Promise<Result<number, string>>[] = [];
         const result = await collectFirstOkAsync(promises);
         expect(result.isErr()).toBe(true);
@@ -53,7 +53,7 @@ describe('collectFirstOkAsync', () => {
         }
     });
 
-    it('unterstützt Thunks und ist wirklich sequentiell', async () => {
+    it('supports Thunks and is truly sequential', async () => {
         const t1 = vi.fn(async () => err('error1'));
         const t2 = vi.fn(async () => ok(42));
         const t3 = vi.fn(async () => ok(99));

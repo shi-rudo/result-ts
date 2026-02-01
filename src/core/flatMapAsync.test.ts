@@ -4,7 +4,7 @@ import { Result, ok, err } from './result';
 import { flatMapAsync } from './flatMapAsync';
 
 describe('flatMapAsync', () => {
-    it('wendet async Funktion auf Ok an und flacht das Result ab', async () => {
+    it('applies async function to Ok and flattens the Result', async () => {
         const result = ok(2);
         const flatMapped = await result.pipeAsync(flatMapAsync(async (v) => ok(v * 3)));
 
@@ -14,7 +14,7 @@ describe('flatMapAsync', () => {
         }
     });
 
-    it('kann async Err aus der map-Funktion zurückgeben', async () => {
+    it('can return async Err from map function', async () => {
         const result = ok(2);
         const flatMapped = await result.pipeAsync(flatMapAsync(async (v) => {
             await Promise.resolve();
@@ -27,7 +27,7 @@ describe('flatMapAsync', () => {
         }
     });
 
-    it('behält Err unverändert bei', async () => {
+    it('keeps Err unchanged', async () => {
         const result = err('original error');
         const flatMapped = await result.pipeAsync(flatMapAsync(async (v) => ok(v * 2)));
 
@@ -35,7 +35,7 @@ describe('flatMapAsync', () => {
         expect(flatMapped.isErr()).toBe(true);
     });
 
-    it('wartet auf async Funktionen', async () => {
+    it('waits for async functions', async () => {
         let processed = false;
         const result = ok(3);
         const flatMapped = await result.pipeAsync(flatMapAsync(async (v) => {
@@ -51,7 +51,7 @@ describe('flatMapAsync', () => {
         }
     });
 
-    it('funktioniert mit verschiedenen Result-Typen', async () => {
+    it('works with different Result types', async () => {
         const result = ok('hello');
         const flatMapped = await result.pipeAsync(flatMapAsync(async (str) => {
             await Promise.resolve();
@@ -64,7 +64,7 @@ describe('flatMapAsync', () => {
         }
     });
 
-    it('funktioniert in async Pipe-Ketten', async () => {
+    it('works in async pipe chains', async () => {
         const result = await ok(2).pipeAsync(
             flatMapAsync(async (v) => ok(v + 1)),      // 3
             flatMapAsync(async (v) => ok(v * 2)),      // 6

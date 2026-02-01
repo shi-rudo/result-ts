@@ -5,11 +5,11 @@ import { unwrapErr } from './unwrapErr';
 import { ERR_UNWRAP_ERR_ON_OK, UnwrapErrOnOkError } from '../errors';
 
 describe('unwrapErr', () => {
-    it('gibt Error bei Err zurück', () => {
+    it('returns Error on Err', () => {
         expect(unwrapErr(err('boom'))).toBe('boom');
     });
 
-    it('wirft Error bei Ok', () => {
+    it('throws Error on Ok', () => {
         let caughtError: unknown;
         try {
             unwrapErr(ok(42));

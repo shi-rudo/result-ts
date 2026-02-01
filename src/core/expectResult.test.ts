@@ -5,11 +5,11 @@ import { expectResult } from './expectResult';
 import { ERR_EXPECT_OK, ExpectOkError } from '../errors';
 
 describe('expectResult', () => {
-    it('gibt Wert bei Ok zurück', () => {
+    it('returns value for Ok', () => {
         expect(expectResult(ok(42), 'custom message')).toBe(42);
     });
 
-    it('wirft custom Error bei Err', () => {
+    it('throws custom Error for Err', () => {
         let caughtError: unknown;
         try {
             expectResult(Result.err('error'), 'custom message');

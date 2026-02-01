@@ -4,7 +4,7 @@ import { Result, ok, err } from './result';
 import { mapErr } from './mapErr';
 
 describe('mapErr', () => {
-    it('lässt Ok unverändert', () => {
+    it('leaves Ok unchanged', () => {
         const result = ok(42);
         const mapped = result.pipe(mapErr(e => `mapped: ${e}`));
         expect(mapped.isOk()).toBe(true);
@@ -13,7 +13,7 @@ describe('mapErr', () => {
         }
     });
 
-    it('transformiert Err-Wert', () => {
+    it('transforms Err value', () => {
         const result = err('original error');
         const mapped = result.pipe(mapErr(e => `mapped: ${e}`));
         expect(mapped.isErr()).toBe(true);

@@ -4,11 +4,11 @@ import { Result, ok } from './result';
 import { mapOr } from './mapOr';
 
 describe('mapOr', () => {
-    it('wendet Funktion bei Ok an', () => {
+    it('applies function to Ok', () => {
         expect(mapOr(ok(2), 0, x => x * 3)).toBe(6);
     });
 
-    it('gibt Default bei Err zurück', () => {
+    it('returns default for Err', () => {
         expect(mapOr(Result.err('error'), 99, x => x * 3)).toBe(99);
     });
 });

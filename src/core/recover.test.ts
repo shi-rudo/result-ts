@@ -4,7 +4,7 @@ import { Result, ok } from './result';
 import { recover, recoverWith } from './recover';
 
 describe('recover / recoverWith', () => {
-    it('recover ersetzt Err durch Ok(defaultValue)', () => {
+    it('recover replaces Err with Ok(defaultValue)', () => {
         const a = ok(1).pipe(recover(9));
         const _typeA: Result<number, never> = a;
 
@@ -22,7 +22,7 @@ describe('recover / recoverWith', () => {
         }
     });
 
-    it('recoverWith berechnet den Ok-Wert aus dem Error', () => {
+    it('recoverWith calculates the Ok value from the error', () => {
         const a = ok(1).pipe(recoverWith(() => 9));
         expect(a.isOk()).toBe(true);
         if (a.isOk()) {

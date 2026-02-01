@@ -5,11 +5,11 @@ import { expectErr } from './expectErr';
 import { ERR_EXPECT_ERR, ExpectErrError } from '../errors';
 
 describe('expectErr', () => {
-    it('gibt Error bei Err zurück', () => {
+    it('returns Error for Err', () => {
         expect(expectErr(err('boom'), 'should not throw')).toBe('boom');
     });
 
-    it('wirft Error bei Ok mit custom Nachricht', () => {
+    it('throws Error for Ok with custom message', () => {
         let caughtError: unknown;
         try {
             expectErr(ok(42), 'expected err');

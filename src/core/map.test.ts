@@ -4,7 +4,7 @@ import { Result, ok, err } from './result';
 import { map } from './map';
 
 describe('map', () => {
-    it('transformiert Ok-Wert', () => {
+    it('transforms Ok value', () => {
         const result = ok(2);
         const mapped = result.pipe(map(x => x * 3));
         expect(mapped.isOk()).toBe(true);
@@ -13,7 +13,7 @@ describe('map', () => {
         }
     });
 
-    it('lässt Err unverändert', () => {
+    it('leaves Err unchanged', () => {
         const result = err('error');
         const mapped = result.pipe(map(x => x * 3));
         expect(mapped.isErr()).toBe(true);
@@ -22,7 +22,7 @@ describe('map', () => {
         }
     });
 
-    it('funktioniert in Pipe-Ketten', () => {
+    it('works in pipe chains', () => {
         const result = ok(2).pipe(
             map(x => x + 1),
             map(x => x * 2)

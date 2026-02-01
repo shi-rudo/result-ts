@@ -3,12 +3,12 @@ import { describe, expect, it, vi } from 'vitest';
 import { Result, filter, filterAsync, flatMap, flatMapAsync, map, mapAsync, mapErr, mapErrAsync, match, matchAsync, ok, err, tap, tapAsync, tryCatch, tryCatchAsync, tryMap, tryMapAsync } from './result';
 
 describe('Result.pipe', () => {
-    it('gibt ohne Operatoren die gleiche Instanz zurück', () => {
+    it('returns same instance without operators', () => {
         const r = ok(1);
         expect(r.pipe()).toBe(r);
     });
 
-    it('verkettet Funktionen von links nach rechts', () => {
+    it('chains functions from left to right', () => {
         const out = ok<number, string>(2).pipe(
             (res) => res.unwrapOr(0),
             (n) => n * 2,
@@ -18,7 +18,7 @@ describe('Result.pipe', () => {
         expect(out).toBe('n=4');
     });
 
-    it('funktioniert mit pipeable Operators im Ok-Fall', () => {
+    it('works with pipeable operators in Ok case', () => {
         const out = ok<number, string>(2).pipe(
             map((n) => n + 1),
             flatMap((n) => ok<number, string>(n * 3)),
@@ -28,7 +28,7 @@ describe('Result.pipe', () => {
         expect(out).toBe(9);
     });
 
-    it('überspringt map bei Err und kann mapErr anwenden', () => {
+    it('skips map on Err and can apply mapErr', () => {
         const project = vi.fn((n: number) => n + 1);
         const projectErr = vi.fn((e: string) => `wrapped: ${e}`);
 
@@ -43,7 +43,7 @@ describe('Result.pipe', () => {
         expect(out).toBe('wrapped: boom');
     });
 
-    it('kann in der Pipe auch zu Err wechseln', () => {
+    it('can switch to Err in pipe', () => {
         const out = ok<number, string>(2).pipe(
             filter((n) => n > 2, () => 'too small'),
             match({ ok: () => 'ok', err: (e) => e }),
@@ -52,7 +52,7 @@ describe('Result.pipe', () => {
         expect(out).toBe('too small');
     });
 
-    it('pipet mehrere Result-Operatoren hintereinander', () => {
+    it('pipes multiple Result operators sequentially', () => {
         const seen: Array<string> = [];
 
         const out = ok<number, string>(1).pipe(
@@ -69,7 +69,7 @@ describe('Result.pipe', () => {
         expect(seen).toEqual(['start:1', 'afterMap:2', 'afterFilter:2']);
     });
 
-    it('short-circuits nach Err in einer langen Pipe', () => {
+    it('short-circuits after Err in a long pipe', () => {
         const okSpy = vi.fn();
         const errSpy = vi.fn();
         const mapSpy = vi.fn((n: number) => n + 1);
@@ -88,7 +88,7 @@ describe('Result.pipe', () => {
         expect(out).toBe('TOO SMALL');
     });
 
-    it('pipet mehrere Result-returning Funktionen via flatMap', () => {
+    it('pipes multiple Result-returning functions via flatMap', () => {
         const firstResult = vi.fn((n: number): Result<string, Error> => {
             if (n < 0) return Result.err<Error, string>(new Error('negative'));
             return ok(String(n));
@@ -132,7 +132,7 @@ describe('Result.pipe', () => {
         expect(thirdResult).not.toHaveBeenCalled();
     });
 
-    it('unterstützt lange Pipes (20 Operatoren)', () => {
+    it('supports long pipes (20 operators)', () => {
         const out = ok(0).pipe(
             map((n) => {
                 const typed: number = n;
@@ -170,7 +170,7 @@ describe('Result.pipe', () => {
 });
 
 describe('Result.tryCatch', () => {
-    it('fängt Exceptions ab und wandelt sie in Err um', () => {
+    it('catches exceptions and converts them to Err', () => {
         const throwingFn = vi.fn(() => {
             throw new Error('test error');
         });
@@ -185,7 +185,7 @@ describe('Result.tryCatch', () => {
         expect(throwingFn).toHaveBeenCalled();
     });
 
-    it('gibt Ok zurück wenn keine Exception geworfen wird', () => {
+    it('returns Ok if no exception is thrown', () => {
         const successFn = vi.fn(() => 'success result');
 
         const result = ok('any input').pipe(tryCatch(successFn));
@@ -197,7 +197,7 @@ describe('Result.tryCatch', () => {
         expect(successFn).toHaveBeenCalled();
     });
 
-    it('überspringt tryCatch wenn Source bereits Err ist', () => {
+    it('skips tryCatch if source is already Err', () => {
         const throwingFn = vi.fn(() => {
             throw new Error('should not be called');
         });
@@ -211,7 +211,7 @@ describe('Result.tryCatch', () => {
         expect(throwingFn).not.toHaveBeenCalled();
     });
 
-    it('verwendet custom errorMapper um Exceptions zu transformieren', () => {
+    it('uses custom errorMapper to transform exceptions', () => {
         const throwingFn = vi.fn(() => {
             throw new Error('original error');
         });
@@ -227,7 +227,7 @@ describe('Result.tryCatch', () => {
         expect(errorMapper).toHaveBeenCalledWith(new Error('original error'));
     });
 
-    it('funktioniert in Pipes mit anderen Operatoren', () => {
+    it('works in pipes with other operators', () => {
         const result = ok('{"name": "test"}').pipe(
             tryCatch(() => JSON.parse('invalid json')),
             mapErr((error: unknown) => `Parse error: ${(error as Error).message}`),
@@ -240,7 +240,7 @@ describe('Result.tryCatch', () => {
 });
 
 describe('Result.tryCatchAsync', () => {
-    it('fängt async Exceptions ab und wandelt sie in Err um', async () => {
+    it('catches async exceptions and converts them to Err', async () => {
         const throwingFn = vi.fn(async () => {
             throw new Error('async test error');
         });
@@ -255,7 +255,7 @@ describe('Result.tryCatchAsync', () => {
         expect(throwingFn).toHaveBeenCalled();
     });
 
-    it('gibt Ok zurück wenn keine Exception in async Funktion geworfen wird', async () => {
+    it('returns Ok if no exception is thrown in async function', async () => {
         const successFn = vi.fn(async () => {
             await Promise.resolve(); // simulate async
             return 'async success';
@@ -270,7 +270,7 @@ describe('Result.tryCatchAsync', () => {
         expect(successFn).toHaveBeenCalled();
     });
 
-    it('überspringt tryCatchAsync wenn Source bereits Err ist', async () => {
+    it('skips tryCatchAsync if source is already Err', async () => {
         const throwingFn = vi.fn(async () => {
             throw new Error('should not be called');
         });
@@ -284,7 +284,7 @@ describe('Result.tryCatchAsync', () => {
         expect(throwingFn).not.toHaveBeenCalled();
     });
 
-    it('verwendet custom errorMapper für async Exceptions', async () => {
+    it('uses custom errorMapper for async exceptions', async () => {
         const throwingFn = vi.fn(async () => {
             throw new Error('async original error');
         });
@@ -300,7 +300,7 @@ describe('Result.tryCatchAsync', () => {
         expect(errorMapper).toHaveBeenCalledWith(new Error('async original error'));
     });
 
-    it('funktioniert in async Pipes mit anderen Operatoren', async () => {
+    it('works in async pipes with other operators', async () => {
         const result = await ok('invalid json').pipeAsync(
             tryCatchAsync(async () => JSON.parse('invalid json')),
             mapErr((error: unknown) => `Async parse error: ${(error as Error).message}`),
@@ -311,7 +311,7 @@ describe('Result.tryCatchAsync', () => {
         expect(result).toMatch(/^Async parse error: Unexpected token/);
     });
 
-    it('funktioniert mit Promises die Exceptions werfen', async () => {
+    it('works with Promises that throw exceptions', async () => {
         const throwingPromiseFn = vi.fn(() => Promise.reject(new Error('promise rejection')));
 
         const result = await ok('any input').pipeAsync(tryCatchAsync(throwingPromiseFn));
@@ -325,7 +325,7 @@ describe('Result.tryCatchAsync', () => {
 });
 
 describe('Result.tryMap', () => {
-    it('mappt Ok value und gibt Ok zurück', () => {
+    it('maps Ok value and returns Ok', () => {
         const project = vi.fn((n: number) => n + 1);
         const result = ok<number, string>(1).pipe(tryMap(project));
 
@@ -336,7 +336,7 @@ describe('Result.tryMap', () => {
         expect(project).toHaveBeenCalledWith(1);
     });
 
-    it('wandelt throw in Err um', () => {
+    it('converts throw to Err', () => {
         const project = vi.fn(() => {
             throw new Error('boom');
         });
@@ -350,7 +350,7 @@ describe('Result.tryMap', () => {
         }
     });
 
-    it('verwendet errorMapper um Exceptions zu transformieren', () => {
+    it('uses errorMapper to transform exceptions', () => {
         const project = vi.fn(() => {
             throw new Error('boom');
         });
@@ -363,7 +363,7 @@ describe('Result.tryMap', () => {
         }
     });
 
-    it('überspringt tryMap wenn Source bereits Err ist', () => {
+    it('skips tryMap if source is already Err', () => {
         const project = vi.fn(() => 123);
         const source = err('original error');
 
@@ -375,7 +375,7 @@ describe('Result.tryMap', () => {
 });
 
 describe('Result.tryMapAsync', () => {
-    it('mappt async Ok value und gibt Ok zurück', async () => {
+    it('maps async Ok value and returns Ok', async () => {
         const project = vi.fn(async (n: number) => n + 1);
         const result = await ok<number, string>(1).pipeAsync(tryMapAsync(project));
 
@@ -386,7 +386,7 @@ describe('Result.tryMapAsync', () => {
         expect(project).toHaveBeenCalledWith(1);
     });
 
-    it('wandelt rejected Promise in Err um', async () => {
+    it('converts rejected Promise to Err', async () => {
         const project = vi.fn(async () => {
             throw new Error('boom');
         });
@@ -400,7 +400,7 @@ describe('Result.tryMapAsync', () => {
         }
     });
 
-    it('überspringt tryMapAsync wenn Source bereits Err ist', async () => {
+    it('skips tryMapAsync if source is already Err', async () => {
         const project = vi.fn(async () => 123);
         const source = err('original error');
 
@@ -412,12 +412,12 @@ describe('Result.tryMapAsync', () => {
 });
 
 describe('Result.pipeAsync', () => {
-    it('gibt ohne Operatoren die gleiche Instanz zurück', async () => {
+    it('returns same instance without operators', async () => {
         const r = ok(1);
         await expect(r.pipeAsync()).resolves.toBe(r);
     });
 
-    it('verkettet sync und async Schritte in Reihenfolge', async () => {
+    it('chains sync and async steps in order', async () => {
         const out = await ok<number, string>(2).pipeAsync(
             map((n) => n + 1),
             (res) => res.unwrapOr(0),
@@ -428,7 +428,7 @@ describe('Result.pipeAsync', () => {
         expect(out).toBe('n=6');
     });
 
-    it('pipet mehrere async Result-Funktionen hintereinander', async () => {
+    it('pipes multiple async Result functions sequentially', async () => {
         const firstResult = vi.fn(async (n: number): Promise<Result<string, Error>> => {
             if (n < 0) return Result.err<Error, string>(new Error('negative'));
             return ok(String(n));
@@ -474,7 +474,7 @@ describe('Result.pipeAsync', () => {
         expect(thirdResult).not.toHaveBeenCalled();
     });
 
-    it('funktioniert auch mit async Operators (mapAsync / tapAsync / filterAsync)', async () => {
+    it('works also with async operators (mapAsync / tapAsync / filterAsync)', async () => {
         const seen: Array<string> = [];
 
         const out = await ok<number, string>(1).pipeAsync(
@@ -491,7 +491,7 @@ describe('Result.pipeAsync', () => {
     });
 
     describe('filter coverage', () => {
-        it('filter gibt source zurück bei Err', () => {
+        it('filter returns source on Err', () => {
             const result = err('original error');
             const filtered = result.pipe(filter(() => true, () => 'filtered'));
             expect(filtered).toBe(result);
@@ -499,13 +499,13 @@ describe('Result.pipeAsync', () => {
     });
 
     describe('filterAsync coverage', () => {
-        it('filterAsync gibt source zurück bei Err', async () => {
+        it('filterAsync returns source on Err', async () => {
             const result = err('original error');
             const filtered = await result.pipeAsync(filterAsync(async () => true, async () => 'filtered'));
             expect(filtered).toBe(result);
         });
 
-        it('filterAsync führt errorFn aus bei Ok aber false predicate', async () => {
+        it('filterAsync executes errorFn on Ok but false predicate', async () => {
             const result = ok(5);
             const filtered = await result.pipeAsync(filterAsync(async (v) => v > 10, async () => 'too small'));
             expect(filtered.isErr()).toBe(true);
@@ -516,7 +516,7 @@ describe('Result.pipeAsync', () => {
     });
 
     describe('mapAsync coverage', () => {
-        it('mapAsync gibt source zurück bei Err', async () => {
+        it('mapAsync returns source on Err', async () => {
             const result = err('original error');
             const mapped = await result.pipeAsync(mapAsync(async (v) => v * 2));
             expect(mapped).toBe(result);
@@ -524,7 +524,7 @@ describe('Result.pipeAsync', () => {
     });
 
     describe('tapAsync coverage', () => {
-        it('tapAsync führt ok callback aus', async () => {
+        it('tapAsync executes ok callback', async () => {
             const seen: string[] = [];
             const result = ok(42);
             await result.pipeAsync(tapAsync({
@@ -534,7 +534,7 @@ describe('Result.pipeAsync', () => {
             expect(seen).toEqual(['ok:42']);
         });
 
-        it('tapAsync führt err callback aus', async () => {
+        it('tapAsync executes err callback', async () => {
             const seen: string[] = [];
             const result = err('error');
             await result.pipeAsync(tapAsync({

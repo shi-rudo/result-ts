@@ -4,7 +4,7 @@ import { err, ok } from './result';
 import { mapErrAsync } from './mapErrAsync';
 
 describe('mapErrAsync', () => {
-    it('gibt source zurück bei Ok', async () => {
+    it('returns source for Ok', async () => {
         const project = vi.fn(async (e: string) => `mapped:${e}`);
         const source = ok<number, string>(1);
 
@@ -14,7 +14,7 @@ describe('mapErrAsync', () => {
         expect(project).not.toHaveBeenCalled();
     });
 
-    it('mappt Err via async project', async () => {
+    it('maps Err via async project', async () => {
         const project = vi.fn(async (e: string) => e.toUpperCase());
         const source = err<string, number>('boom');
 

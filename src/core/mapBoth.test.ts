@@ -4,7 +4,7 @@ import { Result, ok } from './result';
 import { bimap, mapBoth } from './mapBoth';
 
 describe('mapBoth / bimap', () => {
-    it('transformiert Ok und Err', () => {
+    it('transforms Ok and Err', () => {
         const okResult = ok(2).pipe(mapBoth(x => x + 1, e => e.length));
         expect(okResult.isOk()).toBe(true);
         if (okResult.isOk()) {
@@ -20,7 +20,7 @@ describe('mapBoth / bimap', () => {
         }
     });
 
-    it('bimap ist Alias für mapBoth', () => {
+    it('bimap is alias for mapBoth', () => {
         const result = ok(2).pipe(bimap(x => x * 2, e => e));
         expect(result.isOk()).toBe(true);
         if (result.isOk()) {

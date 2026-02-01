@@ -4,7 +4,7 @@ import { Result, ok } from './result';
 import { sequenceRecord } from './sequenceRecord';
 
 describe('sequenceRecord', () => {
-    it('gibt Ok(record) zurück wenn alle Ok sind', () => {
+    it('returns Ok(record) if all are Ok', () => {
         const result = sequenceRecord({ a: ok(1), b: ok('x') } as const);
         expect(result.isOk()).toBe(true);
         if (result.isOk()) {
@@ -15,7 +15,7 @@ describe('sequenceRecord', () => {
         }
     });
 
-    it('short-circuits beim ersten Err', () => {
+    it('short-circuits on first Err', () => {
         const result = sequenceRecord({ a: ok(1), b: Result.err('boom'), c: ok(3) } as const);
         expect(result.isErr()).toBe(true);
         if (result.isErr()) {

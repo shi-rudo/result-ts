@@ -3,13 +3,13 @@ import { describe, expect, it, vi } from 'vitest';
 import type { ErrorMatchBuilder, ErrMatchBuilder } from './matcher';
 import { Result, ok } from './result';
 
-class IOError extends Error {}
-class ParseError extends Error {}
-class ValidationError extends Error {}
-class UnknownError extends Error {}
+class IOError extends Error { }
+class ParseError extends Error { }
+class ValidationError extends Error { }
+class UnknownError extends Error { }
 
 describe('Result.match()', () => {
-    it('ist exhaustiv mit run() (E wird zu never)', () => {
+    it('is exhaustive with run() (E becomes never)', () => {
         const result: Result<number, IOError | ParseError | ValidationError> = Result.err(new ValidationError('bad'));
 
         if (!result.isErr()) throw new Error('expected Err');
@@ -24,7 +24,7 @@ describe('Result.match()', () => {
         expect(message).toBe('Invalid config: bad');
     });
 
-    it('unterstützt otherwise() für nicht-exhaustive Matches', () => {
+    it('supports otherwise() for non-exhaustive matches', () => {
         const result: Result<number, IOError | ParseError | ValidationError | UnknownError> = Result.err(new UnknownError('nope'));
 
         if (!result.isErr()) throw new Error('expected Err');
@@ -39,7 +39,7 @@ describe('Result.match()', () => {
         expect(message).toBe('unexpected: nope');
     });
 
-    it('unterstützt whenGuard und ruft otherwise nicht auf', () => {
+    it('supports whenGuard and does not call otherwise', () => {
         const result: Result<number, Error> = Result.err(new ValidationError('bad'));
 
         if (!result.isErr()) throw new Error('expected Err');
@@ -56,7 +56,7 @@ describe('Result.match()', () => {
         expect(message).toBe('invalid:bad');
     });
 
-    it('überspringt weitere when-Aufrufe nach dem ersten Match', () => {
+    it('skips further when-calls after first match', () => {
         const result: Result<number, ValidationError> = Result.err(new ValidationError('bad'));
 
         if (!result.isErr()) throw new Error('expected Err');
@@ -75,7 +75,7 @@ describe('Result.match()', () => {
         expect(message).toBe('first');
     });
 
-    it('run() wirft wenn kein Match vorhanden ist', () => {
+    it('run() throws if no match is present', () => {
         const result: Result<number, Error> = Result.err(new UnknownError('nope'));
 
         if (!result.isErr()) throw new Error('expected Err');
@@ -89,7 +89,7 @@ describe('Result.match()', () => {
 });
 
 describe('Result.matchErr()', () => {
-    it('liefert Result zurück und wrappt Error-Values automatisch', () => {
+    it('returns Result and wraps error values automatically', () => {
         const result: Result<number, IOError | ParseError | ValidationError> = Result.err(new ParseError('parse'));
 
         const out = result
@@ -108,7 +108,7 @@ describe('Result.matchErr()', () => {
         }
     });
 
-    it('ruft otherwise nicht auf, wenn Source Ok ist', () => {
+    it('does not call otherwise when Source is Ok', () => {
         const result: Result<number, IOError | ParseError> = ok<number, IOError | ParseError>(1);
         const otherwise = vi.fn(() => new UnknownError('nope'));
 
@@ -121,7 +121,7 @@ describe('Result.matchErr()', () => {
         }
     });
 
-    it('wrappt nicht-Result Handler-Rückgaben zu Err', () => {
+    it('wraps non-Result handler returns to Err', () => {
         const result: Result<number, ParseError> = Result.err(new ParseError('parse'));
         const otherwise = vi.fn(() => ok(0));
 
@@ -137,7 +137,7 @@ describe('Result.matchErr()', () => {
         }
     });
 
-    it('gibt Result-Instanzen aus Handlern unverändert zurück', () => {
+    it('returns Result instances from handlers unchanged', () => {
         const result: Result<number, ParseError> = Result.err(new ParseError('parse'));
         const expected = ok(2);
 
@@ -149,7 +149,7 @@ describe('Result.matchErr()', () => {
         expect(out).toBe(expected);
     });
 
-    it('unterstützt whenGuard und wrappt Error-Values', () => {
+    it('supports whenGuard and wraps error values', () => {
         const result: Result<number, ValidationError> = Result.err(new ValidationError('bad'));
         const guard = vi.fn((error: Error): error is ValidationError => error instanceof ValidationError);
 
@@ -165,7 +165,7 @@ describe('Result.matchErr()', () => {
         }
     });
 
-    it('überspringt whenGuard wenn Source Ok ist', () => {
+    it('skips whenGuard when Source is Ok', () => {
         const result = ok<number, ValidationError>(1);
         const guard = vi.fn((error: ValidationError): error is ValidationError => error instanceof ValidationError);
         const handler = vi.fn(() => ok(2));
@@ -183,7 +183,7 @@ describe('Result.matchErr()', () => {
         }
     });
 
-    it('wrappt otherwise-Error wenn kein Match vorhanden ist', () => {
+    it('wraps otherwise-Error if no match is present', () => {
         const result: Result<number, ParseError> = Result.err(new ParseError('parse'));
 
         const out = result
@@ -197,14 +197,14 @@ describe('Result.matchErr()', () => {
         }
     });
 
-    it('run() gibt Ok zurück wenn Source Ok und E = never', () => {
+    it('run() returns Ok if Source Ok and E = never', () => {
         const result = ok<number, never>(1);
         const out = result.matchErr().run();
 
         expect(out).toBe(result);
     });
 
-    it('run() wirft wenn keine Auflösung vorhanden ist', () => {
+    it('run() throws if no resolution is present', () => {
         const result: Result<number, ValidationError> = Result.err(new ValidationError('bad'));
 
         const builder = result

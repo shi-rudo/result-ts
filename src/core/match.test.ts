@@ -4,7 +4,7 @@ import { Result, ok, err } from './result';
 import { match } from './match';
 
 describe('match', () => {
-    it('wendet ok-Handler bei Ok an', () => {
+    it('applies ok-Handler to Ok', () => {
         const result = ok(42);
         const output = result.pipe(match({
             ok: (value) => `success: ${value}`,
@@ -13,7 +13,7 @@ describe('match', () => {
         expect(output).toBe('success: 42');
     });
 
-    it('wendet err-Handler bei Err an', () => {
+    it('applies err-Handler to Err', () => {
         const result = err('something went wrong');
         const output = result.pipe(match({
             ok: (value) => `success: ${value}`,
@@ -22,7 +22,7 @@ describe('match', () => {
         expect(output).toBe('error: something went wrong');
     });
 
-    it('funktioniert in Pipe-Ketten', () => {
+    it('works in pipe chains', () => {
         const result = ok(2).pipe(
             (r) => r.pipe(match({
                 ok: (v) => ok(v * 3),

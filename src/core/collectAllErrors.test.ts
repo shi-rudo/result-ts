@@ -4,7 +4,7 @@ import { err, ok } from './result';
 import { collectAllErrors } from './collectAllErrors';
 
 describe('collectAllErrors', () => {
-    it('gibt Ok(values) zurück wenn alle Ok sind', () => {
+    it('returns Ok(values) if all are Ok', () => {
         const out = collectAllErrors([ok(1), ok(2)]);
         expect(out.isOk()).toBe(true);
         if (out.isOk()) {
@@ -12,7 +12,7 @@ describe('collectAllErrors', () => {
         }
     });
 
-    it('gibt Err(errors) zurück wenn ein Err vorhanden ist', () => {
+    it('returns Err(errors) if one Err is present', () => {
         const out = collectAllErrors([ok(1), err('e1'), ok(2), err('e2')]);
         expect(out.isErr()).toBe(true);
         if (out.isErr()) {
@@ -20,7 +20,7 @@ describe('collectAllErrors', () => {
         }
     });
 
-    it('gibt Ok([]) bei leerem Input zurück', () => {
+    it('returns Ok([]) for empty input', () => {
         const out = collectAllErrors<number, string>([]);
         expect(out.isOk()).toBe(true);
         if (out.isOk()) {

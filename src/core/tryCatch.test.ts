@@ -4,7 +4,7 @@ import { Result, ok, err } from './result';
 import { tryCatch } from './tryCatch';
 
 describe('tryCatch', () => {
-    it('führt Funktion aus und gibt Ok zurück bei Erfolg', () => {
+    it('executes function and returns Ok on success', () => {
         const fn = vi.fn(() => 42);
         const result = ok('any').pipe(tryCatch(fn));
 
@@ -15,7 +15,7 @@ describe('tryCatch', () => {
         expect(fn).toHaveBeenCalled();
     });
 
-    it('fängt Exceptions ab und gibt Err zurück', () => {
+    it('catches exceptions and returns Err', () => {
         const fn = vi.fn(() => {
             throw new Error('test error');
         });
@@ -28,7 +28,7 @@ describe('tryCatch', () => {
         }
     });
 
-    it('wendet errorMapper an um Exceptions zu transformieren', () => {
+    it('applies errorMapper to transform exceptions', () => {
         const fn = vi.fn(() => {
             throw new Error('raw error');
         });
@@ -42,7 +42,7 @@ describe('tryCatch', () => {
         expect(errorMapper).toHaveBeenCalledWith(expect.any(Error));
     });
 
-    it('überspringt tryCatch wenn Source bereits Err ist', () => {
+    it('skips tryCatch if source is already Err', () => {
         const fn = vi.fn(() => 42);
         const source = err('original error');
 
@@ -52,7 +52,7 @@ describe('tryCatch', () => {
         expect(fn).not.toHaveBeenCalled();
     });
 
-    it('funktioniert mit verschiedenen Exception-Typen', () => {
+    it('works with different exception types', () => {
         const fn = vi.fn(() => {
             throw 'string error';
         });
@@ -64,7 +64,7 @@ describe('tryCatch', () => {
         }
     });
 
-    it('kann in Pipe-Ketten verwendet werden', () => {
+    it('can be used in pipe chains', () => {
         const result = ok('input').pipe(
             tryCatch(() => 'processed'),
             (r) => r.isOk() ? ok('final') : r

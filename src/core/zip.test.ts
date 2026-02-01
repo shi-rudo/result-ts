@@ -4,7 +4,7 @@ import { Result, ok } from './result';
 import { combine, zip } from './zip';
 
 describe('zip', () => {
-    it('kombiniert zwei Ok zu Ok([a, b])', () => {
+    it('combines two Ok to Ok([a, b])', () => {
         const result = zip(ok(1), ok('a'));
         expect(result.isOk()).toBe(true);
         if (result.isOk()) {
@@ -13,7 +13,7 @@ describe('zip', () => {
         }
     });
 
-    it('short-circuits beim ersten Err', () => {
+    it('short-circuits on first Err', () => {
         const leftErr = zip(Result.err('left'), ok('a'));
         expect(leftErr.isErr()).toBe(true);
         if (leftErr.isErr()) {
@@ -27,7 +27,7 @@ describe('zip', () => {
         }
     });
 
-    it('funktioniert als Pipe-Operator', () => {
+    it('works as pipe operator', () => {
         const result = ok(1).pipe(zip(ok('a')));
         expect(result.isOk()).toBe(true);
         if (result.isOk()) {
@@ -38,7 +38,7 @@ describe('zip', () => {
 });
 
 describe('combine', () => {
-    it('kombiniert zwei Ok zu Ok([a, b])', () => {
+    it('combines two Ok to Ok([a, b])', () => {
         const result = combine(ok(1), ok('a'));
         expect(result.isOk()).toBe(true);
         if (result.isOk()) {
@@ -46,7 +46,7 @@ describe('combine', () => {
         }
     });
 
-    it('sammelt Fehler ein', () => {
+    it('collects errors', () => {
         const oneErr = combine(Result.err('left'), ok('a'));
         expect(oneErr.isErr()).toBe(true);
         if (oneErr.isErr()) {
@@ -60,7 +60,7 @@ describe('combine', () => {
         }
     });
 
-    it('funktioniert als Pipe-Operator', () => {
+    it('works as pipe operator', () => {
         const result = ok(1).pipe(combine(Result.err('right')));
         expect(result.isErr()).toBe(true);
         if (result.isErr()) {
