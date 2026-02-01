@@ -1,6 +1,6 @@
-# Refactoring Patterns for `result-ts`
+# Refactoring Patterns for `@shirudo/result`
 
-This guide provides patterns for refactoring existing TypeScript code to use the `result-ts` library.
+This guide provides patterns for refactoring existing TypeScript code to use the `@shirudo/result` library.
 
 ## 1. Replacing `try...catch` blocks
 
@@ -21,7 +21,7 @@ function parseJson(json: string): any {
 ### After
 
 ```typescript
-import { tryCatch, Result } from 'result-ts';
+import { tryCatch, Result } from '@shirudo/result';
 
 function parseJson(json: string): Result<any, string> {
   return tryCatch(
@@ -53,7 +53,7 @@ if (user === null) {
 ### After
 
 ```typescript
-import { fromNullable, Result } from 'result-ts';
+import { fromNullable, Result } from '@shirudo/result';
 
 function getUser(id: number): Result<User, 'User not found'> {
   const user = // ... logic to fetch user
@@ -91,7 +91,7 @@ function processData(data: Data): string {
 ### After
 
 ```typescript
-import { Result, flatMap, map, unwrapOr } from 'result-ts';
+import { Result, flatMap, map, unwrapOr } from '@shirudo/result';
 
 function processData(data: Data): string {
   return operation1(data).pipe(
@@ -132,7 +132,7 @@ function doSomething(): string {
 ### After
 
 ```typescript
-import { Result, tryCatch, map, mapErr, fold } from 'result-ts';
+import { Result, tryCatch, map, mapErr, fold } from '@shirudo/result';
 
 function doSomething(): string {
   return tryCatch(mightFail).pipe(

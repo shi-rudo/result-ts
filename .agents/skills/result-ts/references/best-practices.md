@@ -1,11 +1,11 @@
-# Best Practices for `result-ts`
+# Best Practices for `@shirudo/result`
 
-This guide provides best practices for using the `result-ts` library to write robust and maintainable code.
+This guide provides best practices for using `@shirudo/result` to write robust and maintainable code.
 
 ## 1. Use `Result` for Synchronous Operations, `AsyncResult` for Asynchronous
 
 -   **`Result`**: Use for synchronous functions that can fail. This makes error handling explicit and part of the function's signature.
--   **`AsyncResult` (from `result-ts`'s async features)**: Use for asynchronous operations, like Promises, that can fail. It provides a similar API to `Result` but for async workflows. `result-ts` has `mapAsync`, `flatMapAsync` etc to work with promises.
+-   **`AsyncResult` (from `@shirudo/result`'s async features)**: Use for asynchronous operations, like Promises, that can fail. It provides a similar API to `Result` but for async workflows. `@shirudo/result` has `mapAsync`, `flatMapAsync` etc to work with promises.
 
 ## 2. Handle Errors Gracefully at the End of the Chain
 
@@ -74,7 +74,7 @@ const username = getUsername(1).pipe(unwrapOr('Guest'));
 
 ## 4. Use the Pipeable API for Readability
 
-`result-ts` provides a pipeable API, which allows you to chain operations in a readable and type-safe way. Prefer this over nested function calls.
+`@shirudo/result` provides a pipeable API, which allows you to chain operations in a readable and type-safe way. Prefer this over nested function calls.
 
 ### Bad
 
