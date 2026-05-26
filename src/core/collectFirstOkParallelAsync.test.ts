@@ -2,6 +2,7 @@ import { describe, expect, it } from 'vitest';
 
 import type { Result } from './result';
 import { err, ok } from './result';
+import { InvalidResultStateError } from '../errors';
 import { collectFirstOkParallelAsync } from './collectFirstOkParallelAsync';
 
 type Deferred<T> = {
@@ -83,5 +84,14 @@ describe('collectFirstOkParallelAsync', () => {
             const value: number = result.value;
             expect(value).toBe(42);
         }
+    });
+
+    it('rethrows malformed fulfilled values as programmer errors', async () => {
+        const malformed = Promise.resolve({
+            isOk: () => false,
+            isErr: () => false,
+        }) as unknown as Promise<Result<number, string>>;
+
+        await expect(collectFirstOkParallelAsync([malformed])).rejects.toBeInstanceOf(InvalidResultStateError);
     });
 });

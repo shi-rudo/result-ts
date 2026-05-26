@@ -56,7 +56,7 @@ export async function collectFirstOkParallelAsync<const Inputs extends readonly 
                 if (result.isErr()) {
                     errors.push(result.error as ErrValue);
                 } else if (!result.isOk()) {
-                    errors.push(new InvalidResultStateError('collectFirstOkParallelAsync') as ErrValue);
+                    throw new InvalidResultStateError('collectFirstOkParallelAsync');
                 }
             } else {
                 errors.push(entry.reason as ErrValue);
