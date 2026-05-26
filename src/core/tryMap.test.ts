@@ -1,7 +1,8 @@
 import { describe, expect, it, vi } from 'vitest';
 
 import { tryMap } from './tryMap';
-import { err, ok } from './result';
+import { InvalidResultStateError } from '../errors';
+import { err, ok, type Result } from './result';
 
 describe('tryMap', () => {
     it('maps Ok value', () => {
@@ -39,5 +40,14 @@ describe('tryMap', () => {
 
         expect(result).toBe(source);
         expect(project).not.toHaveBeenCalled();
+    });
+
+    it('throws malformed Result values as programmer errors', () => {
+        const malformed = {
+            isOk: () => false,
+            isErr: () => false,
+        } as unknown as Result<number, string>;
+
+        expect(() => tryMap((value: number) => value + 1)(malformed)).toThrow(InvalidResultStateError);
     });
 });

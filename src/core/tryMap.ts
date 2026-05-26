@@ -13,10 +13,10 @@ export function tryMap<T, E, U, F = unknown>(
         if (source.isErr()) {
             return source as unknown as Result<U, E | F>;
         }
+        if (!source.isOk()) throw new InvalidResultStateError('tryMap');
 
         try {
-            if (source.isOk()) return ok<U, E | F>(project(source.value));
-            throw new InvalidResultStateError('tryMap');
+            return ok<U, E | F>(project(source.value));
         } catch (error) {
             return err<E | F, U>(errorMapper ? errorMapper(error) : error as F);
         }
