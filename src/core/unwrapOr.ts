@@ -1,4 +1,5 @@
 import type { Result } from './result';
+import { InvalidResultStateError } from '../errors';
 
 /**
  * Returns the value or a default value.
@@ -6,5 +7,6 @@ import type { Result } from './result';
  */
 export function unwrapOr<T, E>(result: Result<T, E>, defaultValue: T): T {
     if (result.isOk()) return result.value;
-    return defaultValue;
+    if (result.isErr()) return defaultValue;
+    throw new InvalidResultStateError('unwrapOr');
 }
