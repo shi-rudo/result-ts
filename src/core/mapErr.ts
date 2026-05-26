@@ -1,5 +1,6 @@
 import type { Result } from './result';
 import { err } from './result';
+import { InvalidResultStateError } from '../errors';
 
 /**
  * Transforms the error (Err case).
@@ -10,6 +11,7 @@ export function mapErr<T, E, F>(project: (error: E) => F) {
         if (source.isErr()) {
             return err(project(source.error));
         }
-        return source as unknown as Result<T, F>;
+        if (source.isOk()) return source as unknown as Result<T, F>;
+        throw new InvalidResultStateError('mapErr');
     };
 }
