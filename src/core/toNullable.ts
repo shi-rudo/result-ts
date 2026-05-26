@@ -1,4 +1,5 @@
 import type { Result } from './result';
+import { InvalidResultStateError } from '../errors';
 
 /**
  * Converts a Result to `T | null`.
@@ -6,5 +7,6 @@ import type { Result } from './result';
  */
 export function toNullable<T, E>(result: Result<T, E>): T | null {
     if (result.isOk()) return result.value;
-    return null;
+    if (result.isErr()) return null;
+    throw new InvalidResultStateError('toNullable');
 }
