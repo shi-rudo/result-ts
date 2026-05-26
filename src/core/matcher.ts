@@ -24,20 +24,20 @@ export class ErrorMatchBuilder<E, R> {
         Object.freeze(this);
     }
 
-    when<C extends Ctor<E>, R1>(
-        ctor: C,
-        handler: (error: InstanceType<C>) => R1
-    ): ErrorMatchBuilder<Exclude<E, InstanceType<C>>, R | R1> {
-        if (this.#matched) return this as unknown as ErrorMatchBuilder<Exclude<E, InstanceType<C>>, R | R1>;
+    when<A extends E, R1>(
+        ctor: Ctor<A>,
+        handler: (error: A) => R1
+    ): ErrorMatchBuilder<Exclude<E, A>, R | R1> {
+        if (this.#matched) return this as unknown as ErrorMatchBuilder<Exclude<E, A>, R | R1>;
 
         if (this.#error instanceof ctor) {
-            return new ErrorMatchBuilder(this.#error, true, handler(this.#error as InstanceType<C>)) as unknown as ErrorMatchBuilder<
-                Exclude<E, InstanceType<C>>,
+            return new ErrorMatchBuilder(this.#error, true, handler(this.#error as A)) as unknown as ErrorMatchBuilder<
+                Exclude<E, A>,
                 R | R1
             >;
         }
 
-        return this as unknown as ErrorMatchBuilder<Exclude<E, InstanceType<C>>, R | R1>;
+        return this as unknown as ErrorMatchBuilder<Exclude<E, A>, R | R1>;
     }
 
     whenGuard<A extends E, R1>(
@@ -95,26 +95,26 @@ export class ErrMatchBuilder<T, E, OutT, OutE> {
         throw new InvalidResultStateError('ErrMatchBuilder.fromResult');
     }
 
-    when<C extends Ctor<E>, R1>(
-        ctor: C,
-        handler: (error: InstanceType<C>) => R1
-    ): ErrMatchBuilder<T, Exclude<E, InstanceType<C>>, OutT | OkOfReturn<R1>, OutE | ErrOfReturn<R1>> {
+    when<A extends E, R1>(
+        ctor: Ctor<A>,
+        handler: (error: A) => R1
+    ): ErrMatchBuilder<T, Exclude<E, A>, OutT | OkOfReturn<R1>, OutE | ErrOfReturn<R1>> {
         if (this.#resolved) {
-            return this as unknown as ErrMatchBuilder<T, Exclude<E, InstanceType<C>>, OutT | OkOfReturn<R1>, OutE | ErrOfReturn<R1>>;
+            return this as unknown as ErrMatchBuilder<T, Exclude<E, A>, OutT | OkOfReturn<R1>, OutE | ErrOfReturn<R1>>;
         }
 
         if (this.#error instanceof ctor) {
-            const out = handler(this.#error as InstanceType<C>);
+            const out = handler(this.#error as A);
             const resolved = isResult(out) ? out : this.#makeErr(out as ErrOfReturn<R1>);
             return new ErrMatchBuilder(this.#makeErr, this.#error, resolved) as unknown as ErrMatchBuilder<
                 T,
-                Exclude<E, InstanceType<C>>,
+                Exclude<E, A>,
                 OutT | OkOfReturn<R1>,
                 OutE | ErrOfReturn<R1>
             >;
         }
 
-        return this as unknown as ErrMatchBuilder<T, Exclude<E, InstanceType<C>>, OutT | OkOfReturn<R1>, OutE | ErrOfReturn<R1>>;
+        return this as unknown as ErrMatchBuilder<T, Exclude<E, A>, OutT | OkOfReturn<R1>, OutE | ErrOfReturn<R1>>;
     }
 
     whenGuard<A extends E, R1>(
