@@ -1,4 +1,5 @@
 import type { Result } from './result';
+import { InvalidResultStateError } from '../errors';
 
 /**
  * Transforms the value or returns a default value.
@@ -6,5 +7,6 @@ import type { Result } from './result';
  */
 export function mapOr<T, E, U>(result: Result<T, E>, defaultValue: U, fn: (value: T) => U): U {
     if (result.isOk()) return fn(result.value);
-    return defaultValue;
+    if (result.isErr()) return defaultValue;
+    throw new InvalidResultStateError('mapOr');
 }
