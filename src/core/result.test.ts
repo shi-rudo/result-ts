@@ -8,6 +8,7 @@ import {
     ERR_UNWRAP_ON_ERR,
     ExpectErrError,
     ExpectOkError,
+    InvalidResultStateError,
     UnwrapErrOnOkError,
     UnwrapOnErrError,
 } from '../errors';
@@ -67,6 +68,12 @@ describe('Result class', () => {
 
             it('returns default for Err', () => {
                 expect(Result.err<string, number>('error').unwrapOr(99)).toBe(99);
+            });
+
+            it('throws for malformed Result state', () => {
+                const malformed = { _tag: 'Invalid', value: undefined, error: undefined } as unknown as Result<number, string>;
+
+                expect(() => ok<number, string>(0).unwrapOr.call(malformed, 99)).toThrow(InvalidResultStateError);
             });
         });
 

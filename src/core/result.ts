@@ -63,7 +63,9 @@ abstract class ResultBase extends Pipeable {
     }
 
     unwrapOr<T, E>(this: Result<T, E>, defaultValue: T): T {
-        return this._tag === 'Ok' ? this.value : defaultValue;
+        if (this._tag === 'Ok') return this.value;
+        if (this._tag === 'Err') return defaultValue;
+        throw new InvalidResultStateError('Result.unwrapOr');
     }
 
     unwrap<T, E>(this: Result<T, E>): T {
