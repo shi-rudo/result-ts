@@ -1,6 +1,7 @@
 import { describe, expect, it, vi } from 'vitest';
 
 import { Result, ok, err } from './result';
+import { InvalidResultStateError } from '../errors';
 import { tapAsync } from './tapAsync';
 
 describe('tapAsync', () => {
@@ -76,5 +77,14 @@ describe('tapAsync', () => {
         // Nur err callback definiert
         await errResult.pipeAsync(tapAsync({ err: errCallback }));
         expect(errCallback).toHaveBeenCalledWith('error');
+    });
+
+    it('rejects for malformed Result values', async () => {
+        const malformed = {
+            isOk: () => false,
+            isErr: () => false,
+        } as unknown as Result<number, string>;
+
+        await expect(tapAsync({ ok: vi.fn(), err: vi.fn() })(malformed)).rejects.toBeInstanceOf(InvalidResultStateError);
     });
 });
