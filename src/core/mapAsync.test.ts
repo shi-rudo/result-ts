@@ -1,7 +1,8 @@
 import { describe, expect, it, vi } from 'vitest';
 
 import { mapAsync } from './mapAsync';
-import { err, ok } from './result';
+import { InvalidResultStateError } from '../errors';
+import { err, ok, type Result } from './result';
 
 describe('mapAsync', () => {
     it('maps Ok value asynchronously', async () => {
@@ -27,5 +28,14 @@ describe('mapAsync', () => {
         if (result.isErr()) {
             expect(result.error).toBe('boom');
         }
+    });
+
+    it('rejects for malformed Result values', async () => {
+        const malformed = {
+            isOk: () => false,
+            isErr: () => false,
+        } as unknown as Result<number, string>;
+
+        await expect(mapAsync(async (value: number) => value * 2)(malformed)).rejects.toBeInstanceOf(InvalidResultStateError);
     });
 });

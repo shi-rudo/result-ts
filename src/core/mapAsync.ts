@@ -1,5 +1,6 @@
 import type { Result } from './result';
 import { ok } from './result';
+import { InvalidResultStateError } from '../errors';
 
 /**
  * Async version of map.
@@ -9,6 +10,7 @@ export function mapAsync<T, E, U>(project: (value: T) => Promise<U>) {
         if (source.isOk()) {
             return ok(await project(source.value));
         }
-        return source as unknown as Result<U, E>;
+        if (source.isErr()) return source as unknown as Result<U, E>;
+        throw new InvalidResultStateError('mapAsync');
     };
 }
