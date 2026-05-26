@@ -1,6 +1,7 @@
 import { describe, expect, it } from 'vitest';
 
 import { Result, ok } from './result';
+import { InvalidResultStateError } from '../errors';
 import { flatten } from './flatten';
 
 describe('flatten', () => {
@@ -17,5 +18,14 @@ describe('flatten', () => {
     it('returns outer Err', () => {
         const nested: Result<Result<number, string>, string> = Result.err('outer error');
         expect(flatten(nested)).toEqual(Result.err('outer error'));
+    });
+
+    it('throws for malformed Result values', () => {
+        const malformed = {
+            isOk: () => false,
+            isErr: () => false,
+        } as unknown as Result<Result<number, string>, string>;
+
+        expect(() => flatten(malformed)).toThrow(InvalidResultStateError);
     });
 });

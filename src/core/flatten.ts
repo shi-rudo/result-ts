@@ -1,4 +1,5 @@
 import type { Result } from './result';
+import { InvalidResultStateError } from '../errors';
 
 /**
  * Flattens a nested Result.
@@ -9,5 +10,6 @@ export function flatten<T, E>(result: Result<Result<T, E>, E>): Result<T, E> {
     if (result.isOk()) {
         return result.value;
     }
-    return result as unknown as Result<T, E>;
+    if (result.isErr()) return result as unknown as Result<T, E>;
+    throw new InvalidResultStateError('flatten');
 }
