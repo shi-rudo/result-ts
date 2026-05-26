@@ -80,4 +80,13 @@ describe('collectFirstOkAsync', () => {
 
         await expect(collectFirstOkAsync([malformed])).rejects.toBeInstanceOf(InvalidResultStateError);
     });
+
+    it('rethrows synchronous thunk errors as programmer errors', async () => {
+        const bug = new Error('bug');
+        const throwingThunk = () => {
+            throw bug;
+        };
+
+        await expect(collectFirstOkAsync([throwingThunk])).rejects.toBe(bug);
+    });
 });

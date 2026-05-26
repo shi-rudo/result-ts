@@ -24,9 +24,10 @@ export async function collectFirstOkAsync<const Inputs extends readonly CollectF
     const errors: Array<ErrValueOfInput<Inputs[number]>> = [];
 
     for (const input of inputs) {
+        const pendingResult = typeof input === 'function' ? input() : input;
         let result: Result<any, any>;
         try {
-            result = await (typeof input === 'function' ? input() : input);
+            result = await pendingResult;
         } catch (error) {
             errors.push(error as ErrValueOfInput<Inputs[number]>);
             continue;
