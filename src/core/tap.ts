@@ -1,4 +1,5 @@
 import type { Result } from './result';
+import { InvalidResultStateError } from '../errors';
 
 /**
  * Executes a side effect (logging, debugging) without changing the Result.
@@ -6,8 +7,14 @@ import type { Result } from './result';
  */
 export function tap<T, E>(observer: { ok?: (val: T) => void; err?: (e: E) => void }) {
     return (source: Result<T, E>): Result<T, E> => {
-        if (source.isOk() && observer.ok) observer.ok(source.value);
-        if (source.isErr() && observer.err) observer.err(source.error);
-        return source;
+        if (source.isOk()) {
+            if (observer.ok) observer.ok(source.value);
+            return source;
+        }
+        if (source.isErr()) {
+            if (observer.err) observer.err(source.error);
+            return source;
+        }
+        throw new InvalidResultStateError('tap');
     };
 }

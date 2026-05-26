@@ -1,6 +1,7 @@
 import { describe, expect, it, vi } from 'vitest';
 
 import { Result, ok, err } from './result';
+import { InvalidResultStateError } from '../errors';
 import { tap } from './tap';
 
 describe('tap', () => {
@@ -67,5 +68,14 @@ describe('tap', () => {
         );
 
         expect(seen).toEqual(['start:2', 'end:2']);
+    });
+
+    it('throws for malformed Result values', () => {
+        const malformed = {
+            isOk: () => false,
+            isErr: () => false,
+        } as unknown as Result<number, string>;
+
+        expect(() => tap({ ok: vi.fn(), err: vi.fn() })(malformed)).toThrow(InvalidResultStateError);
     });
 });
