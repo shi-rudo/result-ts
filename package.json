@@ -40,10 +40,11 @@
   },
   "scripts": {
     "typecheck": "tsc --noEmit --emitDeclarationOnly false",
+    "test:types": "tsc -p tsconfig.type-tests.json --noEmit --emitDeclarationOnly false",
     "lint": "tsc --noEmit --emitDeclarationOnly false",
     "test": "vitest",
     "test:coverage": "vitest run --coverage",
-    "prebuild": "pnpm lint && pnpm test run",
+    "prebuild": "pnpm lint && pnpm test:types && pnpm test run",
     "build": "tsdown",
     "prepublishOnly": "pnpm build"
   },
