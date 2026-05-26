@@ -1,6 +1,7 @@
 import { describe, expect, it } from 'vitest';
 
 import { Result, ok } from './result';
+import { InvalidResultStateError } from '../errors';
 import { combine, zip } from './zip';
 
 describe('zip', () => {
@@ -67,5 +68,14 @@ describe('combine', () => {
             expect(result.error).toEqual(['right']);
         }
     });
-});
 
+    it('throws for malformed Result values', () => {
+        const malformed = {
+            isOk: () => false,
+            isErr: () => false,
+        } as unknown as Result<number, string>;
+
+        expect(() => combine(malformed, ok('a'))).toThrow(InvalidResultStateError);
+        expect(() => combine(ok(1), malformed)).toThrow(InvalidResultStateError);
+    });
+});

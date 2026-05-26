@@ -35,6 +35,8 @@ function combineImpl<A, AE, B, BE>(
     const errors: Array<AE | BE> = [];
     if (left.isErr()) errors.push(left.error as AE | BE);
     if (right.isErr()) errors.push(right.error as AE | BE);
+    if (!left.isOk() && !left.isErr()) throw new InvalidResultStateError('combine');
+    if (!right.isOk() && !right.isErr()) throw new InvalidResultStateError('combine');
 
     return err<Array<AE | BE>, [A, B]>(errors);
 }
