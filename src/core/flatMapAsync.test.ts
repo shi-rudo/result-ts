@@ -1,6 +1,7 @@
 import { describe, expect, it } from 'vitest';
 
 import { Result, ok, err } from './result';
+import { InvalidResultStateError } from '../errors';
 import { flatMapAsync } from './flatMapAsync';
 
 describe('flatMapAsync', () => {
@@ -75,5 +76,14 @@ describe('flatMapAsync', () => {
         if (result.isOk()) {
             expect(result.value).toBe('6!');
         }
+    });
+
+    it('rejects for malformed Result values', async () => {
+        const malformed = {
+            isOk: () => false,
+            isErr: () => false,
+        } as unknown as Result<number, string>;
+
+        await expect(flatMapAsync(async (value: number) => ok(value * 2))(malformed)).rejects.toBeInstanceOf(InvalidResultStateError);
     });
 });
