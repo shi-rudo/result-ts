@@ -13,10 +13,10 @@ export function tryMapAsync<T, E, U, F = unknown>(
         if (source.isErr()) {
             return source as unknown as Result<U, E | F>;
         }
+        if (!source.isOk()) throw new InvalidResultStateError('tryMapAsync');
 
         try {
-            if (source.isOk()) return ok<U, E | F>(await project(source.value));
-            throw new InvalidResultStateError('tryMapAsync');
+            return ok<U, E | F>(await project(source.value));
         } catch (error) {
             return err<E | F, U>(errorMapper ? errorMapper(error) : error as F);
         }
