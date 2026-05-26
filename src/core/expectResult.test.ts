@@ -1,8 +1,8 @@
 import { describe, expect, it } from 'vitest';
 
-import { Result, ok } from './result';
+import { Result, ok, type Result as ResultType } from './result';
 import { expectResult } from './expectResult';
-import { ERR_EXPECT_OK, ExpectOkError } from '../errors';
+import { ERR_EXPECT_OK, ExpectOkError, InvalidResultStateError } from '../errors';
 
 describe('expectResult', () => {
     it('returns value for Ok', () => {
@@ -20,5 +20,14 @@ describe('expectResult', () => {
         expect(caughtError).toBeInstanceOf(ExpectOkError);
         expect((caughtError as ExpectOkError).code).toBe(ERR_EXPECT_OK);
         expect((caughtError as ExpectOkError).message).toContain('custom message');
+    });
+
+    it('throws InvalidResultStateError for malformed Result values', () => {
+        const malformed = {
+            isOk: () => false,
+            isErr: () => false,
+        } as unknown as ResultType<number, string>;
+
+        expect(() => expectResult(malformed, 'custom message')).toThrow(InvalidResultStateError);
     });
 });
