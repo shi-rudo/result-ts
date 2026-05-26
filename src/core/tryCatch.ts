@@ -7,13 +7,13 @@ import { ok, err } from './result';
  * Corresponds to Rust `Result::from` for fallible operations.
  */
 export function tryCatch<T, E = unknown>(fn: () => T, errorMapper?: (error: unknown) => E) {
-    return (source: Result<any, any>): Result<T, E> => {
-        if (source.isErr()) return source as unknown as Result<T, E>;
+    return <SE>(source: Result<unknown, SE>): Result<T, SE | E> => {
+        if (source.isErr()) return source as unknown as Result<T, SE | E>;
 
         try {
-            return ok(fn());
+            return ok<T, SE | E>(fn());
         } catch (error) {
-            return err(errorMapper ? errorMapper(error) : error as E);
+            return err<SE | E, T>(errorMapper ? errorMapper(error) : error as E);
         }
     };
 }

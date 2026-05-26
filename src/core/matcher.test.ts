@@ -1,6 +1,7 @@
 import { describe, expect, it, vi } from 'vitest';
 
 import type { ErrorMatchBuilder, ErrMatchBuilder } from './matcher';
+import { isResult } from './isResult';
 import { Result, ok } from './result';
 
 class IOError extends Error { }
@@ -194,6 +195,19 @@ describe('Result.matchErr()', () => {
         expect(out.isErr()).toBe(true);
         if (out.isErr()) {
             expect(out.error).toBeInstanceOf(UnknownError);
+        }
+    });
+
+    it('does not treat structurally similar handler output as a Result', () => {
+        const imposter = { isOk: () => true, isErr: () => false, value: 123 };
+        const result: Result<number, ValidationError> = Result.err(new ValidationError('bad'));
+
+        const out = result.matchErr().otherwise(() => imposter);
+
+        expect(isResult(out)).toBe(true);
+        expect(out.isErr()).toBe(true);
+        if (out.isErr()) {
+            expect(out.error).toBe(imposter);
         }
     });
 

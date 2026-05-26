@@ -1,6 +1,16 @@
 import { describe, expect, it } from 'vitest';
 
 import { Result, ok, err, collectFirstOk } from './result';
+import {
+    ERR_EXPECT_ERR,
+    ERR_EXPECT_OK,
+    ERR_UNWRAP_ERR_ON_OK,
+    ERR_UNWRAP_ON_ERR,
+    ExpectErrError,
+    ExpectOkError,
+    UnwrapErrOnOkError,
+    UnwrapOnErrError,
+} from '../errors';
 
 describe('Result class', () => {
     describe('static constructors', () => {
@@ -57,6 +67,89 @@ describe('Result class', () => {
 
             it('returns default for Err', () => {
                 expect(Result.err<string, number>('error').unwrapOr(99)).toBe(99);
+            });
+        });
+
+        describe('documented unwrap utilities', () => {
+            it('unwrap returns Ok value and throws typed error on Err', () => {
+                expect(ok<number, string>(42).unwrap()).toBe(42);
+
+                let caughtError: unknown;
+                try {
+                    Result.err<string, number>('error').unwrap();
+                } catch (error) {
+                    caughtError = error;
+                }
+
+                expect(caughtError).toBeInstanceOf(UnwrapOnErrError);
+                expect((caughtError as UnwrapOnErrError).code).toBe(ERR_UNWRAP_ON_ERR);
+                expect((caughtError as UnwrapOnErrError).errorValue).toBe('error');
+            });
+
+            it('unwrapErr returns Err value and throws typed error on Ok', () => {
+                expect(Result.err<string, number>('error').unwrapErr()).toBe('error');
+
+                let caughtError: unknown;
+                try {
+                    ok<number, string>(42).unwrapErr();
+                } catch (error) {
+                    caughtError = error;
+                }
+
+                expect(caughtError).toBeInstanceOf(UnwrapErrOnOkError);
+                expect((caughtError as UnwrapErrOnOkError).code).toBe(ERR_UNWRAP_ERR_ON_OK);
+                expect((caughtError as UnwrapErrOnOkError).okValue).toBe(42);
+            });
+
+            it('unwrapOrElse lazily computes fallback from Err', () => {
+                expect(ok<number, string>(42).unwrapOrElse(() => 0)).toBe(42);
+                expect(Result.err<string, number>('error').unwrapOrElse((error) => error.length)).toBe(5);
+            });
+
+            it('unwrapOrThrow throws the original Err value', () => {
+                const original = new Error('boom');
+
+                expect(ok<number, Error>(42).unwrapOrThrow()).toBe(42);
+                expect(() => Result.err<Error, number>(original).unwrapOrThrow()).toThrow(original);
+            });
+
+            it('expect and expectErr throw typed errors with custom messages', () => {
+                expect(ok<number, string>(42).expect('must be ok')).toBe(42);
+                expect(Result.err<string, number>('error').expectErr('must be err')).toBe('error');
+
+                let expectOkError: unknown;
+                try {
+                    Result.err<string, number>('error').expect('must be ok');
+                } catch (error) {
+                    expectOkError = error;
+                }
+
+                expect(expectOkError).toBeInstanceOf(ExpectOkError);
+                expect((expectOkError as ExpectOkError).code).toBe(ERR_EXPECT_OK);
+                expect((expectOkError as ExpectOkError).expectedMessage).toBe('must be ok');
+
+                let expectErrError: unknown;
+                try {
+                    ok<number, string>(42).expectErr('must be err');
+                } catch (error) {
+                    expectErrError = error;
+                }
+
+                expect(expectErrError).toBeInstanceOf(ExpectErrError);
+                expect((expectErrError as ExpectErrError).code).toBe(ERR_EXPECT_ERR);
+                expect((expectErrError as ExpectErrError).expectedMessage).toBe('must be err');
+            });
+        });
+
+        describe('documented conversions', () => {
+            it('toPromise resolves Ok and rejects Err', async () => {
+                await expect(ok<number, string>(42).toPromise()).resolves.toBe(42);
+                await expect(Result.err<string, number>('boom').toPromise()).rejects.toBe('boom');
+            });
+
+            it('toNullable returns Ok value or null', () => {
+                expect(ok<number, string>(42).toNullable()).toBe(42);
+                expect(Result.err<string, number>('boom').toNullable()).toBeNull();
             });
         });
 
@@ -318,6 +411,11 @@ describe('Result class', () => {
             const error = new Error('error message');
             const result = err(error);
             expect(result.toUserFriendly()).toEqual({ isSuccess: false, error: 'error message' });
+        });
+
+        it('converts non-string message properties to strings', () => {
+            const result = err({ message: 404 });
+            expect(result.toUserFriendly()).toEqual({ isSuccess: false, error: '404' });
         });
 
         it('converts any error types to strings for user-friendly format', () => {

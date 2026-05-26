@@ -1,4 +1,5 @@
-export const ERR_INVALID_STATE = 'ERR_INVALID_STATE' as const;
+export const ERR_INVALID_RESULT_STATE = 'ERR_INVALID_RESULT_STATE' as const;
+export const ERR_INVALID_STATE = ERR_INVALID_RESULT_STATE;
 export const ERR_TASK_YIELD_NOT_RESULT = 'ERR_TASK_YIELD_NOT_RESULT' as const;
 export const ERR_MATCH_ON_OK = 'ERR_MATCH_ON_OK' as const;
 export const ERR_UNWRAP_ON_ERR = 'ERR_UNWRAP_ON_ERR' as const;
@@ -7,7 +8,7 @@ export const ERR_EXPECT_OK = 'ERR_EXPECT_OK' as const;
 export const ERR_EXPECT_ERR = 'ERR_EXPECT_ERR' as const;
 
 export type ResultErrorCode =
-    | typeof ERR_INVALID_STATE
+    | typeof ERR_INVALID_RESULT_STATE
     | typeof ERR_TASK_YIELD_NOT_RESULT
     | typeof ERR_MATCH_ON_OK
     | typeof ERR_UNWRAP_ON_ERR
@@ -52,7 +53,7 @@ const INVALID_RESULT_STATE_MESSAGE = 'Unreachable: Result is neither Ok nor Err'
 
 export class InvalidResultStateError extends ResultError {
     constructor(context?: string) {
-        super(INVALID_RESULT_STATE_MESSAGE, ERR_INVALID_STATE, context);
+        super(INVALID_RESULT_STATE_MESSAGE, ERR_INVALID_RESULT_STATE, context);
     }
 }
 

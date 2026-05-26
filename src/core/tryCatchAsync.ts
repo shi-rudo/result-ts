@@ -8,13 +8,13 @@ export function tryCatchAsync<T, E = unknown>(
     fn: () => Promise<T>,
     errorMapper?: (error: unknown) => E
 ) {
-    return async (source: Result<any, any>): Promise<Result<T, E>> => {
-        if (source.isErr()) return source as unknown as Result<T, E>;
+    return async <SE>(source: Result<unknown, SE>): Promise<Result<T, SE | E>> => {
+        if (source.isErr()) return source as unknown as Result<T, SE | E>;
 
         try {
-            return ok(await fn());
+            return ok<T, SE | E>(await fn());
         } catch (error) {
-            return err(errorMapper ? errorMapper(error) : error as E);
+            return err<SE | E, T>(errorMapper ? errorMapper(error) : error as E);
         }
     };
 }

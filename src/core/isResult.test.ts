@@ -15,5 +15,6 @@ describe('isResult', () => {
         expect(isResult({})).toBe(false);
         expect(isResult({ isOk: () => true })).toBe(false);
         expect(isResult({ isOk: () => true, isErr: 'nope' })).toBe(false);
+        expect(isResult({ isOk: () => true, isErr: () => false, value: 1 })).toBe(false);
     });
 });

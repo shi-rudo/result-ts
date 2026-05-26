@@ -1,6 +1,7 @@
 import { describe, expect, it, vi } from 'vitest';
 
 import { Result, ok, err } from './result';
+import { InvalidResultStateError } from '../errors';
 import { collectFirstOkAsync } from './collectFirstOkAsync';
 
 describe('collectFirstOkAsync', () => {
@@ -69,5 +70,14 @@ describe('collectFirstOkAsync', () => {
             const value: number = result.value;
             expect(value).toBe(42);
         }
+    });
+
+    it('rethrows malformed fulfilled values as programmer errors', async () => {
+        const malformed = Promise.resolve({
+            isOk: () => false,
+            isErr: () => false,
+        }) as unknown as Promise<Result<number, string>>;
+
+        await expect(collectFirstOkAsync([malformed])).rejects.toBeInstanceOf(InvalidResultStateError);
     });
 });

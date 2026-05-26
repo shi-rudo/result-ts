@@ -1,6 +1,13 @@
 import { Pipeable } from './pipeable';
 import { ErrMatchBuilder, ErrorMatchBuilder } from './matcher';
-import { InvalidResultStateError, MatchOnOkError } from '../errors';
+import {
+    ExpectErrError,
+    ExpectOkError,
+    InvalidResultStateError,
+    MatchOnOkError,
+    UnwrapErrOnOkError,
+    UnwrapOnErrError,
+} from '../errors';
 
 // Re-export pipe operators for convenience
 export { map } from './map';
@@ -57,6 +64,52 @@ abstract class ResultBase extends Pipeable {
 
     unwrapOr<T, E>(this: Result<T, E>, defaultValue: T): T {
         return this._tag === 'Ok' ? this.value : defaultValue;
+    }
+
+    unwrap<T, E>(this: Result<T, E>): T {
+        if (this._tag === 'Ok') return this.value;
+        if (this._tag === 'Err') throw new UnwrapOnErrError(this.error);
+        throw new InvalidResultStateError('Result.unwrap');
+    }
+
+    unwrapErr<T, E>(this: Result<T, E>): E {
+        if (this._tag === 'Err') return this.error;
+        if (this._tag === 'Ok') throw new UnwrapErrOnOkError(this.value);
+        throw new InvalidResultStateError('Result.unwrapErr');
+    }
+
+    unwrapOrElse<T, E>(this: Result<T, E>, fn: (error: E) => T): T {
+        if (this._tag === 'Ok') return this.value;
+        if (this._tag === 'Err') return fn(this.error);
+        throw new InvalidResultStateError('Result.unwrapOrElse');
+    }
+
+    unwrapOrThrow<T, E>(this: Result<T, E>): T {
+        if (this._tag === 'Ok') return this.value;
+        if (this._tag === 'Err') throw this.error;
+        throw new InvalidResultStateError('Result.unwrapOrThrow');
+    }
+
+    expect<T, E>(this: Result<T, E>, message: string): T {
+        if (this._tag === 'Ok') return this.value;
+        throw new ExpectOkError(message);
+    }
+
+    expectErr<T, E>(this: Result<T, E>, message: string): E {
+        if (this._tag === 'Err') return this.error;
+        throw new ExpectErrError(message);
+    }
+
+    toPromise<T, E>(this: Result<T, E>): Promise<T> {
+        if (this._tag === 'Ok') return Promise.resolve(this.value);
+        if (this._tag === 'Err') return Promise.reject(this.error);
+        throw new InvalidResultStateError('Result.toPromise');
+    }
+
+    toNullable<T, E>(this: Result<T, E>): T | null {
+        if (this._tag === 'Ok') return this.value;
+        if (this._tag === 'Err') return null;
+        throw new InvalidResultStateError('Result.toNullable');
     }
 
     /**
@@ -118,7 +171,9 @@ abstract class ResultBase extends Pipeable {
 
         const error = this.error;
         const errorMessage =
-            error && typeof error === 'object' && 'message' in error ? (error as any).message : String(error);
+            error && typeof error === 'object' && 'message' in error
+                ? String((error as { message: unknown }).message)
+                : String(error);
 
         return { isSuccess: false, error: errorMessage };
     }

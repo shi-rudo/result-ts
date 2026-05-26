@@ -24,22 +24,24 @@ export async function collectFirstOkAsync<const Inputs extends readonly CollectF
     const errors: Array<ErrValueOfInput<Inputs[number]>> = [];
 
     for (const input of inputs) {
+        let result: Result<any, any>;
         try {
-            const result = await (typeof input === 'function' ? input() : input);
-            if (result.isOk()) {
-                return ok<OkValueOfInput<Inputs[number]>, ErrValueOfInput<Inputs[number]>[]>(
-                    result.value as OkValueOfInput<Inputs[number]>
-                );
-            }
-            if (result.isErr()) {
-                errors.push(result.error as ErrValueOfInput<Inputs[number]>);
-                continue;
-            }
-            throw new InvalidResultStateError('collectFirstOkAsync');
+            result = await (typeof input === 'function' ? input() : input);
         } catch (error) {
-            // If the Promise itself rejects, we treat it as an Error
             errors.push(error as ErrValueOfInput<Inputs[number]>);
+            continue;
         }
+
+        if (result.isOk()) {
+            return ok<OkValueOfInput<Inputs[number]>, ErrValueOfInput<Inputs[number]>[]>(
+                result.value as OkValueOfInput<Inputs[number]>
+            );
+        }
+        if (result.isErr()) {
+            errors.push(result.error as ErrValueOfInput<Inputs[number]>);
+            continue;
+        }
+        throw new InvalidResultStateError('collectFirstOkAsync');
     }
 
     return err<ErrValueOfInput<Inputs[number]>[], OkValueOfInput<Inputs[number]>>(errors);

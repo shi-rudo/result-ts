@@ -1,5 +1,6 @@
 import type { Result } from './result';
 import { InvalidResultStateError } from '../errors';
+import { isResult } from './isResult';
 
 export type Ctor<T> = abstract new (...args: any[]) => T;
 export type TypeGuard<E, A extends E> = (error: E) => error is A;
@@ -68,17 +69,6 @@ type OkOfReturn<R> = R extends Result<infer T, any> ? T : never;
 type ErrOfReturn<R> = R extends Result<any, infer E> ? E : R;
 
 type ErrFactory = <E>(error: E) => Result<never, E>;
-
-function isResult(value: unknown): value is Result<any, any> {
-    return (
-        typeof value === 'object' &&
-        value !== null &&
-        'isOk' in value &&
-        typeof (value as any).isOk === 'function' &&
-        'isErr' in value &&
-        typeof (value as any).isErr === 'function'
-    );
-}
 
 /**
  * Matcher for `Result` Errors, which returns a `Result` again.

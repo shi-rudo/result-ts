@@ -4,9 +4,7 @@ import type { Result } from './index';
 import { err, ok, Result as ResultClass } from './index';
 import { task } from './gen';
 import {
-    ERR_INVALID_STATE,
     ERR_TASK_YIELD_NOT_RESULT,
-    InvalidResultStateError,
     TaskYieldNotResultError,
 } from './errors';
 
@@ -474,8 +472,7 @@ describe('task/gen (Do-Notation)', () => {
             ).rejects.toThrow('Return value failed');
         });
 
-        it('handles unreachable case (Result neither Ok nor Err)', async () => {
-            // Create a malformed Result that bypasses type checking
+        it('rejects malformed Result-like values', async () => {
             const malformedResult = {
                 isOk: () => false,
                 isErr: () => false,
@@ -483,7 +480,6 @@ describe('task/gen (Do-Notation)', () => {
                 error: undefined,
             } as unknown as Result<number, string>;
 
-            // Create a generator that yields this malformed result
             let caughtError: unknown;
             try {
                 await task(function* () {
@@ -493,9 +489,9 @@ describe('task/gen (Do-Notation)', () => {
                 caughtError = error;
             }
 
-            expect(caughtError).toBeInstanceOf(InvalidResultStateError);
-            expect((caughtError as InvalidResultStateError).code).toBe(ERR_INVALID_STATE);
-            expect((caughtError as InvalidResultStateError).message).toContain('Unreachable: Result is neither Ok nor Err');
+            expect(caughtError).toBeInstanceOf(TaskYieldNotResultError);
+            expect((caughtError as TaskYieldNotResultError).code).toBe(ERR_TASK_YIELD_NOT_RESULT);
+            expect((caughtError as TaskYieldNotResultError).yieldedValue).toBe(malformedResult);
         });
 
         it('handles iterator without return() method', async () => {

@@ -1,6 +1,7 @@
 import { describe, expect, it } from 'vitest';
 
 import { Result, ok } from './result';
+import { InvalidResultStateError } from '../errors';
 import { sequenceRecord } from './sequenceRecord';
 
 describe('sequenceRecord', () => {
@@ -15,6 +16,19 @@ describe('sequenceRecord', () => {
         }
     });
 
+    it('preserves symbol keys', () => {
+        const id = Symbol('id');
+        const result = sequenceRecord({ [id]: ok(1), name: ok('alice') } as const);
+
+        expect(result.isOk()).toBe(true);
+        if (result.isOk()) {
+            expect(result.value[id]).toBe(1);
+            expect(result.value.name).toBe('alice');
+            const symbolValue: number = result.value[id];
+            expect(symbolValue).toBe(1);
+        }
+    });
+
     it('short-circuits on first Err', () => {
         const result = sequenceRecord({ a: ok(1), b: Result.err('boom'), c: ok(3) } as const);
         expect(result.isErr()).toBe(true);
@@ -22,5 +36,10 @@ describe('sequenceRecord', () => {
             expect(result.error).toBe('boom');
         }
     });
-});
 
+    it('throws for missing or malformed Result values instead of returning partial Ok', () => {
+        const record = { a: ok(1), b: undefined } as unknown as Record<string, Result<number, string>>;
+
+        expect(() => sequenceRecord(record)).toThrow(InvalidResultStateError);
+    });
+});
