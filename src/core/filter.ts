@@ -1,5 +1,6 @@
 import type { Result } from './result';
 import { err } from './result';
+import { InvalidResultStateError } from '../errors';
 
 /**
  * Checks a condition. If false, the Result becomes Err.
@@ -13,6 +14,7 @@ export function filter<T, E>(predicate: (val: T) => boolean, errorFn: () => E) {
             }
             return err(errorFn());
         }
-        return source;
+        if (source.isErr()) return source;
+        throw new InvalidResultStateError('filter');
     };
 }

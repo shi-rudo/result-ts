@@ -1,6 +1,7 @@
 import { describe, expect, it } from 'vitest';
 
 import { Result, ok, err } from './result';
+import { InvalidResultStateError } from '../errors';
 import { filter } from './filter';
 
 describe('filter', () => {
@@ -47,5 +48,14 @@ describe('filter', () => {
         );
 
         expect(result.isOk()).toBe(true);
+    });
+
+    it('throws for malformed Result values', () => {
+        const malformed = {
+            isOk: () => false,
+            isErr: () => false,
+        } as unknown as Result<number, string>;
+
+        expect(() => filter((value: number) => value > 40, () => 'too small')(malformed)).toThrow(InvalidResultStateError);
     });
 });
