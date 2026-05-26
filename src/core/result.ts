@@ -128,7 +128,7 @@ abstract class ResultBase extends Pipeable {
      * - Ok  → sends back the Ok value (`next(value)`), `yield*` yields `T`
      * - Err → aborts and returns the Err Result
      */
-    *[Symbol.iterator](): Generator<unknown, OkValue<this>, unknown> {
+    *[Symbol.iterator](): Generator<this, OkValue<this>, unknown> {
         return (yield this) as OkValue<this>;
     }
 
