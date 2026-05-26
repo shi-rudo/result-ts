@@ -1,6 +1,7 @@
 import { describe, expect, it } from 'vitest';
 
 import { Result, ok, err } from './result';
+import { InvalidResultStateError } from '../errors';
 import { filterAsync } from './filterAsync';
 
 describe('filterAsync', () => {
@@ -66,5 +67,14 @@ describe('filterAsync', () => {
         );
 
         expect(result.isOk()).toBe(true);
+    });
+
+    it('rejects for malformed Result values', async () => {
+        const malformed = {
+            isOk: () => false,
+            isErr: () => false,
+        } as unknown as Result<number, string>;
+
+        await expect(filterAsync(async (value: number) => value > 40, async () => 'too small')(malformed)).rejects.toBeInstanceOf(InvalidResultStateError);
     });
 });

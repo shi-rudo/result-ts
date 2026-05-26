@@ -1,5 +1,6 @@
 import type { Result } from './result';
 import { err } from './result';
+import { InvalidResultStateError } from '../errors';
 
 /**
  * Async version of filter.
@@ -12,6 +13,7 @@ export function filterAsync<T, E>(predicate: (val: T) => Promise<boolean>, error
             }
             return err(await errorFn());
         }
-        return source;
+        if (source.isErr()) return source;
+        throw new InvalidResultStateError('filterAsync');
     };
 }
