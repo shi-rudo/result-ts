@@ -1,6 +1,7 @@
 import { describe, expect, it } from 'vitest';
 
 import { Result, ok, err } from './result';
+import { InvalidResultStateError } from '../errors';
 import { isErr } from './isErr';
 
 describe('isErr', () => {
@@ -17,5 +18,14 @@ describe('isErr', () => {
         if (isErr(result)) {
             expect(result.error).toBe('error message');
         }
+    });
+
+    it('throws for malformed Result values', () => {
+        const malformed = {
+            isOk: () => false,
+            isErr: () => false,
+        } as unknown as Result<number, string>;
+
+        expect(() => isErr(malformed)).toThrow(InvalidResultStateError);
     });
 });
