@@ -1,6 +1,7 @@
 import { describe, expect, it } from 'vitest';
 
 import { Result, ok, err } from './result';
+import { InvalidResultStateError } from '../errors';
 import { map } from './map';
 
 describe('map', () => {
@@ -30,5 +31,14 @@ describe('map', () => {
         if (result.isOk()) {
             expect(result.value).toBe(6);
         }
+    });
+
+    it('throws for malformed Result values', () => {
+        const malformed = {
+            isOk: () => false,
+            isErr: () => false,
+        } as unknown as Result<number, string>;
+
+        expect(() => map((x: number) => x * 2)(malformed)).toThrow(InvalidResultStateError);
     });
 });

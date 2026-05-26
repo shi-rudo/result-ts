@@ -1,5 +1,6 @@
 import type { Result } from './result';
 import { ok } from './result';
+import { InvalidResultStateError } from '../errors';
 
 /**
  * Transforms the value (Ok case).
@@ -10,6 +11,7 @@ export function map<T, E, U>(project: (value: T) => U) {
         if (source.isOk()) {
             return ok(project(source.value));
         }
-        return source as unknown as Result<U, E>;
+        if (source.isErr()) return source as unknown as Result<U, E>;
+        throw new InvalidResultStateError('map');
     };
 }
