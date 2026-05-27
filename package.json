@@ -4,6 +4,7 @@
   "description": "Robust, type-safe error handling for TypeScript using the Result pattern (Monad)",
   "type": "module",
   "private": false,
+  "packageManager": "pnpm@10.32.1",
   "main": "./dist/index.cjs",
   "module": "./dist/index.mjs",
   "types": "./dist/index.d.mts",
@@ -32,6 +33,15 @@
   ],
   "author": "shirudo",
   "license": "MIT",
+  "repository": {
+    "type": "git",
+    "url": "git+https://github.com/shi-rudo/result-ts.git"
+  },
+  "bugs": {
+    "url": "https://github.com/shi-rudo/result-ts/issues"
+  },
+  "homepage": "https://github.com/shi-rudo/result-ts#readme",
+  "sideEffects": false,
   "engines": {
     "node": ">=20"
   },
