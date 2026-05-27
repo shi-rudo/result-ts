@@ -9,6 +9,10 @@ class ParseError extends Error { }
 class ValidationError extends Error { }
 class UnknownError extends Error { }
 
+type TaggedError =
+    | { readonly type: 'network'; readonly retryAfter: number }
+    | { readonly type: 'validation'; readonly field: string };
+
 describe('Result.match()', () => {
     it('supports matchError() as explicit Err-only matcher name', () => {
         const result: Result<number, IOError | ValidationError> = Result.err(new IOError('io'));
@@ -73,6 +77,20 @@ describe('Result.match()', () => {
         expect(handler).toHaveBeenCalled();
         expect(otherwise).not.toHaveBeenCalled();
         expect(message).toBe('invalid:bad');
+    });
+
+    it('supports whenTag for discriminated union errors', () => {
+        const result: Result<number, TaggedError> = Result.err({ type: 'validation', field: 'email' });
+
+        if (!result.isErr()) throw new Error('expected Err');
+
+        const message = result
+            .matchError()
+            .whenTag('type', 'network', error => `retry:${error.retryAfter}`)
+            .whenTag('type', 'validation', error => `field:${error.field}`)
+            .run();
+
+        expect(message).toBe('field:email');
     });
 
     it('skips further when-calls after first match', () => {
@@ -200,6 +218,21 @@ describe('Result.matchErr()', () => {
         expect((caughtError as MatchErrHandlerNotResultError).code).toBe(ERR_MATCH_ERR_HANDLER_NOT_RESULT);
         expect((caughtError as MatchErrHandlerNotResultError).handlerName).toBe('whenGuard');
         expect(guard).toHaveBeenCalled();
+    });
+
+    it('supports whenTag for discriminated union errors', () => {
+        const result: Result<number, TaggedError> = Result.err({ type: 'network', retryAfter: 30 });
+
+        const out = result
+            .matchErr()
+            .whenTag('type', 'network', error => ok(error.retryAfter))
+            .whenTag('type', 'validation', error => err(error))
+            .run();
+
+        expect(out.isOk()).toBe(true);
+        if (out.isOk()) {
+            expect(out.value).toBe(30);
+        }
     });
 
     it('skips whenGuard when Source is Ok', () => {

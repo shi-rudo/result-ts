@@ -208,6 +208,24 @@ if (result.isErr()) {
 }
 ```
 
+For discriminated-union errors, use `.whenTag(key, value, handler)`:
+
+```ts
+type DomainError =
+  | { type: "network"; retryAfter: number }
+  | { type: "validation"; field: string };
+
+const result = Result.err<DomainError>({ type: "validation", field: "email" });
+
+if (result.isErr()) {
+  const message = result
+    .matchError()
+    .whenTag("type", "network", (e) => `Retry in ${e.retryAfter}s`)
+    .whenTag("type", "validation", (e) => `Invalid field: ${e.field}`)
+    .run();
+}
+```
+
 Use `.matchErr()` when you want to transform only Err cases and keep returning a `Result`. Handlers must return a `Result` explicitly: use `ok(...)` for recovery and `err(...)` for mapped errors.
 
 ```ts

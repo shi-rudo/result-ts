@@ -4,6 +4,11 @@ import { isResult } from './isResult';
 
 export type Ctor<T> = abstract new (...args: any[]) => T;
 export type TypeGuard<E, A extends E> = (error: E) => error is A;
+type TaggedBy<K extends PropertyKey, V extends PropertyKey> = { readonly [P in K]: V };
+
+const matchesTag = <K extends PropertyKey, V extends PropertyKey>(value: unknown, key: K, tag: V): boolean => {
+    return value !== null && typeof value === 'object' && (value as Record<PropertyKey, unknown>)[key] === tag;
+};
 
 /**
  * Matcher for Err values (returns an arbitrary return type, e.g. string messages).
@@ -49,6 +54,23 @@ export class ErrorMatchBuilder<E, R> {
         const error = this.#error as E;
         if (guard(error)) {
             return new ErrorMatchBuilder(this.#error, true, handler(error)) as unknown as ErrorMatchBuilder<Exclude<E, A>, R | R1>;
+        }
+
+        return this as unknown as ErrorMatchBuilder<Exclude<E, A>, R | R1>;
+    }
+
+    whenTag<K extends PropertyKey, V extends PropertyKey, A extends E = Extract<E, TaggedBy<K, V>>, R1 = never>(
+        key: K,
+        tag: V,
+        handler: (error: A) => R1
+    ): ErrorMatchBuilder<Exclude<E, A>, R | R1> {
+        if (this.#matched) return this as unknown as ErrorMatchBuilder<Exclude<E, A>, R | R1>;
+
+        if (matchesTag(this.#error, key, tag)) {
+            return new ErrorMatchBuilder(this.#error, true, handler(this.#error as A)) as unknown as ErrorMatchBuilder<
+                Exclude<E, A>,
+                R | R1
+            >;
         }
 
         return this as unknown as ErrorMatchBuilder<Exclude<E, A>, R | R1>;
@@ -127,6 +149,27 @@ export class ErrMatchBuilder<T, E, OutT, OutE> {
         if (guard(error)) {
             const out = handler(error);
             const resolved = expectResultReturn(out, 'whenGuard');
+            return new ErrMatchBuilder(this.#error, resolved) as unknown as ErrMatchBuilder<
+                T,
+                Exclude<E, A>,
+                OutT | OkOfResult<R1>,
+                OutE | ErrOfResult<R1>
+            >;
+        }
+
+        return this as unknown as ErrMatchBuilder<T, Exclude<E, A>, OutT | OkOfResult<R1>, OutE | ErrOfResult<R1>>;
+    }
+
+    whenTag<K extends PropertyKey, V extends PropertyKey, A extends E = Extract<E, TaggedBy<K, V>>, R1 extends Result<any, any> = never>(
+        key: K,
+        tag: V,
+        handler: (error: A) => R1
+    ): ErrMatchBuilder<T, Exclude<E, A>, OutT | OkOfResult<R1>, OutE | ErrOfResult<R1>> {
+        if (this.#resolved) return this as unknown as ErrMatchBuilder<T, Exclude<E, A>, OutT | OkOfResult<R1>, OutE | ErrOfResult<R1>>;
+
+        if (matchesTag(this.#error, key, tag)) {
+            const out = handler(this.#error as A);
+            const resolved = expectResultReturn(out, 'whenTag');
             return new ErrMatchBuilder(this.#error, resolved) as unknown as ErrMatchBuilder<
                 T,
                 Exclude<E, A>,

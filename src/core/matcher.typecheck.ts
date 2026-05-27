@@ -14,6 +14,10 @@ class ValidationError extends Error {
     private readonly __validationError!: void;
 }
 
+type TaggedError =
+    | { readonly type: 'network'; readonly retryAfter: number }
+    | { readonly type: 'validation'; readonly field: string };
+
 const result: Result<number, NetworkError | ValidationError> = err(new ValidationError('bad'));
 
 if (!result.isErr()) {
@@ -58,3 +62,32 @@ result.matchErr().whenGuard((error): error is NetworkError => error instanceof N
 
 // @ts-expect-error matchErr otherwise handlers must return Result explicitly.
 result.matchErr().otherwise(() => 1);
+
+const tagged: Result<number, TaggedError> = err({ type: 'network', retryAfter: 30 });
+
+if (!tagged.isErr()) {
+    throw new Error('expected Err');
+}
+
+const taggedMessage = tagged
+    .matchError()
+    .whenTag('type', 'network', error => `retry:${error.retryAfter}` as const)
+    .whenTag('type', 'validation', error => `field:${error.field}` as const)
+    .run();
+
+type MatchErrorNarrowsDiscriminatedUnions = Expect<
+    Equal<typeof taggedMessage, `retry:${number}` | `field:${string}`>
+>;
+
+const taggedRecovery = tagged
+    .matchErr()
+    .whenTag('type', 'network', error => ok(error.retryAfter))
+    .whenTag('type', 'validation', error => err(error))
+    .run();
+
+type MatchErrWhenTagPreservesResultTypes = Expect<
+    Equal<typeof taggedRecovery, Result<number, { readonly type: 'validation'; readonly field: string }>>
+>;
+
+// @ts-expect-error matchErr whenTag handlers must return Result explicitly.
+tagged.matchErr().whenTag('type', 'network', error => error.retryAfter);
