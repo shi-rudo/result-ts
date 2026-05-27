@@ -39,5 +39,6 @@ result
 
 ### Fixed
 
+- Added `.matchError()` as the explicit name for Err-only fluent matching. `.match()` remains available as a compatibility alias.
 - Removed the `matchErr()` footgun where naked handler return values were silently interpreted as `Err(value)`.
 - Updated matcher documentation to use the actual `.when(...)` / `.whenGuard(...)` API.

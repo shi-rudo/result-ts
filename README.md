@@ -189,7 +189,7 @@ const response = result.fold(
 
 ### Pattern Matching
 
-Handle errors exhaustively using the fluent matching API for complex error types. `.match()` is for Err values and should be called after narrowing with `.isErr()`.
+Handle errors exhaustively using the fluent matching API for complex error types. `.matchError()` is for Err values and should be called after narrowing with `.isErr()`. `.match()` remains as a compatibility alias.
 
 ```ts
 import { Result } from "@shirudo/result";
@@ -201,7 +201,7 @@ const result = Result.err(new NetworkError("Timeout"));
 
 if (result.isErr()) {
   const message = result
-    .match()
+    .matchError()
     .when(NetworkError, (e) => `Retry later: ${e.message}`)
     .when(ValidationError, (e) => `Invalid input: ${e.message}`)
     .otherwise((e) => `Unexpected error: ${String(e)}`);
@@ -241,7 +241,7 @@ const result = await matchAsync({
 **When to use what:**
 
 - Use `.fold()` for simple cases where you handle both Ok and Err
-- Use `.match()` after `.isErr()` for complex matching on multiple error types
+- Use `.matchError()` after `.isErr()` for complex matching on multiple error types
 - Use `match({ ok, err })` or `fold({ ok, err })` pipe operators when a pipeline should handle both states
 
 ---
@@ -273,7 +273,8 @@ const result = await matchAsync({
 - `.fold(onOk, onErr)`: Handle both cases and return a single value.
 - `.pipe(...)`: Chain operators synchronously.
 - `.pipeAsync(...)`: Chain operators asynchronously.
-- `.match()`: Start a fluent pattern matching builder for Err values after narrowing with `.isErr()`.
+- `.matchError()`: Start a fluent pattern matching builder for Err values after narrowing with `.isErr()`.
+- `.match()`: Compatibility alias for `.matchError()`.
 - `.matchErr()`: Transform Err cases while returning a `Result`; handlers must explicitly return `ok(...)` or `err(...)`.
 - `.serialize()`: Convert to `{ isSuccess, data?, error? }`.
 - `.toUserFriendly()`: User-friendly serialization with error messages.

@@ -30,6 +30,16 @@ type MatchChainsAllErrorConstructors = Expect<
     Equal<typeof matched, 'network' | 'validation'>
 >;
 
+const matchedWithExplicitName = result
+    .matchError()
+    .when(NetworkError, () => 'network' as const)
+    .when(ValidationError, () => 'validation' as const)
+    .run();
+
+type MatchErrorChainsAllErrorConstructors = Expect<
+    Equal<typeof matchedWithExplicitName, 'network' | 'validation'>
+>;
+
 const recovered = result
     .matchErr()
     .when(NetworkError, () => ok(1))

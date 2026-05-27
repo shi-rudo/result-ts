@@ -10,6 +10,24 @@ class ValidationError extends Error { }
 class UnknownError extends Error { }
 
 describe('Result.match()', () => {
+    it('supports matchError() as explicit Err-only matcher name', () => {
+        const result: Result<number, IOError | ValidationError> = Result.err(new IOError('io'));
+
+        if (!result.isErr()) throw new Error('expected Err');
+
+        const message = result
+            .matchError()
+            .when(IOError, error => `io:${error.message}`)
+            .when(ValidationError, error => `validation:${error.message}`)
+            .run();
+
+        expect(message).toBe('io:io');
+    });
+
+    it('names matchError() in the Ok-state error message', () => {
+        expect(() => ok<number, Error>(1).matchError()).toThrow('matchError() can only be called on Err results');
+    });
+
     it('is exhaustive with run() (E becomes never)', () => {
         const result: Result<number, IOError | ParseError | ValidationError> = Result.err(new ValidationError('bad'));
 

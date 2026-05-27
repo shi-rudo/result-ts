@@ -140,11 +140,19 @@ abstract class ResultBase extends Pipeable {
         return (yield this) as OkValue<this>;
     }
 
+    matchError<T, E>(this: Result<T, E>): ErrorMatchBuilder<E, never> {
+        if (this._tag === 'Err') return new ErrorMatchBuilder(this.error);
+        if (this._tag === 'Ok') throw new MatchOnOkError('matchError');
+        throw new InvalidResultStateError('Result.matchError');
+    }
+
     /**
      * Matches on the Err value via `.when(...)` chain.
      *
      * Note: for type safety reasons, `.match()` can only be called on a Result already narrowed to `Err`,
      * e.g. inside `if (result.isErr()) { ... }`.
+     *
+     * @deprecated Use `.matchError()` for clearer Err-only semantics.
      */
     match<T, E>(this: Result<T, E>): ErrorMatchBuilder<E, never> {
         if (this._tag === 'Err') return new ErrorMatchBuilder(this.error);
