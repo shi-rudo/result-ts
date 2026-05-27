@@ -69,6 +69,8 @@
     "lint": "tsc --noEmit --emitDeclarationOnly false",
     "test": "vitest",
     "test:coverage": "vitest run --coverage",
+    "check": "pnpm typecheck && pnpm test:types && pnpm test run && pnpm docs:check && pnpm docs:build && pnpm build && pnpm test:exports",
+    "check:clean": "git diff --exit-code && git diff --cached --exit-code",
     "docs:dev": "vitepress dev docs",
     "docs:check": "node scripts/check-docs-examples.mjs",
     "docs:build": "vitepress build docs",
@@ -76,7 +78,7 @@
     "prebuild": "pnpm lint && pnpm test:types && pnpm test run",
     "build": "tsdown",
     "test:exports": "node scripts/check-package-exports.mjs",
-    "prepublishOnly": "pnpm build && pnpm docs:check && pnpm test:exports"
+    "prepublishOnly": "pnpm check"
   },
   "devDependencies": {
     "@types/node": "^25.0.2",

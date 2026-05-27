@@ -45,6 +45,7 @@ result
 - Added `matchTag(result, key, handlers)` for exhaustive object matching over discriminated-union errors.
 - Added subpath exports for `@shirudo/result/errors`, `@shirudo/result/operators`, and `@shirudo/result/collections`, backed by ESM/CJS/type resolution checks.
 - Added `pnpm docs:check` to compile-check TypeScript examples from README and docs.
+- Added `pnpm check`, `pnpm check:clean`, and a GitHub Actions CI workflow for the full release quality chain.
 - Documented the 1.0 decision to keep async composition on `Promise<Result<T, E>>` instead of adding a lazy async wrapper.
 - Hardened `isResult` with a stable internal brand and `_tag`/payload validation instead of relying on `instanceof` only.
 - Added `.matchError()` as the explicit name for Err-only fluent matching. `.match()` remains available as a compatibility alias.

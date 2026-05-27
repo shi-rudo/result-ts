@@ -56,7 +56,7 @@ Every implementation task must follow TDD: write failing runtime or type tests f
   - Acceptance: docs examples are covered by `pnpm test:types` or a dedicated `pnpm docs:check`.
   - Breaking: no.
 
-- [ ] Add release and CI hardening.
+- [x] Add release and CI hardening.
   - Target: CI should run typecheck, type tests, runtime tests, property tests, docs build, package build, and package export checks.
   - Acceptance: local scripts map cleanly to CI jobs and fail on generated artifacts or stale docs.
   - Breaking: no.
