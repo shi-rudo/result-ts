@@ -10,7 +10,6 @@ export default defineConfig({
             { text: 'Guide', link: '/guide/getting-started' },
             { text: 'API', link: '/api/result' },
             { text: 'Migration', link: '/migration/v1' },
-            { text: 'Roadmap', link: '/roadmap/state-of-the-art' },
             { text: 'GitHub', link: 'https://github.com/shi-rudo/result-ts' },
         ],
         sidebar: [
@@ -37,11 +36,8 @@ export default defineConfig({
                 items: [{ text: 'Version 1', link: '/migration/v1' }],
             },
             {
-                text: 'Roadmap',
-                items: [
-                    { text: 'State of the Art', link: '/roadmap/state-of-the-art' },
-                    { text: 'Lazy Async Abstraction', link: '/decisions/lazy-async-abstraction' },
-                ],
+                text: 'Decisions',
+                items: [{ text: 'Lazy Async Abstraction', link: '/decisions/lazy-async-abstraction' }],
             },
         ],
         search: {
