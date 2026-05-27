@@ -3,8 +3,12 @@ import { defineConfig } from 'tsdown'
 const isProd = process.env.NODE_ENV === 'production'
 
 export default defineConfig({
-    // Single public entrypoint.
-    entry: ['./src/index.ts'],
+    entry: {
+        index: './src/index.ts',
+        errors: './src/errors.ts',
+        operators: './src/operators.ts',
+        collections: './src/collections.ts',
+    },
     // Emit ESM and CJS; keep ESM platform-neutral for browser usage.
     format: {
         esm: {

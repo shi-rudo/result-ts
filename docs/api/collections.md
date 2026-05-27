@@ -2,6 +2,10 @@
 
 Collection helpers compose multiple Results.
 
+```ts
+import { sequence, sequenceRecord } from '@shirudo/result/collections';
+```
+
 - `sequence(results)`: Convert `Result<T, E>[]` to `Result<T[], E>`. The first error stops the process.
 - `all(results)`: Alias for `sequence`.
 - `sequenceRecord(record)`: Convert a record of Results to a Result of record values.
@@ -13,7 +17,8 @@ Collection helpers compose multiple Results.
 - `flatten(result)`: Flatten `Result<Result<T, E>, E>` to `Result<T, E>`.
 
 ```ts
-import { collectAllErrors, err, ok, sequenceRecord } from '@shirudo/result';
+import { err, ok } from '@shirudo/result';
+import { collectAllErrors, sequenceRecord } from '@shirudo/result/collections';
 
 sequenceRecord({
     id: ok(1),

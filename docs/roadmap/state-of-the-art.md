@@ -45,7 +45,7 @@ Every implementation task must follow TDD: write failing runtime or type tests f
 
 ## P3: Distribution and Documentation Quality
 
-- [ ] Add subpath exports.
+- [x] Add subpath exports.
   - Target candidates: `@shirudo/result/errors`, `@shirudo/result/operators`, `@shirudo/result/collections`.
   - Acceptance: package export tests prove ESM, CJS, and types resolve correctly.
   - Breaking: no.

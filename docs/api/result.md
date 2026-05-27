@@ -41,6 +41,12 @@
 
 ## Utilities
 
+All APIs remain available from the package root. Focused subpath exports are also available for users who prefer narrower imports:
+
+- `@shirudo/result/errors`
+- `@shirudo/result/operators`
+- `@shirudo/result/collections`
+
 - `isResult(value)`: Check whether a value is a valid branded `Result` with a matching `_tag` and payload shape.
 - `matchTag(result, key, handlers)`: Exhaustively match discriminated-union Err values by tag.
 - `contains(result, value)`: Check whether an `Ok` contains a value.

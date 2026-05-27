@@ -9,7 +9,7 @@ import {
     ERR_UNWRAP_ON_ERR,
     ResultTypeError,
     UnwrapOnErrError,
-} from '@shirudo/result';
+} from '@shirudo/result/errors';
 
 try {
     result.unwrap();

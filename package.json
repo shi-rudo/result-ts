@@ -13,6 +13,21 @@
       "types": "./dist/index.d.mts",
       "import": "./dist/index.mjs",
       "require": "./dist/index.cjs"
+    },
+    "./errors": {
+      "types": "./dist/errors.d.mts",
+      "import": "./dist/errors.mjs",
+      "require": "./dist/errors.cjs"
+    },
+    "./operators": {
+      "types": "./dist/operators.d.mts",
+      "import": "./dist/operators.mjs",
+      "require": "./dist/operators.cjs"
+    },
+    "./collections": {
+      "types": "./dist/collections.d.mts",
+      "import": "./dist/collections.mjs",
+      "require": "./dist/collections.cjs"
     }
   },
   "files": [
@@ -59,7 +74,8 @@
     "docs:preview": "vitepress preview docs",
     "prebuild": "pnpm lint && pnpm test:types && pnpm test run",
     "build": "tsdown",
-    "prepublishOnly": "pnpm build"
+    "test:exports": "node scripts/check-package-exports.mjs",
+    "prepublishOnly": "pnpm build && pnpm test:exports"
   },
   "devDependencies": {
     "@types/node": "^25.0.2",

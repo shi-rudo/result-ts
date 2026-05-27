@@ -1,6 +1,10 @@
 # Operators
 
-Import pipeable operators from the package root and pass them to `.pipe()` or `.pipeAsync()`.
+Import pipeable operators from the package root or from `@shirudo/result/operators` and pass them to `.pipe()` or `.pipeAsync()`.
+
+```ts
+import { map, flatMapAsync } from '@shirudo/result/operators';
+```
 
 ## Synchronous Operators
 
