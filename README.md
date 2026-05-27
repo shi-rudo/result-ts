@@ -109,14 +109,14 @@ const asyncRes = await Result.fromPromise(fetch("/api/data"));
 Transforming async results is seamless with `.pipeAsync()`.
 
 ```ts
-import { ok, mapAsync, tryCatchAsync } from "@shirudo/result";
+import { ok, mapAsync, tryMapAsync } from "@shirudo/result";
 
 const result = await ok(1).pipeAsync(
   mapAsync(async (id) => {
     const user = await db.getUser(id);
     return user.name;
   }),
-  tryCatchAsync(async (name) => {
+  tryMapAsync(async (name) => {
     // If this throws, it becomes an Err
     return await externalService.validate(name);
   })
@@ -199,11 +199,13 @@ class ValidationError extends Error {}
 
 const result = Result.err(new NetworkError("Timeout"));
 
-const message = result
-  .match()
-  .when(NetworkError, (e) => `Retry later: ${e.message}`)
-  .when(ValidationError, (e) => `Invalid input: ${e.message}`)
-  .otherwise((e) => `Unexpected error: ${String(e)}`);
+if (result.isErr()) {
+  const message = result
+    .match()
+    .when(NetworkError, (e) => `Retry later: ${e.message}`)
+    .when(ValidationError, (e) => `Invalid input: ${e.message}`)
+    .otherwise((e) => `Unexpected error: ${String(e)}`);
+}
 ```
 
 Use `.matchErr()` when you want to transform only Err cases and keep returning a `Result`. Handlers must return a `Result` explicitly: use `ok(...)` for recovery and `err(...)` for mapped errors.
@@ -239,8 +241,8 @@ const result = await matchAsync({
 **When to use what:**
 
 - Use `.fold()` for simple cases where you handle both Ok and Err
-- Use `.match()` for complex pattern matching on multiple error types
-- Use `fold()` pipe operator for functional composition in pipelines
+- Use `.match()` after `.isErr()` for complex matching on multiple error types
+- Use `match({ ok, err })` or `fold({ ok, err })` pipe operators when a pipeline should handle both states
 
 ---
 
@@ -312,15 +314,18 @@ Import these from the root package to use inside `.pipe()`.
 | `map(fn)`              | Transform the `Ok` value.                                |
 | `mapErr(fn)`           | Transform the `Err` value.                               |
 | `mapBoth(fnOk, fnErr)` | Transform both sides.                                    |
+| `bimap(fnOk, fnErr)`   | Alias for `mapBoth`.                                     |
 | `flatMap(fn)`          | Chain a function that returns a `Result` (monadic bind). |
 | `filter(pred, errFn)`  | Turn `Ok` into `Err` if predicate fails.                 |
 | `tap(observer)`        | Run side effects (logging) without changing the result.  |
 | `recover(val)`         | Convert `Err` to `Ok` with a default value.              |
+| `recoverWith(fn)`      | Convert `Err` to `Ok` using the error value.             |
 | `tryCatch(fn)`         | Run a function, catching exceptions into `Err`.          |
 | `tryMap(fn)`           | Like `map`, but catches exceptions.                      |
 | `fold({ ok, err })`    | Terminate the pipe and return a value based on state.    |
+| `match({ ok, err })`   | Alias-style pipe matcher for both states.                |
 
-**Async Variants:** `mapAsync`, `mapErrAsync`, `flatMapAsync`, `filterAsync`, `tapAsync`, `tryCatchAsync`, `tryMapAsync`, `foldAsync`.
+**Async Variants:** `mapAsync`, `mapErrAsync`, `flatMapAsync`, `filterAsync`, `tapAsync`, `tryCatchAsync`, `tryMapAsync`, `foldAsync`, `matchAsync`.
 
 ### Combinators
 
@@ -334,9 +339,11 @@ Combinators (inspired by Rust) for composing and transforming Results:
 | `mapOr(r, default, fn)` | Maps `Ok` value or returns `default` |
 | `mapOrElse(r, defaultFn, fn)` | Maps `Ok` value or computes `default` from error |
 | `swap(r)` | Swaps Ok and Err: `Result<T, E>` → `Result<E, T>` |
+| `zip(r1, r2)` | Combines two `Ok` values into a tuple, short-circuiting on the first `Err` |
+| `combine(r1, r2)` | Combines two Results and collects one or both errors in an array |
 
 ```ts
-import { and, or, orElse, mapOr, mapOrElse, swap, ok, err } from "@shirudo/result";
+import { and, combine, or, orElse, mapOr, mapOrElse, swap, zip, ok, err } from "@shirudo/result";
 
 const a = ok(5);
 const b = ok(10);
@@ -357,11 +364,18 @@ mapOr(err("x"), 0, (n) => n * 2); // 0
 // swap: interchange Ok and Err
 swap(ok("value")); // Err("value")
 swap(err("error")); // Ok("error")
+
+// zip: short-circuiting tuple composition
+zip(ok(1), ok("a")); // Ok([1, "a"])
+
+// combine: collect errors from both sides
+combine(err("left"), err("right")); // Err(["left", "right"])
 ```
 
 ### Collections
 
 - `sequence(results)`: Turn `Result[]` into `Result<T[]>`. First error stops the process.
+- `all(results)`: Alias for `sequence`.
 - `sequenceRecord(record)`: Like `sequence`, but for objects (`{ a: Result, b: Result }` → `Result<{ a, b }>`).
 - `collectFirstOk(results)`: Find the first success, or return all errors.
 - `collectFirstOkAsync(results)`: Async version - find the first success.
