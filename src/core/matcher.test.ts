@@ -301,3 +301,36 @@ describe('Result.matchErr()', () => {
         expect(run).toThrow(ValidationError);
     });
 });
+
+describe('Result.matchErrorAsync()', () => {
+    it('supports async handlers for Err-only matching', async () => {
+        const result: Result<number, IOError | ValidationError> = Result.err(new ValidationError('bad'));
+
+        if (!result.isErr()) throw new Error('expected Err');
+
+        const message = await result
+            .matchErrorAsync()
+            .when(IOError, async error => `io:${error.message}`)
+            .when(ValidationError, async error => `validation:${error.message}`)
+            .run();
+
+        expect(message).toBe('validation:bad');
+    });
+});
+
+describe('Result.matchErrAsync()', () => {
+    it('supports async Result-returning handlers', async () => {
+        const result: Result<number, IOError | ValidationError> = Result.err(new IOError('io'));
+
+        const out = await result
+            .matchErrAsync()
+            .when(IOError, async () => ok(42))
+            .when(ValidationError, async error => err(error))
+            .run();
+
+        expect(out.isOk()).toBe(true);
+        if (out.isOk()) {
+            expect(out.value).toBe(42);
+        }
+    });
+});

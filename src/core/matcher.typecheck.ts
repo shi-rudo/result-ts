@@ -91,3 +91,26 @@ type MatchErrWhenTagPreservesResultTypes = Expect<
 
 // @ts-expect-error matchErr whenTag handlers must return Result explicitly.
 tagged.matchErr().whenTag('type', 'network', error => error.retryAfter);
+
+const asyncTaggedMessage = tagged
+    .matchErrorAsync()
+    .whenTag('type', 'network', async error => `retry:${error.retryAfter}` as const)
+    .whenTag('type', 'validation', async error => `field:${error.field}` as const)
+    .run();
+
+type MatchErrorAsyncNarrowsDiscriminatedUnions = Expect<
+    Equal<typeof asyncTaggedMessage, Promise<`retry:${number}` | `field:${string}`>>
+>;
+
+const asyncTaggedRecovery = tagged
+    .matchErrAsync()
+    .whenTag('type', 'network', async error => ok(error.retryAfter))
+    .whenTag('type', 'validation', async error => err(error))
+    .run();
+
+type MatchErrAsyncWhenTagPreservesResultTypes = Expect<
+    Equal<typeof asyncTaggedRecovery, Promise<Result<number, { readonly type: 'validation'; readonly field: string }>>>
+>;
+
+// @ts-expect-error matchErrAsync handlers must return Result explicitly.
+tagged.matchErrAsync().whenTag('type', 'network', async error => error.retryAfter);

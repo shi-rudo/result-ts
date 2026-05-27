@@ -245,7 +245,7 @@ const recovered = result
 
 #### Async Pattern Matching
 
-For async handlers, use `matchAsync`:
+For async handlers over both states, use the `matchAsync` pipe operator:
 
 ```ts
 import { matchAsync } from "@shirudo/result";
@@ -254,6 +254,27 @@ const result = await matchAsync({
   ok: async (val) => `Success: ${val}`,
   err: async (e) => `Error: ${e}`
 })(someResult);
+```
+
+For fluent Err-only matching with async handlers, use `.matchErrorAsync()`:
+
+```ts
+if (result.isErr()) {
+  const message = await result
+    .matchErrorAsync()
+    .whenTag("type", "network", async (e) => `Retry in ${e.retryAfter}s`)
+    .whenTag("type", "validation", async (e) => `Invalid field: ${e.field}`)
+    .run();
+}
+```
+
+For async Err transformations that still return a `Result`, use `.matchErrAsync()`:
+
+```ts
+const recovered = await result
+  .matchErrAsync()
+  .whenTag("type", "network", async () => ok(cachedValue))
+  .otherwise(async (error) => err(error));
 ```
 
 **When to use what:**
@@ -292,8 +313,10 @@ const result = await matchAsync({
 - `.pipe(...)`: Chain operators synchronously.
 - `.pipeAsync(...)`: Chain operators asynchronously.
 - `.matchError()`: Start a fluent pattern matching builder for Err values after narrowing with `.isErr()`.
+- `.matchErrorAsync()`: Async fluent variant of `.matchError()`.
 - `.match()`: Compatibility alias for `.matchError()`.
 - `.matchErr()`: Transform Err cases while returning a `Result`; handlers must explicitly return `ok(...)` or `err(...)`.
+- `.matchErrAsync()`: Async fluent variant of `.matchErr()`.
 - `.serialize()`: Convert to `{ isSuccess, data?, error? }`.
 - `.toUserFriendly()`: User-friendly serialization with error messages.
 

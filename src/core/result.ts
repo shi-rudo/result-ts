@@ -1,5 +1,5 @@
 import { Pipeable } from './pipeable';
-import { ErrMatchBuilder, ErrorMatchBuilder } from './matcher';
+import { AsyncErrMatchBuilder, AsyncErrorMatchBuilder, ErrMatchBuilder, ErrorMatchBuilder } from './matcher';
 import {
     ExpectErrError,
     ExpectOkError,
@@ -146,6 +146,12 @@ abstract class ResultBase extends Pipeable {
         throw new InvalidResultStateError('Result.matchError');
     }
 
+    matchErrorAsync<T, E>(this: Result<T, E>): AsyncErrorMatchBuilder<E, never> {
+        if (this._tag === 'Err') return new AsyncErrorMatchBuilder(this.error);
+        if (this._tag === 'Ok') throw new MatchOnOkError('matchErrorAsync');
+        throw new InvalidResultStateError('Result.matchErrorAsync');
+    }
+
     /**
      * Matches on the Err value via `.when(...)` chain.
      *
@@ -167,6 +173,10 @@ abstract class ResultBase extends Pipeable {
      */
     matchErr<T, E>(this: Result<T, E>): ErrMatchBuilder<T, E, never, never> {
         return ErrMatchBuilder.fromResult(this);
+    }
+
+    matchErrAsync<T, E>(this: Result<T, E>): AsyncErrMatchBuilder<T, E, never, never> {
+        return AsyncErrMatchBuilder.fromResult(this);
     }
 
     /**
