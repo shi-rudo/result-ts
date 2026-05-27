@@ -42,7 +42,10 @@ const failure = Result.err('something went wrong');
 
 const parsed = Result.try(() => JSON.parse('{"valid": true}'));
 const user = Result.fromNullable(maybeUser, 'user not found');
-const response = await Result.fromPromise(fetch('/api/data'));
+const response = await Result.fromPromise(
+    fetch('/api/data'),
+    error => ({ type: 'network', cause: error }),
+);
 ```
 
 ## Choosing Error Types

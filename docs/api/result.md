@@ -8,7 +8,7 @@
 - `Result.ok(value)` / `Result.err(error)`: Static factory variants.
 - `Result.try(fn)`: Execute a synchronous function and catch exceptions as `Err`.
 - `Result.fromNullable(value, fallback)`: Convert `null | undefined` to `Err`.
-- `Result.fromPromise(promise)`: Convert a promise to `Promise<Result>`.
+- `Result.fromPromise(promise, errorMapper?)`: Convert a promise to `Promise<Result>`. Rejections become `Err`; exceptions thrown by `errorMapper` are rethrown.
 - `.toPromise()`: Convert `Ok` to a resolved promise and `Err` to a rejected promise.
 - `.toNullable()`: Convert `Ok` to the value and `Err` to `null`.
 

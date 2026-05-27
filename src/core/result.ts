@@ -270,11 +270,7 @@ export async function fromPromise<T, E>(promise: Promise<T>, errorMapper?: (erro
         const value = await promise;
         return ok(value);
     } catch (error) {
-        try {
-            return err(errorMapper ? errorMapper(error) : (error as E));
-        } catch (mapperError) {
-            return err(mapperError as E);
-        }
+        return err(errorMapper ? errorMapper(error) : (error as E));
     }
 }
 

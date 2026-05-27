@@ -113,12 +113,13 @@ describe('fromPromise', () => {
             expect(result).toEqual(err('HTTP 404: Not Found'));
         });
 
-        it('errorMapper can throw errors itself', async () => {
+        it('rethrows errors thrown by errorMapper', async () => {
             const promise = Promise.reject('original error');
-            const result = await fromPromise(promise, () => {
-                throw new Error('mapper error');
-            });
-            expect(result).toEqual(err(new Error('mapper error')));
+            const mapperError = new Error('mapper error');
+
+            await expect(fromPromise(promise, () => {
+                throw mapperError;
+            })).rejects.toBe(mapperError);
         });
     });
 

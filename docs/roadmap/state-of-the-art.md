@@ -18,7 +18,7 @@ Every implementation task must follow TDD: write failing runtime or type tests f
   - Acceptance: branded Results are accepted across duplicate module instances where possible; impostors with only methods or tags are rejected.
   - Breaking: potentially, depending on whether structural Results were intentionally accepted.
 
-- [ ] Stop swallowing mapper bugs in `fromPromise`.
+- [x] Stop swallowing mapper bugs in `fromPromise`.
   - Problem: exceptions thrown by `errorMapper` are converted to `Err<E>`, which can hide programmer bugs as domain errors.
   - Target: promise rejections are mapped; mapper exceptions rethrow or are modeled explicitly by a separate API.
   - Acceptance: tests cover rejected promises, mapper success, and mapper throws.
