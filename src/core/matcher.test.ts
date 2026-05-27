@@ -3,6 +3,7 @@ import { describe, expect, it, vi } from 'vitest';
 import type { ErrorMatchBuilder, ErrMatchBuilder } from './matcher';
 import { isResult } from './isResult';
 import { Result, ok } from './result';
+import { InvalidResultStateError } from '../errors';
 
 class IOError extends Error { }
 class ParseError extends Error { }
@@ -86,6 +87,12 @@ describe('Result.match()', () => {
         const run = () => (builder as unknown as ErrorMatchBuilder<never, string>).run();
 
         expect(run).toThrow(UnknownError);
+    });
+
+    it('throws InvalidResultStateError for malformed Result state', () => {
+        const malformed = { _tag: 'Invalid', value: undefined, error: undefined } as unknown as Result<number, Error>;
+
+        expect(() => Result.err<Error, number>(new UnknownError('nope')).match.call(malformed)).toThrow(InvalidResultStateError);
     });
 });
 

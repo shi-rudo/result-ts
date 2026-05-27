@@ -144,7 +144,8 @@ abstract class ResultBase extends Pipeable {
      */
     match<T, E>(this: Result<T, E>): ErrorMatchBuilder<E, never> {
         if (this._tag === 'Err') return new ErrorMatchBuilder(this.error);
-        throw new MatchOnOkError();
+        if (this._tag === 'Ok') throw new MatchOnOkError();
+        throw new InvalidResultStateError('Result.match');
     }
 
     /**
