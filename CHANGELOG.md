@@ -40,6 +40,7 @@ result
 
 ### Fixed
 
+- Hardened `isResult` with a stable internal brand and `_tag`/payload validation instead of relying on `instanceof` only.
 - Added `.matchError()` as the explicit name for Err-only fluent matching. `.match()` remains available as a compatibility alias.
 - Added `.whenTag(key, value, handler)` to fluent matchers for discriminated-union error types.
 - Added `.matchErrorAsync()` and `.matchErrAsync()` for fluent async matching.

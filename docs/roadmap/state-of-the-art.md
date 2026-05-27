@@ -12,7 +12,7 @@ Every implementation task must follow TDD: write failing runtime or type tests f
   - Acceptance: type tests prove `result.value` / `result.error` require narrowing; runtime behavior stays immutable and predictable.
   - Breaking: yes.
 
-- [ ] Replace `instanceof`-only `isResult` with robust branding.
+- [x] Replace `instanceof`-only `isResult` with robust branding.
   - Problem: `instanceof Ok || instanceof Err` rejects valid Results created by another package copy or JS realm.
   - Target: use an internal brand, preferably `Symbol.for(...)`, plus `_tag` and payload validation.
   - Acceptance: branded Results are accepted across duplicate module instances where possible; impostors with only methods or tags are rejected.

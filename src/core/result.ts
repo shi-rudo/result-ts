@@ -1,5 +1,6 @@
 import { Pipeable } from './pipeable';
 import { AsyncErrMatchBuilder, AsyncErrorMatchBuilder, ErrMatchBuilder, ErrorMatchBuilder } from './matcher';
+import { RESULT_BRAND } from './brand';
 import {
     ExpectErrError,
     ExpectOkError,
@@ -50,6 +51,16 @@ type OkValue<R> = R extends { readonly _tag: 'Ok'; readonly value: infer T } ? T
 
 abstract class ResultBase extends Pipeable {
     abstract readonly _tag: 'Ok' | 'Err';
+
+    protected constructor() {
+        super();
+        Object.defineProperty(this, RESULT_BRAND, {
+            value: true,
+            enumerable: false,
+            configurable: false,
+            writable: false,
+        });
+    }
 
     // Basic helpers for internal access in operators
     isOk<T, E>(this: Result<T, E>): this is Ok<T, E> {

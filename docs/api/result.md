@@ -36,7 +36,7 @@
 
 ## Utilities
 
-- `isResult(value)`: Check whether a value is a valid `Result`.
+- `isResult(value)`: Check whether a value is a valid branded `Result` with a matching `_tag` and payload shape.
 - `contains(result, value)`: Check whether an `Ok` contains a value.
 - `containsErr(result, error)`: Check whether an `Err` contains an error.
 - `fromResult(fn)`: Execute a function and catch exceptions.
