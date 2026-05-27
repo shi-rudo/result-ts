@@ -49,6 +49,12 @@ describe('Result class', () => {
             it('returns false for Err', () => {
                 expect(Result.err<string>('error').isOk()).toBe(false);
             });
+
+            it('throws for malformed Result state', () => {
+                const malformed = { _tag: 'Invalid', value: undefined, error: undefined } as unknown as Result<number, string>;
+
+                expect(() => ok<number, string>(0).isOk.call(malformed)).toThrow(InvalidResultStateError);
+            });
         });
 
         describe('isErr', () => {
@@ -58,6 +64,12 @@ describe('Result class', () => {
 
             it('returns true for Err', () => {
                 expect(Result.err<string>('error').isErr()).toBe(true);
+            });
+
+            it('throws for malformed Result state', () => {
+                const malformed = { _tag: 'Invalid', value: undefined, error: undefined } as unknown as Result<number, string>;
+
+                expect(() => ok<number, string>(0).isErr.call(malformed)).toThrow(InvalidResultStateError);
             });
         });
 

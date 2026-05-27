@@ -55,11 +55,15 @@ abstract class ResultBase extends Pipeable {
 
     // Basic helpers for internal access in operators
     isOk<T, E>(this: Result<T, E>): this is Ok<T, E> {
-        return this._tag === 'Ok';
+        if (this._tag === 'Ok') return true;
+        if (this._tag === 'Err') return false;
+        throw new InvalidResultStateError('Result.isOk');
     }
 
     isErr<T, E>(this: Result<T, E>): this is Err<T, E> {
-        return this._tag === 'Err';
+        if (this._tag === 'Err') return true;
+        if (this._tag === 'Ok') return false;
+        throw new InvalidResultStateError('Result.isErr');
     }
 
     unwrapOr<T, E>(this: Result<T, E>, defaultValue: T): T {
