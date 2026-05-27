@@ -32,6 +32,13 @@ import {
     type Result,
 } from '../index';
 
+const logResult = <T, E>(label: string, result: Result<T, E>) => {
+    result.fold(
+        value => console.log(label, value),
+        error => console.log(label, error)
+    );
+};
+
 // =============================================================================
 // 1. BASICS: create Result
 // =============================================================================
@@ -78,13 +85,13 @@ console.log('\n=== 2. TRANSFORMATIONS ===\n');
 const doubled = ok(21).pipe(
     map((n) => n * 2)
 );
-console.log('Doubled:', doubled.value); // 42
+logResult('Doubled:', doubled); // 42
 
 // mapErr: transforms the Err value
 const betterError = err('db_error').pipe(
     mapErr((e) => `Database Error: ${e}`)
 );
-console.log('Better error:', betterError.error);
+logResult('Better error:', betterError);
 
 // flatMap: chains operations that return Result
 const divide = (a: number, b: number): Result<number, string> => {
@@ -96,7 +103,7 @@ const calculation = ok(100).pipe(
     flatMap((n) => divide(n, 5)),  // 10
     map((n) => n + 2)               // 12
 );
-console.log('Calculation result:', calculation.value); // 12
+logResult('Calculation result:', calculation); // 12
 
 // =============================================================================
 // 3. VALIDATION: filter, tryMap
@@ -139,13 +146,13 @@ console.log('\n=== 4. ERROR HANDLING ===\n');
 const withDefault = err('error').pipe(
     recover(0)
 );
-console.log('Recovered value:', withDefault.value); // 0
+logResult('Recovered value:', withDefault); // 0
 
 // recoverWith: provides an alternative Result
 const withFallback = err('primary failed').pipe(
     recoverWith((_error: string) => 42)
 );
-console.log('Fallback value:', withFallback.value); // 42
+logResult('Fallback value:', withFallback); // 42
 
 // tryCatch: runs a function and catches exceptions
 const riskyOperation = ok(null).pipe(
@@ -172,7 +179,7 @@ const withLogging = ok(42).pipe(
     map((n) => n * 2),
     tap({ ok: (n) => console.log(`  After doubling: ${n}`) })
 );
-console.log('Final value:', withLogging.value);
+logResult('Final value:', withLogging);
 
 // =============================================================================
 // 6. ASYNC OPERATIONS
@@ -197,7 +204,7 @@ async function processAsync() {
             return n * 2;
         })
     );
-    console.log('Async mapped:', result.value);
+    logResult('Async mapped:', result);
 }
 
 // flatMapAsync: async chaining
@@ -245,7 +252,7 @@ console.log('\n=== 7. COLLECTIONS ===\n');
 // sequence: converts Array<Result> to Result<Array>
 const results = [ok(1), ok(2), ok(3)];
 const sequenced = sequence(results);
-console.log('Sequenced:', sequenced.value); // [1, 2, 3]
+logResult('Sequenced:', sequenced); // [1, 2, 3]
 
 const withError = [ok(1), err('error'), ok(3)];
 const sequencedWithError = sequence(withError);
@@ -253,7 +260,7 @@ console.log('Sequenced with error:', sequencedWithError.isErr()); // true
 
 // zip: combines multiple Results
 const combined = zip(ok(1), ok('hello'));
-console.log('Zipped:', combined.value); // [1, 'hello']
+logResult('Zipped:', combined); // [1, 'hello']
 
 // collectFirstOk: finds the first Ok Result
 const firstOk = collectFirstOk([
@@ -262,7 +269,7 @@ const firstOk = collectFirstOk([
     ok(42),
     ok(100),
 ]);
-console.log('First OK:', firstOk.value); // 42
+logResult('First OK:', firstOk); // 42
 
 // =============================================================================
 // 8. CONVERSIONS: fromNullable, toPromise
@@ -273,11 +280,11 @@ console.log('\n=== 8. CONVERSIONS ===\n');
 // fromNullable: converts nullable values
 const maybeValue: string | null = 'hello';
 const resultFromNullable = fromNullable(maybeValue, 'Value was null');
-console.log('From nullable:', resultFromNullable.value);
+logResult('From nullable:', resultFromNullable);
 
 const nullValue: string | null = null;
 const resultFromNull = fromNullable(nullValue, 'Value was null');
-console.log('From null:', resultFromNull.error);
+logResult('From null:', resultFromNull);
 
 // toPromise: converts Result to Promise
 async function resultToPromiseExample() {

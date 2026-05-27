@@ -1,5 +1,11 @@
 # Changelog
 
+## 2.0.0 - Unreleased
+
+### Breaking Changes
+
+- `Ok` no longer exposes an `error` property and `Err` no longer exposes a `value` property. Access `result.value` or `result.error` only after narrowing with `.isOk()` or `.isErr()`.
+
 ## 1.0.0 - 2026-05-27
 
 ### Breaking Changes

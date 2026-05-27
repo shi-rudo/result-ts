@@ -7,6 +7,13 @@
 
 import { Result, flatMap, map, recover, tryFn } from '../index';
 
+const logResult = <T, E>(label: string, result: Result<T, E>) => {
+    result.fold(
+        value => console.log(label, value),
+        error => console.log(label, error)
+    );
+};
+
 // ============================================================================
 // 1. Result.try() - catch exceptions
 // ============================================================================
@@ -17,10 +24,10 @@ console.log('\n=== Result.try() ===\n');
 const parseJson = (input: string) => Result.try(() => JSON.parse(input));
 
 const validJson = parseJson('{"name": "Alice"}');
-console.log('Valid JSON:', validJson.value); // { name: 'Alice' }
+logResult('Valid JSON:', validJson); // { name: 'Alice' }
 
 const invalidJson = parseJson('{invalid}');
-console.log('Invalid JSON:', invalidJson.error); // SyntaxError
+logResult('Invalid JSON:', invalidJson); // SyntaxError
 
 // Also for other throwing functions
 const divide = (a: number, b: number) =>
@@ -29,8 +36,8 @@ const divide = (a: number, b: number) =>
         return a / b;
     });
 
-console.log('10 / 2 =', divide(10, 2).value); // 5
-console.log('10 / 0 =', divide(10, 0).error); // Error: Division by zero
+logResult('10 / 2 =', divide(10, 2)); // 5
+logResult('10 / 0 =', divide(10, 0)); // Error: Division by zero
 
 // ============================================================================
 // 2. Result.fromNullable() - convert nullable values
@@ -53,15 +60,15 @@ const findUser = (id: number): User | undefined => {
 };
 
 const user1 = Result.fromNullable(findUser(1), 'User not found');
-console.log('User 1:', user1.value); // { id: 1, name: 'Alice' }
+logResult('User 1:', user1); // { id: 1, name: 'Alice' }
 
 const user99 = Result.fromNullable(findUser(99), 'User not found');
-console.log('User 99:', user99.error); // 'User not found'
+logResult('User 99:', user99); // 'User not found'
 
 // With undefined
 const maybeValue: string | undefined = undefined;
 const result = Result.fromNullable(maybeValue, 'Value is missing');
-console.log('Undefined value:', result.error); // 'Value is missing'
+logResult('Undefined value:', result); // 'Value is missing'
 
 // ============================================================================
 // 3. Result.fromPromise() - async operations
@@ -78,17 +85,17 @@ const fetchUser = async (id: number): Promise<User> => {
 
 // Without error mapper
 const asyncUser1 = await Result.fromPromise(fetchUser(1));
-console.log('Async User 1:', asyncUser1.value); // { id: 1, name: 'Alice' }
+logResult('Async User 1:', asyncUser1); // { id: 1, name: 'Alice' }
 
 const asyncUser99 = await Result.fromPromise(fetchUser(99));
-console.log('Async User 99:', asyncUser99.error); // Error: User 99 not found
+logResult('Async User 99:', asyncUser99); // Error: User 99 not found
 
 // With custom error mapper
 const asyncUser2 = await Result.fromPromise(
     fetchUser(99),
     (error) => `Failed to fetch user: ${error}`
 );
-console.log('Mapped error:', asyncUser2.error); // 'Failed to fetch user: Error: User 99 not found'
+logResult('Mapped error:', asyncUser2); // 'Failed to fetch user: Error: User 99 not found'
 
 // ============================================================================
 // 4. Combine with pipe operators
@@ -106,8 +113,8 @@ const parseAndDouble = (input: string) =>
             recover(0) // Fallback on error
         );
 
-console.log('Parse and double "{"value": 5}":', parseAndDouble('{"value": 5}').value); // 10
-console.log('Parse and double "{invalid}":', parseAndDouble('{invalid}').value); // 0
+logResult('Parse and double "{"value": 5}":', parseAndDouble('{"value": 5}')); // 10
+logResult('Parse and double "{invalid}":', parseAndDouble('{invalid}')); // 0
 
 // fromNullable + flatMap
 const getUserEmail = (userId: number) =>
@@ -121,8 +128,8 @@ const getUserEmail = (userId: number) =>
             )
         );
 
-console.log('Get email for user 1:', getUserEmail(1).error); // 'Email not set'
-console.log('Get email for user 99:', getUserEmail(99).error); // 'User not found'
+logResult('Get email for user 1:', getUserEmail(1)); // 'Email not set'
+logResult('Get email for user 99:', getUserEmail(99)); // 'User not found'
 
 // fromPromise + error recovery
 const fetchWithFallback = async (id: number) =>
@@ -131,8 +138,8 @@ const fetchWithFallback = async (id: number) =>
             recover({ id: 0, name: 'Guest' })
         );
 
-console.log('Fetch with fallback (1):', (await fetchWithFallback(1)).value); // { id: 1, name: 'Alice' }
-console.log('Fetch with fallback (99):', (await fetchWithFallback(99)).value); // { id: 0, name: 'Guest' }
+logResult('Fetch with fallback (1):', await fetchWithFallback(1)); // { id: 1, name: 'Alice' }
+logResult('Fetch with fallback (99):', await fetchWithFallback(99)); // { id: 0, name: 'Guest' }
 
 // ============================================================================
 // 5. Real-World Example: Form Validation
@@ -169,20 +176,20 @@ const validateForm = (data: FormData) => {
     return Result.ok({ email: email.value, age: age.value });
 };
 
-console.log('Valid form:', validateForm({
+logResult('Valid form:', validateForm({
     email: 'alice@example.com',
     age: '25'
-}).value); // { email: 'alice@example.com', age: 25 }
+})); // { email: 'alice@example.com', age: 25 }
 
-console.log('Invalid email:', validateForm({
+logResult('Invalid email:', validateForm({
     email: 'invalid',
     age: '25'
-}).error); // Error: Invalid email
+})); // Error: Invalid email
 
-console.log('Invalid age:', validateForm({
+logResult('Invalid age:', validateForm({
     email: 'alice@example.com',
     age: '15'
-}).error); // Error: Must be 18 or older
+})); // Error: Must be 18 or older
 
 // ============================================================================
 // 6. Comparison: static methods vs. standalone functions
@@ -199,7 +206,7 @@ const result1 = Result.try(() => JSON.parse('{"a": 1}'));
 // Standalone function (for backward compatibility)
 const result2 = tryFn(() => JSON.parse('{"a": 1}'));
 
-console.log('Static method:', result1.value); // { a: 1 }
-console.log('Standalone function:', result2.value); // { a: 1 }
+logResult('Static method:', result1); // { a: 1 }
+logResult('Standalone function:', result2); // { a: 1 }
 
 // The static methods are more idiomatic and consistent with other languages

@@ -20,9 +20,9 @@ describe('Result class', () => {
                 const result = ok(42);
                 expect(result.isOk()).toBe(true);
                 expect(result.isErr()).toBe(false);
+                expect('error' in result).toBe(false);
                 if (result.isOk()) {
                     expect(result.value).toBe(42);
-                    expect(result.error).toBeUndefined();
                 }
             });
         });
@@ -32,9 +32,9 @@ describe('Result class', () => {
                 const result = Result.err<string>('error message');
                 expect(result.isOk()).toBe(false);
                 expect(result.isErr()).toBe(true);
+                expect('value' in result).toBe(false);
                 if (result.isErr()) {
                     expect(result.error).toBe('error message');
-                    expect(result.value).toBeUndefined();
                 }
             });
         });

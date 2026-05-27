@@ -50,8 +50,6 @@ type OkValue<R> = R extends { readonly _tag: 'Ok'; readonly value: infer T } ? T
 
 abstract class ResultBase extends Pipeable {
     abstract readonly _tag: 'Ok' | 'Err';
-    abstract readonly value: unknown;
-    abstract readonly error: unknown;
 
     // Basic helpers for internal access in operators
     isOk<T, E>(this: Result<T, E>): this is Ok<T, E> {
@@ -210,7 +208,6 @@ abstract class ResultBase extends Pipeable {
 export class Ok<T, E = never> extends ResultBase {
     readonly _tag = 'Ok' as const;
     readonly value: T;
-    readonly error = undefined;
 
     constructor(value: T) {
         super();
@@ -221,7 +218,6 @@ export class Ok<T, E = never> extends ResultBase {
 
 export class Err<T = never, E = never> extends ResultBase {
     readonly _tag = 'Err' as const;
-    readonly value = undefined;
     readonly error: E;
 
     constructor(error: E) {

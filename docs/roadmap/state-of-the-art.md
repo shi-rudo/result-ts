@@ -6,7 +6,7 @@ Every implementation task must follow TDD: write failing runtime or type tests f
 
 ## P1: API Soundness
 
-- [ ] Harden impossible fields on `Ok` and `Err`.
+- [x] Harden impossible fields on `Ok` and `Err`.
   - Problem: `Ok` currently exposes `error = undefined`; `Err` exposes `value = undefined`. This makes accidental reads possible without proper narrowing.
   - Target: accessing the impossible field is either not part of the public type or typed as impossible in a way that fails early for misuse.
   - Acceptance: type tests prove `result.value` / `result.error` require narrowing; runtime behavior stays immutable and predictable.
