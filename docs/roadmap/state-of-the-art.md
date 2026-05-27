@@ -37,10 +37,10 @@ Every implementation task must follow TDD: write failing runtime or type tests f
   - Acceptance: missing tags fail type tests; runtime rejects invalid states and preserves current matcher behavior.
   - Breaking: no.
 
-- [ ] Decide whether to add a lazy async abstraction.
+- [x] Decide whether to add a lazy async abstraction.
   - Problem: `Promise<Result<T, E>>` is simple, but advanced users may want lazy composition, retries, and cancellation support.
   - Target: design decision for `ResultAsync` / `TaskResult`, including whether it belongs in this package.
-  - Acceptance: documented decision record before implementation.
+  - Acceptance: documented decision record before implementation. See [Lazy Async Abstraction](/decisions/lazy-async-abstraction).
   - Breaking: no.
 
 ## P3: Distribution and Documentation Quality

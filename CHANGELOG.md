@@ -43,6 +43,7 @@ result
 
 - Added `Result.is`, `Result.fromThrowable`, `Result.tryAsync`, `Result.sequence`, `Result.all`, and `Result.combine` as namespace entrypoints.
 - Added `matchTag(result, key, handlers)` for exhaustive object matching over discriminated-union errors.
+- Documented the 1.0 decision to keep async composition on `Promise<Result<T, E>>` instead of adding a lazy async wrapper.
 - Hardened `isResult` with a stable internal brand and `_tag`/payload validation instead of relying on `instanceof` only.
 - Added `.matchError()` as the explicit name for Err-only fluent matching. `.match()` remains available as a compatibility alias.
 - Added `.whenTag(key, value, handler)` to fluent matchers for discriminated-union error types.

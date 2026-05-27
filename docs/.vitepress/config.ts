@@ -38,7 +38,10 @@ export default defineConfig({
             },
             {
                 text: 'Roadmap',
-                items: [{ text: 'State of the Art', link: '/roadmap/state-of-the-art' }],
+                items: [
+                    { text: 'State of the Art', link: '/roadmap/state-of-the-art' },
+                    { text: 'Lazy Async Abstraction', link: '/decisions/lazy-async-abstraction' },
+                ],
             },
         ],
         search: {
