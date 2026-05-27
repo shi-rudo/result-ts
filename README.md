@@ -1,486 +1,84 @@
 # @shirudo/result
 
-**Robust, type-safe error handling for TypeScript.**
+Robust, type-safe error handling for TypeScript.
 
-`@shirudo/result` brings the power of the Result pattern (Monad) to TypeScript. It helps you write safer, more predictable code by treating errors as values rather than exceptions. Stop guessing if a function will throw—let the type system guide you.
+`@shirudo/result` brings the Result pattern to TypeScript. It helps you model expected failures as values instead of hidden exceptions, so callers must handle success and failure explicitly.
 
 ![TypeScript](https://img.shields.io/badge/TypeScript-5.0+-blue.svg)
 ![Runtime](https://img.shields.io/badge/Runtime-Node%20%7C%20Browser-green)
 ![License](https://img.shields.io/badge/License-MIT-yellow.svg)
 ![Stable](https://img.shields.io/badge/Status-Stable-brightgreen.svg)
 
-## 🌟 Key Features
+## Installation
 
-- **Type-Safe:** generic `Result<T, E>` type discriminates between Success (`Ok`) and Failure (`Err`).
-- **Pipeable Architecture:** Functional, tree-shakeable operators via `.pipe()` and `.pipeAsync()`.
-- **Async Support:** First-class support for Promises and async transformations.
-- **Do-Notation:** A `task` generator utility to write sequential code without callback hell (similar to Rust's `?` operator).
-- **Rich Pattern Matching:** Fluent builders for exhaustive matching and error handling.
-- **Comprehensive Utilities:** Helpers for collections, conversion from/to Promises, Nullables, and try/catch blocks.
-
----
-
-## 📦 Installation
-
-```bash
+```sh
 npm install @shirudo/result
-# or
 pnpm add @shirudo/result
-# or
 yarn add @shirudo/result
 ```
 
----
-
-## 🚀 Quick Start
-
-### Basic Usage
-
-Instead of throwing errors, return a `Result`.
+## Quick Start
 
 ```ts
-import { ok, err, Result } from "@shirudo/result";
+import { Result, err, ok } from '@shirudo/result';
 
 function divide(a: number, b: number): Result<number, string> {
-  if (b === 0) {
-    return err("Division by zero");
-  }
-  return ok(a / b);
+    if (b === 0) {
+        return err('division by zero');
+    }
+
+    return ok(a / b);
 }
 
 const result = divide(10, 2);
 
 if (result.isOk()) {
-  // TypeScript narrows 'result' to Ok<number>
-  console.log("Success:", result.value); // 5
+    console.log('Success:', result.value);
 } else {
-  // TypeScript narrows 'result' to Err<string>
-  console.error("Error:", result.error);
+    console.error('Error:', result.error);
 }
 ```
 
-### Functional Pipelines
+## Features
 
-Use `.pipe()` to chain operations. If an error occurs at any step, the chain short-circuits and returns the `Err`.
+- Type-safe `Result<T, E>` values for success and failure.
+- Pipeable operators via `.pipe()` and `.pipeAsync()`.
+- First-class async helpers for promises and async transformations.
+- Generator-based `task()` notation for sequential workflows.
+- Fluent matching APIs for classes and discriminated unions.
+- Exported library error classes with stable `ERR_*` codes.
 
-```ts
-import { ok, map, filter, mapErr } from "@shirudo/result";
+## Documentation
 
-const processed = ok(10).pipe(
-  map((n) => n * 2), // 20
-  filter(
-    (n) => n > 50,
-    () => "Too small"
-  ), // Returns Err('Too small')
-  mapErr((e) => `Error: ${e}`) // Transforms the error message
-);
+The full documentation lives in `docs/` and is built with VitePress.
 
-console.log(processed.isErr()); // true
-console.log(processed.unwrapOr(0)); // 0 (fallback)
+```sh
+pnpm docs:dev
+pnpm docs:build
+pnpm docs:preview
 ```
 
----
+Start here:
 
-## 💡 Core Concepts
+- [Getting Started](docs/guide/getting-started.md)
+- [Pipelines](docs/guide/pipelines.md)
+- [Pattern Matching](docs/guide/matching.md)
+- [Result API](docs/api/result.md)
+- [Error Classes](docs/api/errors.md)
+- [Version 1 Migration](docs/migration/v1.md)
 
-### Creating Results
+## Contributing
 
-There are several static factories to help you wrap existing code or values.
+Use TypeScript and Vitest. Before opening a pull request, run:
 
-```ts
-import { Result } from "@shirudo/result";
-
-// Standard
-const a = Result.ok(42);
-const b = Result.err("Something went wrong");
-
-// From a function that might throw
-const json = Result.try(() => JSON.parse('{"valid": true}'));
-
-// From a potentially null/undefined value
-const user = Result.fromNullable(maybeUser, "User not found");
-
-// From a Promise (catches rejections)
-const asyncRes = await Result.fromPromise(fetch("/api/data"));
+```sh
+pnpm typecheck
+pnpm test:types
+pnpm test run
+pnpm docs:build
+pnpm build
 ```
 
-### Async Pipelines
+## License
 
-Transforming async results is seamless with `.pipeAsync()`.
-
-```ts
-import { ok, mapAsync, tryMapAsync } from "@shirudo/result";
-
-const result = await ok(1).pipeAsync(
-  mapAsync(async (id) => {
-    const user = await db.getUser(id);
-    return user.name;
-  }),
-  tryMapAsync(async (name) => {
-    // If this throws, it becomes an Err
-    return await externalService.validate(name);
-  })
-);
-```
-
-### Generator "Do-Notation" (`task`)
-
-The `task` (or `gen`) utility allows you to write code that looks imperative but handles `Result` flow control automatically. Use `yield*` to unwrap `Ok` values; if an `Err` is yielded, the function returns early with that error.
-
-```ts
-import { task, ok, err } from "@shirudo/result";
-
-const calculate = task(function* () {
-  // yield* automatically unwraps the value if Ok
-  const x = yield* ok(10);
-  const y = yield* ok(20);
-
-  // If this were err(), execution would stop here and return that err
-  const z = yield* validate(x + y);
-
-  return z; // Returns Ok(z)
-});
-
-// calculate is a Promise<Result<number, Error>>
-```
-
-#### Error Handling with `onThrow`
-
-The `task()` function accepts an optional `onThrow` callback for custom error mapping:
-
-```ts
-const result = await task(
-  function* () {
-    const data = yield* fetchData();
-    return process(data);
-  },
-  (error) => new CustomError(`Failed: ${error}`)  // custom error mapping
-);
-// Returns Result<ProcessedData, CustomError>
-```
-
-### Folding Results
-
-The simplest way to handle both `Ok` and `Err` cases and return a single value:
-
-```ts
-import { ok, err } from "@shirudo/result";
-
-const result = ok(42);
-
-const message = result.fold(
-  (val) => `Success: ${val}`,
-  (err) => `Error: ${err}`
-);
-// message = "Success: 42"
-
-// Useful for side effects
-result.fold(
-  (val) => console.log("Yay:", val),
-  (err) => console.error("Nay:", err)
-);
-
-// Convert to HTTP response
-const response = result.fold(
-  (data) => ({ status: 200, body: data }),
-  (error) => ({ status: 500, body: { error } })
-);
-```
-
-### Pattern Matching
-
-Handle errors exhaustively using the fluent matching API for complex error types. `.matchError()` is for Err values and should be called after narrowing with `.isErr()`. `.match()` remains as a compatibility alias.
-
-```ts
-import { Result } from "@shirudo/result";
-
-class NetworkError extends Error {}
-class ValidationError extends Error {}
-
-const result = Result.err(new NetworkError("Timeout"));
-
-if (result.isErr()) {
-  const message = result
-    .matchError()
-    .when(NetworkError, (e) => `Retry later: ${e.message}`)
-    .when(ValidationError, (e) => `Invalid input: ${e.message}`)
-    .otherwise((e) => `Unexpected error: ${String(e)}`);
-}
-```
-
-For discriminated-union errors, use `.whenTag(key, value, handler)`:
-
-```ts
-type DomainError =
-  | { type: "network"; retryAfter: number }
-  | { type: "validation"; field: string };
-
-const result = Result.err<DomainError>({ type: "validation", field: "email" });
-
-if (result.isErr()) {
-  const message = result
-    .matchError()
-    .whenTag("type", "network", (e) => `Retry in ${e.retryAfter}s`)
-    .whenTag("type", "validation", (e) => `Invalid field: ${e.field}`)
-    .run();
-}
-```
-
-Use `.matchErr()` when you want to transform only Err cases and keep returning a `Result`. Handlers must return a `Result` explicitly: use `ok(...)` for recovery and `err(...)` for mapped errors.
-
-```ts
-import { Result, err, ok } from "@shirudo/result";
-
-class NetworkError extends Error {}
-class ValidationError extends Error {}
-
-const result = Result.err(new NetworkError("Timeout"));
-
-const recovered = result
-  .matchErr()
-  .when(NetworkError, () => ok("cached fallback"))
-  .when(ValidationError, (e) => err(e))
-  .run();
-```
-
-#### Async Pattern Matching
-
-For async handlers over both states, use the `matchAsync` pipe operator:
-
-```ts
-import { matchAsync } from "@shirudo/result";
-
-const result = await matchAsync({
-  ok: async (val) => `Success: ${val}`,
-  err: async (e) => `Error: ${e}`
-})(someResult);
-```
-
-For fluent Err-only matching with async handlers, use `.matchErrorAsync()`:
-
-```ts
-if (result.isErr()) {
-  const message = await result
-    .matchErrorAsync()
-    .whenTag("type", "network", async (e) => `Retry in ${e.retryAfter}s`)
-    .whenTag("type", "validation", async (e) => `Invalid field: ${e.field}`)
-    .run();
-}
-```
-
-For async Err transformations that still return a `Result`, use `.matchErrAsync()`:
-
-```ts
-const recovered = await result
-  .matchErrAsync()
-  .whenTag("type", "network", async () => ok(cachedValue))
-  .otherwise(async (error) => err(error));
-```
-
-**When to use what:**
-
-- Use `.fold()` for simple cases where you handle both Ok and Err
-- Use `.matchError()` after `.isErr()` for complex matching on multiple error types
-- Use `match({ ok, err })` or `fold({ ok, err })` pipe operators when a pipeline should handle both states
-
----
-
-## 📚 API Reference
-
-### Creation & Conversions
-
-- `ok(value)` / `err(error)`: Create basic instances.
-- `okIf(condition, okValue, errValue)`: Conditionally create `Ok` or `Err`.
-- `okIfLazy(condition, okFn, errFn)`: Lazy conditional creation.
-- `Result.try(fn)`: Execute a sync function; catches exceptions as `Err`.
-- `Result.fromNullable(val, fallback)`: Convert `null | undefined` to `Err`.
-- `Result.fromPromise(promise)`: Convert a Promise to `Promise<Result>`.
-- `.toPromise()`: Convert `Ok` to resolved Promise, `Err` to rejected.
-- `.toNullable()`: Convert `Ok` to value, `Err` to `null`.
-
-### Instance Methods
-
-- `.isOk()`: Type guard for success.
-- `.isErr()`: Type guard for failure.
-- `.unwrap()`: Get value or throw (use carefully).
-- `.unwrapErr()`: Get error or throw (use carefully).
-- `.unwrapOr(default)`: Get value or return default.
-- `.unwrapOrElse(fn)`: Get value or generate default from error.
-- `.unwrapOrThrow()`: Get value or throw original error (preserves stack trace).
-- `.expect(msg)`: Get value or throw with specific message.
-- `.expectErr(msg)`: Get error or throw with specific message.
-- `.fold(onOk, onErr)`: Handle both cases and return a single value.
-- `.pipe(...)`: Chain operators synchronously.
-- `.pipeAsync(...)`: Chain operators asynchronously.
-- `.matchError()`: Start a fluent pattern matching builder for Err values after narrowing with `.isErr()`.
-- `.matchErrorAsync()`: Async fluent variant of `.matchError()`.
-- `.match()`: Compatibility alias for `.matchError()`.
-- `.matchErr()`: Transform Err cases while returning a `Result`; handlers must explicitly return `ok(...)` or `err(...)`.
-- `.matchErrAsync()`: Async fluent variant of `.matchErr()`.
-- `.serialize()`: Convert to `{ isSuccess, data?, error? }`.
-- `.toUserFriendly()`: User-friendly serialization with error messages.
-
-### Error Classes
-
-`Result` is designed for typed domain errors via `Err<E>`. The exported error classes below are reserved for API misuse, unsafe unwrapping, invalid internal state, and integration mistakes. They are useful when you intentionally call throwing APIs or need to distinguish library-level failures in tests, logs, or boundaries.
-
-All library error classes expose a stable `code` field. `ResultError` extends `Error`; `ResultTypeError` extends `TypeError`.
-
-```ts
-import {
-  ERR_UNWRAP_ON_ERR,
-  ResultTypeError,
-  UnwrapOnErrError,
-} from "@shirudo/result";
-
-try {
-  result.unwrap();
-} catch (error) {
-  if (error instanceof UnwrapOnErrError && error.code === ERR_UNWRAP_ON_ERR) {
-    console.error("Tried to unwrap an Err:", error.errorValue);
-  }
-
-  if (error instanceof ResultTypeError) {
-    reportLibraryMisuse(error.code, error.message);
-  }
-}
-```
-
-| Class | Extends | Code | When it is thrown | Extra fields |
-| :---- | :------ | :--- | :---------------- | :----------- |
-| `InvalidResultStateError` | `ResultError` | `ERR_INVALID_RESULT_STATE` | A value is structurally invalid and is neither a valid `Ok` nor a valid `Err`. | `context?: string` |
-| `TaskYieldNotResultError` | `ResultTypeError` | `ERR_TASK_YIELD_NOT_RESULT` | `task()` receives a yielded value that is not a `Result`; usually caused by `yield` instead of `yield*`. | `yieldedValue: unknown` |
-| `MatchOnOkError` | `ResultTypeError` | `ERR_MATCH_ON_OK` | Err-only fluent matchers such as `.matchError()` are called on an `Ok`. | none |
-| `MatchErrHandlerNotResultError` | `ResultTypeError` | `ERR_MATCH_ERR_HANDLER_NOT_RESULT` | A `.matchErr()` / `.matchErrAsync()` handler returns a naked value instead of `ok(...)` or `err(...)`. | `handlerName: string`, `returnedValue: unknown` |
-| `UnwrapOnErrError` | `ResultTypeError` | `ERR_UNWRAP_ON_ERR` | `.unwrap()` is called on an `Err`. | `errorValue: unknown` |
-| `UnwrapErrOnOkError` | `ResultTypeError` | `ERR_UNWRAP_ERR_ON_OK` | `.unwrapErr()` is called on an `Ok`. | `okValue: unknown` |
-| `ExpectOkError` | `ResultError` | `ERR_EXPECT_OK` | `.expect(message)` is called on an `Err`. | `expectedMessage: string` |
-| `ExpectErrError` | `ResultError` | `ERR_EXPECT_ERR` | `.expectErr(message)` is called on an `Ok`. | `expectedMessage: string` |
-
-Exported error code constants:
-
-- `ERR_INVALID_RESULT_STATE`
-- `ERR_TASK_YIELD_NOT_RESULT`
-- `ERR_MATCH_ON_OK`
-- `ERR_MATCH_ERR_HANDLER_NOT_RESULT`
-- `ERR_UNWRAP_ON_ERR`
-- `ERR_UNWRAP_ERR_ON_OK`
-- `ERR_EXPECT_OK`
-- `ERR_EXPECT_ERR`
-
-`ERR_INVALID_STATE` is exported as a backwards-compatible alias for `ERR_INVALID_RESULT_STATE`. Prefer `ERR_INVALID_RESULT_STATE` in new code.
-
-### Utilities
-
-Type guards and helper functions:
-
-- `isResult(value)`: Type guard to check if a value is a `Result`.
-- `contains(result, value)`: Check if `Ok` contains a specific value.
-- `containsErr(result, error)`: Check if `Err` contains a specific error.
-- `fromResult(fn)`: Execute a function, catching exceptions (Rust `Result::from`).
-
-```ts
-import { isResult, contains, containsErr, fromResult, ok, err } from "@shirudo/result";
-
-isResult(ok(5)); // true
-isResult("not a result"); // false
-
-const result = ok(42);
-contains(result, 42); // true
-contains(result, 100); // false
-
-const errResult = err("not found");
-containsErr(errResult, "not found"); // true
-
-const wrapped = fromResult(() => JSON.parse('{"valid": true}'));
-```
-
-### Pipeable Operators
-
-Import these from the root package to use inside `.pipe()`.
-
-| Operator               | Description                                              |
-| :--------------------- | :------------------------------------------------------- |
-| `map(fn)`              | Transform the `Ok` value.                                |
-| `mapErr(fn)`           | Transform the `Err` value.                               |
-| `mapBoth(fnOk, fnErr)` | Transform both sides.                                    |
-| `bimap(fnOk, fnErr)`   | Alias for `mapBoth`.                                     |
-| `flatMap(fn)`          | Chain a function that returns a `Result` (monadic bind). |
-| `filter(pred, errFn)`  | Turn `Ok` into `Err` if predicate fails.                 |
-| `tap(observer)`        | Run side effects (logging) without changing the result.  |
-| `recover(val)`         | Convert `Err` to `Ok` with a default value.              |
-| `recoverWith(fn)`      | Convert `Err` to `Ok` using the error value.             |
-| `tryCatch(fn)`         | Run a function, catching exceptions into `Err`.          |
-| `tryMap(fn)`           | Like `map`, but catches exceptions.                      |
-| `fold({ ok, err })`    | Terminate the pipe and return a value based on state.    |
-| `match({ ok, err })`   | Alias-style pipe matcher for both states.                |
-
-**Async Variants:** `mapAsync`, `mapErrAsync`, `flatMapAsync`, `filterAsync`, `tapAsync`, `tryCatchAsync`, `tryMapAsync`, `foldAsync`, `matchAsync`.
-
-### Combinators
-
-Combinators (inspired by Rust) for composing and transforming Results:
-
-| Combinator | Description |
-| :--------- | :---------- |
-| `and(r1, r2)` | Short-circuit AND: returns `r2` only if `r1` is `Ok` |
-| `or(r1, r2)` | Returns `r1` if `Ok`, otherwise `r2` |
-| `orElse(r, fn)` | Returns `r` if `Ok`, otherwise calls `fn(error)` |
-| `mapOr(r, default, fn)` | Maps `Ok` value or returns `default` |
-| `mapOrElse(r, defaultFn, fn)` | Maps `Ok` value or computes `default` from error |
-| `swap(r)` | Swaps Ok and Err: `Result<T, E>` → `Result<E, T>` |
-| `zip(r1, r2)` | Combines two `Ok` values into a tuple, short-circuiting on the first `Err` |
-| `combine(r1, r2)` | Combines two Results and collects one or both errors in an array |
-
-```ts
-import { and, combine, or, orElse, mapOr, mapOrElse, swap, zip, ok, err } from "@shirudo/result";
-
-const a = ok(5);
-const b = ok(10);
-
-// and: returns b only if a is Ok
-and(a, b); // Ok(10)
-
-// or: returns first Ok, otherwise fallback
-or(err("fallback"), ok("success")); // Ok("success")
-
-// orElse: lazy fallback with error context
-orElse(err("error"), (e) => ok(`recovered: ${e}`)); // Ok("recovered: error")
-
-// mapOr: map or use default
-mapOr(ok(5), 0, (n) => n * 2); // 10
-mapOr(err("x"), 0, (n) => n * 2); // 0
-
-// swap: interchange Ok and Err
-swap(ok("value")); // Err("value")
-swap(err("error")); // Ok("error")
-
-// zip: short-circuiting tuple composition
-zip(ok(1), ok("a")); // Ok([1, "a"])
-
-// combine: collect errors from both sides
-combine(err("left"), err("right")); // Err(["left", "right"])
-```
-
-### Collections
-
-- `sequence(results)`: Turn `Result[]` into `Result<T[]>`. First error stops the process.
-- `all(results)`: Alias for `sequence`.
-- `sequenceRecord(record)`: Like `sequence`, but for objects (`{ a: Result, b: Result }` → `Result<{ a, b }>`).
-- `collectFirstOk(results)`: Find the first success, or return all errors.
-- `collectFirstOkAsync(results)`: Async version - find the first success.
-- `collectFirstOkParallelAsync(results)`: Parallel variant - first success wins, all rejections continue.
-- `collectAllErrors(results)`: Returns `Ok(values)` only if all are Ok, otherwise collects _all_ errors.
-- `partition(results)`: Separate a list into arrays of `[oks, errs]`.
-- `flatten(result)`: Flattens a nested `Result<Result<T, E>, E>` into `Result<T, E>`.
-- `zip(r1, r2)`: Combine two results into a tuple.
-
----
-
-## 🤝 Contributing
-
-We welcome contributions! Please follow the standard pull request process. Ensure usage of TypeScript and Vitest for testing.
-
-## 📄 License
-
-This project is licensed under the MIT License.
+MIT

@@ -54,6 +54,9 @@
     "lint": "tsc --noEmit --emitDeclarationOnly false",
     "test": "vitest",
     "test:coverage": "vitest run --coverage",
+    "docs:dev": "vitepress dev docs",
+    "docs:build": "vitepress build docs",
+    "docs:preview": "vitepress preview docs",
     "prebuild": "pnpm lint && pnpm test:types && pnpm test run",
     "build": "tsdown",
     "prepublishOnly": "pnpm build"
@@ -65,6 +68,7 @@
     "tsdown": "^0.17.4",
     "tsx": "^4.21.0",
     "typescript": "^5.7.3",
+    "vitepress": "^1.6.4",
     "vitest": "^4.0.15"
   }
 }
