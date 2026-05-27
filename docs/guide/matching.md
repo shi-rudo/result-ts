@@ -41,6 +41,23 @@ if (result.isErr()) {
 }
 ```
 
+For object-style exhaustive handling, use `matchTag(result, key, handlers)`.
+
+```ts
+import { Result, matchTag } from '@shirudo/result';
+
+type DomainError =
+    | { type: 'network'; retryAfter: number }
+    | { type: 'validation'; field: string };
+
+const result = Result.err<DomainError>({ type: 'network', retryAfter: 30 });
+
+const message = matchTag(result, 'type', {
+    network: error => `Retry in ${error.retryAfter}s`,
+    validation: error => `Invalid field: ${error.field}`,
+});
+```
+
 ## Transforming Err Values
 
 Use `.matchErr()` when handlers should return a new `Result`. Handlers must explicitly return `ok(...)` or `err(...)`.

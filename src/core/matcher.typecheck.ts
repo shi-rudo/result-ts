@@ -1,4 +1,4 @@
-import { err, ok, type Result } from '../index';
+import { err, matchTag, ok, type Result } from '../index';
 
 type Equal<A, B> =
     (<T>() => T extends A ? 1 : 2) extends
@@ -78,6 +78,31 @@ const taggedMessage = tagged
 type MatchErrorNarrowsDiscriminatedUnions = Expect<
     Equal<typeof taggedMessage, `retry:${number}` | `field:${string}`>
 >;
+
+const objectTaggedMessage = matchTag(tagged, 'type', {
+    network: error => `retry:${error.retryAfter}` as const,
+    validation: error => `field:${error.field}` as const,
+});
+
+type MatchTagObjectHandlersAreExhaustive = Expect<
+    Equal<typeof objectTaggedMessage, `retry:${number}` | `field:${string}`>
+>;
+
+// @ts-expect-error matchTag requires a handler for every tag.
+matchTag(tagged, 'type', {
+    network: error => `retry:${error.retryAfter}` as const,
+});
+
+matchTag(tagged, 'type', {
+    network: error => {
+        const retryAfter: number = error.retryAfter;
+        return retryAfter;
+    },
+    validation: error => {
+        const field: string = error.field;
+        return field;
+    },
+});
 
 const taggedRecovery = tagged
     .matchErr()

@@ -31,7 +31,7 @@ Every implementation task must follow TDD: write failing runtime or type tests f
   - Acceptance: namespace functions are aliases or thin wrappers over existing core implementations, with type tests for inference.
   - Breaking: no.
 
-- [ ] Add an exhaustive object matcher for tagged unions.
+- [x] Add an exhaustive object matcher for tagged unions.
   - Problem: fluent `.whenTag(...)` works, but object-style matching can provide clearer exhaustive handling for discriminated unions.
   - Target: an API like `matchTag(result, 'type', { network, validation })` or equivalent.
   - Acceptance: missing tags fail type tests; runtime rejects invalid states and preserves current matcher behavior.

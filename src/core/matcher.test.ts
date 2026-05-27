@@ -1,6 +1,6 @@
 import { describe, expect, it, vi } from 'vitest';
 
-import type { ErrorMatchBuilder, ErrMatchBuilder } from './matcher';
+import { matchTag, type ErrorMatchBuilder, type ErrMatchBuilder } from './matcher';
 import { Result, err, ok } from './result';
 import { ERR_MATCH_ERR_HANDLER_NOT_RESULT, InvalidResultStateError, MatchErrHandlerNotResultError } from '../errors';
 
@@ -91,6 +91,24 @@ describe('Result.match()', () => {
             .run();
 
         expect(message).toBe('field:email');
+    });
+
+    it('supports exhaustive object matching for discriminated union errors', () => {
+        const result: Result<number, TaggedError> = Result.err({ type: 'network', retryAfter: 30 });
+
+        const message = matchTag(result, 'type', {
+            network: error => `retry:${error.retryAfter}`,
+            validation: error => `field:${error.field}`,
+        });
+
+        expect(message).toBe('retry:30');
+    });
+
+    it('throws when object matching is called on Ok', () => {
+        expect(() => matchTag(ok<number, TaggedError>(1), 'type', {
+            network: error => `retry:${error.retryAfter}`,
+            validation: error => `field:${error.field}`,
+        })).toThrow('matchTag() can only be called on Err results');
     });
 
     it('skips further when-calls after first match', () => {

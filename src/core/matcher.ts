@@ -1,15 +1,47 @@
 import type { Result } from './result';
-import { InvalidResultStateError, MatchErrHandlerNotResultError } from '../errors';
+import { InvalidResultStateError, MatchErrHandlerNotResultError, MatchOnOkError } from '../errors';
 import { isResult } from './isResult';
 
 export type Ctor<T> = abstract new (...args: any[]) => T;
 export type TypeGuard<E, A extends E> = (error: E) => error is A;
 type TaggedBy<K extends PropertyKey, V extends PropertyKey> = { readonly [P in K]: V };
 type Awaitable<T> = T | Promise<T>;
+type TagValue<E, K extends keyof E> = Extract<E[K], PropertyKey>;
+type TagHandlerMap<E, K extends keyof E> = {
+    readonly [V in TagValue<E, K>]: (error: Extract<E, Record<K, V>>) => unknown;
+};
+type TagHandlerReturn<Handlers> = {
+    [K in keyof Handlers]: Handlers[K] extends (...args: any[]) => infer R ? R : never;
+}[keyof Handlers];
 
 const matchesTag = <K extends PropertyKey, V extends PropertyKey>(value: unknown, key: K, tag: V): boolean => {
     return value !== null && typeof value === 'object' && (value as Record<PropertyKey, unknown>)[key] === tag;
 };
+
+export function matchTag<
+    T,
+    K extends keyof E & PropertyKey,
+    E extends Record<K, PropertyKey>,
+    Handlers extends TagHandlerMap<E, K>,
+>(
+    result: Result<T, E>,
+    key: K,
+    handlers: Handlers
+): TagHandlerReturn<Handlers> {
+    if (result.isOk()) throw new MatchOnOkError('matchTag');
+
+    if (result.isErr()) {
+        const error = result.error;
+        const tag = error[key];
+        const handler = handlers[tag as unknown as keyof Handlers];
+
+        if (typeof handler !== 'function') throw new InvalidResultStateError('matchTag');
+
+        return (handler as (matchedError: never) => TagHandlerReturn<Handlers>)(error as never);
+    }
+
+    throw new InvalidResultStateError('matchTag');
+}
 
 /**
  * Matcher for Err values (returns an arbitrary return type, e.g. string messages).

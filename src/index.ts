@@ -67,3 +67,4 @@ export * from './core/isErr';
 export * from './core/contains';
 export * from './core/containsErr';
 export * from './core/isResult';
+export { matchTag } from './core/matcher';
