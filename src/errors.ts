@@ -2,6 +2,7 @@ export const ERR_INVALID_RESULT_STATE = 'ERR_INVALID_RESULT_STATE' as const;
 export const ERR_INVALID_STATE = ERR_INVALID_RESULT_STATE;
 export const ERR_TASK_YIELD_NOT_RESULT = 'ERR_TASK_YIELD_NOT_RESULT' as const;
 export const ERR_MATCH_ON_OK = 'ERR_MATCH_ON_OK' as const;
+export const ERR_MATCH_ERR_HANDLER_NOT_RESULT = 'ERR_MATCH_ERR_HANDLER_NOT_RESULT' as const;
 export const ERR_UNWRAP_ON_ERR = 'ERR_UNWRAP_ON_ERR' as const;
 export const ERR_UNWRAP_ERR_ON_OK = 'ERR_UNWRAP_ERR_ON_OK' as const;
 export const ERR_EXPECT_OK = 'ERR_EXPECT_OK' as const;
@@ -11,6 +12,7 @@ export type ResultErrorCode =
     | typeof ERR_INVALID_RESULT_STATE
     | typeof ERR_TASK_YIELD_NOT_RESULT
     | typeof ERR_MATCH_ON_OK
+    | typeof ERR_MATCH_ERR_HANDLER_NOT_RESULT
     | typeof ERR_UNWRAP_ON_ERR
     | typeof ERR_UNWRAP_ERR_ON_OK
     | typeof ERR_EXPECT_OK
@@ -69,6 +71,17 @@ export class TaskYieldNotResultError extends ResultTypeError {
 export class MatchOnOkError extends ResultTypeError {
     constructor() {
         super('match() can only be called on Err results. Use `if (result.isErr()) { ... }` first.', ERR_MATCH_ON_OK);
+    }
+}
+
+export class MatchErrHandlerNotResultError extends ResultTypeError {
+    readonly handlerName: string;
+    readonly returnedValue: unknown;
+
+    constructor(handlerName: string, returnedValue: unknown) {
+        super(`matchErr().${handlerName}() handlers must return a Result. Wrap values with ok(...) or err(...).`, ERR_MATCH_ERR_HANDLER_NOT_RESULT);
+        this.handlerName = handlerName;
+        this.returnedValue = returnedValue;
     }
 }
 

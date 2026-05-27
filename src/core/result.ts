@@ -154,12 +154,11 @@ abstract class ResultBase extends Pipeable {
 
     /**
      * Matches on the Err value, but normalizes every branch to a `Result`:
-     * - Handlers may return a `Result` (is returned directly)
-     * - or an Error value (is wrapped into `Err(error)`)
+     * - Handlers must return a `Result`
+     * - use `ok(...)` for recovery and `err(...)` for mapped errors
      */
     matchErr<T, E>(this: Result<T, E>): ErrMatchBuilder<T, E, never, never> {
-        const makeErr = <ErrValue>(error: ErrValue) => err<ErrValue, never>(error);
-        return ErrMatchBuilder.fromResult(this, makeErr);
+        return ErrMatchBuilder.fromResult(this);
     }
 
     /**

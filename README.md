@@ -2,14 +2,12 @@
 
 **Robust, type-safe error handling for TypeScript.**
 
-> ⚠️ **Beta Notice**: This library is currently in beta. The API may change before the stable release. Use with caution in production environments.
-
 `@shirudo/result` brings the power of the Result pattern (Monad) to TypeScript. It helps you write safer, more predictable code by treating errors as values rather than exceptions. Stop guessing if a function will throw—let the type system guide you.
 
 ![TypeScript](https://img.shields.io/badge/TypeScript-5.0+-blue.svg)
 ![Runtime](https://img.shields.io/badge/Runtime-Node%20%7C%20Browser-green)
 ![License](https://img.shields.io/badge/License-MIT-yellow.svg)
-![Beta](https://img.shields.io/badge/Status-Beta-orange.svg)
+![Stable](https://img.shields.io/badge/Status-Stable-brightgreen.svg)
 
 ## 🌟 Key Features
 
@@ -191,7 +189,7 @@ const response = result.fold(
 
 ### Pattern Matching
 
-Handle errors exhaustively using the fluent matching API for complex error types. You can match by Error class (`.err`) or by primitive value (`.errVal`).
+Handle errors exhaustively using the fluent matching API for complex error types. `.match()` is for Err values and should be called after narrowing with `.isErr()`.
 
 ```ts
 import { Result } from "@shirudo/result";
@@ -203,10 +201,25 @@ const result = Result.err(new NetworkError("Timeout"));
 
 const message = result
   .match()
-  .err(NetworkError, (e) => `Retry later: ${e.message}`)
-  .err(ValidationError, (e) => `Invalid input: ${e.message}`)
-  .errVal("TIMEOUT_CODE", () => "Operation timed out") // Match primitive values
-  .ok((val) => `Success: ${val}`)
+  .when(NetworkError, (e) => `Retry later: ${e.message}`)
+  .when(ValidationError, (e) => `Invalid input: ${e.message}`)
+  .otherwise((e) => `Unexpected error: ${String(e)}`);
+```
+
+Use `.matchErr()` when you want to transform only Err cases and keep returning a `Result`. Handlers must return a `Result` explicitly: use `ok(...)` for recovery and `err(...)` for mapped errors.
+
+```ts
+import { Result, err, ok } from "@shirudo/result";
+
+class NetworkError extends Error {}
+class ValidationError extends Error {}
+
+const result = Result.err(new NetworkError("Timeout"));
+
+const recovered = result
+  .matchErr()
+  .when(NetworkError, () => ok("cached fallback"))
+  .when(ValidationError, (e) => err(e))
   .run();
 ```
 
@@ -258,8 +271,8 @@ const result = await matchAsync({
 - `.fold(onOk, onErr)`: Handle both cases and return a single value.
 - `.pipe(...)`: Chain operators synchronously.
 - `.pipeAsync(...)`: Chain operators asynchronously.
-- `.match()`: Start a fluent pattern matching builder (Err only).
-- `.matchErr()`: Pattern matching builder for Err cases.
+- `.match()`: Start a fluent pattern matching builder for Err values after narrowing with `.isErr()`.
+- `.matchErr()`: Transform Err cases while returning a `Result`; handlers must explicitly return `ok(...)` or `err(...)`.
 - `.serialize()`: Convert to `{ isSuccess, data?, error? }`.
 - `.toUserFriendly()`: User-friendly serialization with error messages.
 

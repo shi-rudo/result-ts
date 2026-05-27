@@ -1,9 +1,8 @@
 import { describe, expect, it, vi } from 'vitest';
 
 import type { ErrorMatchBuilder, ErrMatchBuilder } from './matcher';
-import { isResult } from './isResult';
-import { Result, ok } from './result';
-import { InvalidResultStateError } from '../errors';
+import { Result, err, ok } from './result';
+import { ERR_MATCH_ERR_HANDLER_NOT_RESULT, InvalidResultStateError, MatchErrHandlerNotResultError } from '../errors';
 
 class IOError extends Error { }
 class ParseError extends Error { }
@@ -97,15 +96,15 @@ describe('Result.match()', () => {
 });
 
 describe('Result.matchErr()', () => {
-    it('returns Result and wraps error values automatically', () => {
+    it('returns explicit Result instances from handlers', () => {
         const result: Result<number, IOError | ParseError | ValidationError> = Result.err(new ParseError('parse'));
 
         const out = result
             .matchErr()
             .when(IOError, () => ok(1))
             .when(ParseError, () => ok(2))
-            .when(ValidationError, e => new ValidationError(`Invalid config: ${e.message}`))
-            .otherwise(e => new UnknownError(`Unexpected error: ${String(e)}`));
+            .when(ValidationError, e => err(new ValidationError(`Invalid config: ${e.message}`)))
+            .otherwise(e => err(new UnknownError(`Unexpected error: ${String(e)}`)));
 
         const _type: Result<number, ValidationError | UnknownError> = out;
 
@@ -129,20 +128,26 @@ describe('Result.matchErr()', () => {
         }
     });
 
-    it('wraps non-Result handler returns to Err', () => {
+    it('throws when a handler returns a non-Result value', () => {
         const result: Result<number, ParseError> = Result.err(new ParseError('parse'));
         const otherwise = vi.fn(() => ok(0));
 
-        const out = result
+        const out = () => result
             .matchErr()
-            .when(ParseError, () => new ValidationError('bad'))
+            .when(ParseError, () => new ValidationError('bad') as never)
             .otherwise(otherwise);
 
-        expect(otherwise).not.toHaveBeenCalled();
-        expect(out.isErr()).toBe(true);
-        if (out.isErr()) {
-            expect(out.error).toBeInstanceOf(ValidationError);
+        let caughtError: unknown;
+        try {
+            out();
+        } catch (error) {
+            caughtError = error;
         }
+
+        expect(caughtError).toBeInstanceOf(MatchErrHandlerNotResultError);
+        expect((caughtError as MatchErrHandlerNotResultError).code).toBe(ERR_MATCH_ERR_HANDLER_NOT_RESULT);
+        expect((caughtError as MatchErrHandlerNotResultError).handlerName).toBe('when');
+        expect(otherwise).not.toHaveBeenCalled();
     });
 
     it('returns Result instances from handlers unchanged', () => {
@@ -157,20 +162,26 @@ describe('Result.matchErr()', () => {
         expect(out).toBe(expected);
     });
 
-    it('supports whenGuard and wraps error values', () => {
+    it('throws when a guarded handler returns a non-Result value', () => {
         const result: Result<number, ValidationError> = Result.err(new ValidationError('bad'));
         const guard = vi.fn((error: Error): error is ValidationError => error instanceof ValidationError);
 
-        const out = result
+        const out = () => result
             .matchErr()
-            .whenGuard(guard, () => new UnknownError('mapped'))
+            .whenGuard(guard, () => new UnknownError('mapped') as never)
             .otherwise(() => ok(0));
 
-        expect(guard).toHaveBeenCalled();
-        expect(out.isErr()).toBe(true);
-        if (out.isErr()) {
-            expect(out.error).toBeInstanceOf(UnknownError);
+        let caughtError: unknown;
+        try {
+            out();
+        } catch (error) {
+            caughtError = error;
         }
+
+        expect(caughtError).toBeInstanceOf(MatchErrHandlerNotResultError);
+        expect((caughtError as MatchErrHandlerNotResultError).code).toBe(ERR_MATCH_ERR_HANDLER_NOT_RESULT);
+        expect((caughtError as MatchErrHandlerNotResultError).handlerName).toBe('whenGuard');
+        expect(guard).toHaveBeenCalled();
     });
 
     it('skips whenGuard when Source is Ok', () => {
@@ -191,31 +202,33 @@ describe('Result.matchErr()', () => {
         }
     });
 
-    it('wraps otherwise-Error if no match is present', () => {
+    it('throws when otherwise returns a non-Result value', () => {
         const result: Result<number, ParseError> = Result.err(new ParseError('parse'));
 
-        const out = result
+        const out = () => result
             .matchErr()
             .when(IOError, () => ok(1))
-            .otherwise(() => new UnknownError('nope'));
+            .otherwise(() => new UnknownError('nope') as never);
 
-        expect(out.isErr()).toBe(true);
-        if (out.isErr()) {
-            expect(out.error).toBeInstanceOf(UnknownError);
+        let caughtError: unknown;
+        try {
+            out();
+        } catch (error) {
+            caughtError = error;
         }
+
+        expect(caughtError).toBeInstanceOf(MatchErrHandlerNotResultError);
+        expect((caughtError as MatchErrHandlerNotResultError).code).toBe(ERR_MATCH_ERR_HANDLER_NOT_RESULT);
+        expect((caughtError as MatchErrHandlerNotResultError).handlerName).toBe('otherwise');
     });
 
-    it('does not treat structurally similar handler output as a Result', () => {
+    it('throws for structurally similar handler output', () => {
         const imposter = { isOk: () => true, isErr: () => false, value: 123 };
         const result: Result<number, ValidationError> = Result.err(new ValidationError('bad'));
 
-        const out = result.matchErr().otherwise(() => imposter);
+        const out = () => result.matchErr().otherwise(() => imposter as never);
 
-        expect(isResult(out)).toBe(true);
-        expect(out.isErr()).toBe(true);
-        if (out.isErr()) {
-            expect(out.error).toBe(imposter);
-        }
+        expect(out).toThrow(MatchErrHandlerNotResultError);
     });
 
     it('run() returns Ok if Source Ok and E = never', () => {

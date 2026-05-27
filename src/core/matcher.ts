@@ -1,5 +1,5 @@
 import type { Result } from './result';
-import { InvalidResultStateError } from '../errors';
+import { InvalidResultStateError, MatchErrHandlerNotResultError } from '../errors';
 import { isResult } from './isResult';
 
 export type Ctor<T> = abstract new (...args: any[]) => T;
@@ -65,86 +65,86 @@ export class ErrorMatchBuilder<E, R> {
     }
 }
 
-type OkOfReturn<R> = R extends Result<infer T, any> ? T : never;
-type ErrOfReturn<R> = R extends Result<any, infer E> ? E : R;
+type OkOfResult<R> = R extends Result<infer T, any> ? T : never;
+type ErrOfResult<R> = R extends Result<any, infer E> ? E : never;
 
-type ErrFactory = <E>(error: E) => Result<never, E>;
+const expectResultReturn = (value: unknown, handlerName: string): Result<any, any> => {
+    if (isResult(value)) return value;
+    throw new MatchErrHandlerNotResultError(handlerName, value);
+};
 
 /**
  * Matcher for `Result` Errors, which returns a `Result` again.
  *
- * Handlers may:
- * - return a `Result` (is returned directly)
- * - return an Error value (is automatically wrapped into `Err(error)`)
+ * Handlers must return a `Result`.
+ * Wrap recovered values with `ok(...)` and mapped errors with `err(...)`.
  */
 export class ErrMatchBuilder<T, E, OutT, OutE> {
-    readonly #makeErr: ErrFactory;
     readonly #error: unknown;
     readonly #resolved: Result<any, any> | undefined;
 
-    private constructor(makeErr: ErrFactory, error: unknown, resolved?: Result<any, any>) {
-        this.#makeErr = makeErr;
+    private constructor(error: unknown, resolved?: Result<any, any>) {
         this.#error = error;
         this.#resolved = resolved;
         Object.freeze(this);
     }
 
-    static fromResult<T, E>(result: Result<T, E>, makeErr: ErrFactory): ErrMatchBuilder<T, E, never, never> {
-        if (result.isOk()) return new ErrMatchBuilder<T, E, never, never>(makeErr, undefined, result);
-        if (result.isErr()) return new ErrMatchBuilder<T, E, never, never>(makeErr, result.error);
+    static fromResult<T, E>(result: Result<T, E>): ErrMatchBuilder<T, E, never, never> {
+        if (result.isOk()) return new ErrMatchBuilder<T, E, never, never>(undefined, result);
+        if (result.isErr()) return new ErrMatchBuilder<T, E, never, never>(result.error);
         throw new InvalidResultStateError('ErrMatchBuilder.fromResult');
     }
 
-    when<A extends E, R1>(
+    when<A extends E, R1 extends Result<any, any>>(
         ctor: Ctor<A>,
         handler: (error: A) => R1
-    ): ErrMatchBuilder<T, Exclude<E, A>, OutT | OkOfReturn<R1>, OutE | ErrOfReturn<R1>> {
+    ): ErrMatchBuilder<T, Exclude<E, A>, OutT | OkOfResult<R1>, OutE | ErrOfResult<R1>> {
         if (this.#resolved) {
-            return this as unknown as ErrMatchBuilder<T, Exclude<E, A>, OutT | OkOfReturn<R1>, OutE | ErrOfReturn<R1>>;
+            return this as unknown as ErrMatchBuilder<T, Exclude<E, A>, OutT | OkOfResult<R1>, OutE | ErrOfResult<R1>>;
         }
 
         if (this.#error instanceof ctor) {
             const out = handler(this.#error as A);
-            const resolved = isResult(out) ? out : this.#makeErr(out as ErrOfReturn<R1>);
-            return new ErrMatchBuilder(this.#makeErr, this.#error, resolved) as unknown as ErrMatchBuilder<
+            const resolved = expectResultReturn(out, 'when');
+            return new ErrMatchBuilder(this.#error, resolved) as unknown as ErrMatchBuilder<
                 T,
                 Exclude<E, A>,
-                OutT | OkOfReturn<R1>,
-                OutE | ErrOfReturn<R1>
+                OutT | OkOfResult<R1>,
+                OutE | ErrOfResult<R1>
             >;
         }
 
-        return this as unknown as ErrMatchBuilder<T, Exclude<E, A>, OutT | OkOfReturn<R1>, OutE | ErrOfReturn<R1>>;
+        return this as unknown as ErrMatchBuilder<T, Exclude<E, A>, OutT | OkOfResult<R1>, OutE | ErrOfResult<R1>>;
     }
 
-    whenGuard<A extends E, R1>(
+    whenGuard<A extends E, R1 extends Result<any, any>>(
         guard: TypeGuard<E, A>,
         handler: (error: A) => R1
-    ): ErrMatchBuilder<T, Exclude<E, A>, OutT | OkOfReturn<R1>, OutE | ErrOfReturn<R1>> {
-        if (this.#resolved) return this as unknown as ErrMatchBuilder<T, Exclude<E, A>, OutT | OkOfReturn<R1>, OutE | ErrOfReturn<R1>>;
+    ): ErrMatchBuilder<T, Exclude<E, A>, OutT | OkOfResult<R1>, OutE | ErrOfResult<R1>> {
+        if (this.#resolved) return this as unknown as ErrMatchBuilder<T, Exclude<E, A>, OutT | OkOfResult<R1>, OutE | ErrOfResult<R1>>;
 
         const error = this.#error as E;
         if (guard(error)) {
             const out = handler(error);
-            const resolved = isResult(out) ? out : this.#makeErr(out as ErrOfReturn<R1>);
-            return new ErrMatchBuilder(this.#makeErr, this.#error, resolved) as unknown as ErrMatchBuilder<
+            const resolved = expectResultReturn(out, 'whenGuard');
+            return new ErrMatchBuilder(this.#error, resolved) as unknown as ErrMatchBuilder<
                 T,
                 Exclude<E, A>,
-                OutT | OkOfReturn<R1>,
-                OutE | ErrOfReturn<R1>
+                OutT | OkOfResult<R1>,
+                OutE | ErrOfResult<R1>
             >;
         }
 
-        return this as unknown as ErrMatchBuilder<T, Exclude<E, A>, OutT | OkOfReturn<R1>, OutE | ErrOfReturn<R1>>;
+        return this as unknown as ErrMatchBuilder<T, Exclude<E, A>, OutT | OkOfResult<R1>, OutE | ErrOfResult<R1>>;
     }
 
-    otherwise<R2>(handler: (error: E) => R2): Result<T | OutT | OkOfReturn<R2>, OutE | ErrOfReturn<R2>> {
-        if (this.#resolved) return this.#resolved as Result<T | OutT | OkOfReturn<R2>, OutE | ErrOfReturn<R2>>;
+    otherwise<R2 extends Result<any, any>>(handler: (error: E) => R2): Result<T | OutT | OkOfResult<R2>, OutE | ErrOfResult<R2>> {
+        if (this.#resolved) return this.#resolved as Result<T | OutT | OkOfResult<R2>, OutE | ErrOfResult<R2>>;
 
         const out = handler(this.#error as E);
-        return (isResult(out) ? out : this.#makeErr(out as ErrOfReturn<R2>)) as Result<
-            T | OutT | OkOfReturn<R2>,
-            OutE | ErrOfReturn<R2>
+        return expectResultReturn(out, 'otherwise') as Result<
+            T | OutT | OkOfResult<R2>,
+            OutE | ErrOfResult<R2>
         >;
     }
 

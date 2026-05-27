@@ -1,4 +1,4 @@
-import { err, type Result } from '../index';
+import { err, ok, type Result } from '../index';
 
 type Equal<A, B> =
     (<T>() => T extends A ? 1 : 2) extends
@@ -29,3 +29,22 @@ const matched = result
 type MatchChainsAllErrorConstructors = Expect<
     Equal<typeof matched, 'network' | 'validation'>
 >;
+
+const recovered = result
+    .matchErr()
+    .when(NetworkError, () => ok(1))
+    .when(ValidationError, () => ok(2))
+    .run();
+
+type MatchErrRequiresResultHandlers = Expect<
+    Equal<typeof recovered, Result<number, never>>
+>;
+
+// @ts-expect-error matchErr handlers must return Result explicitly.
+result.matchErr().when(NetworkError, () => 1);
+
+// @ts-expect-error matchErr guarded handlers must return Result explicitly.
+result.matchErr().whenGuard((error): error is NetworkError => error instanceof NetworkError, () => 1);
+
+// @ts-expect-error matchErr otherwise handlers must return Result explicitly.
+result.matchErr().otherwise(() => 1);
