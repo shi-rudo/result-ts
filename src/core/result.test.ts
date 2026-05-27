@@ -152,6 +152,12 @@ describe('Result class', () => {
 
                 expect(() => ok<number, string>(0).expect.call(malformed, 'must be ok')).toThrow(InvalidResultStateError);
             });
+
+            it('expectErr throws for malformed Result state', () => {
+                const malformed = { _tag: 'Invalid', value: undefined, error: undefined } as unknown as Result<number, string>;
+
+                expect(() => ok<number, string>(0).expectErr.call(malformed, 'must be err')).toThrow(InvalidResultStateError);
+            });
         });
 
         describe('documented conversions', () => {

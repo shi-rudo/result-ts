@@ -100,7 +100,8 @@ abstract class ResultBase extends Pipeable {
 
     expectErr<T, E>(this: Result<T, E>, message: string): E {
         if (this._tag === 'Err') return this.error;
-        throw new ExpectErrError(message);
+        if (this._tag === 'Ok') throw new ExpectErrError(message);
+        throw new InvalidResultStateError('Result.expectErr');
     }
 
     toPromise<T, E>(this: Result<T, E>): Promise<T> {
