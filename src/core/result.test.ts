@@ -413,6 +413,12 @@ describe('Result class', () => {
             const result = err(404);
             expect(result.serialize()).toEqual({ isSuccess: false, error: 404 });
         });
+
+        it('throws for malformed Result state', () => {
+            const malformed = { _tag: 'Invalid', value: undefined, error: undefined } as unknown as Result<number, string>;
+
+            expect(() => ok<number, string>(0).serialize.call(malformed)).toThrow(InvalidResultStateError);
+        });
     });
 
     describe('toUserFriendly', () => {
@@ -440,6 +446,12 @@ describe('Result class', () => {
         it('converts any error types to strings for user-friendly format', () => {
             const result = err(404);
             expect(result.toUserFriendly()).toEqual({ isSuccess: false, error: '404' });
+        });
+
+        it('throws for malformed Result state', () => {
+            const malformed = { _tag: 'Invalid', value: undefined, error: undefined } as unknown as Result<number, string>;
+
+            expect(() => ok<number, string>(0).toUserFriendly.call(malformed)).toThrow(InvalidResultStateError);
         });
 
         it('is perfect for APIs and user interfaces', () => {

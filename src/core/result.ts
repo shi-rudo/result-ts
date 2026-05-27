@@ -164,7 +164,8 @@ abstract class ResultBase extends Pipeable {
      */
     serialize<T, E>(this: Result<T, E>): { isSuccess: boolean; data?: T; error?: E } {
         if (this._tag === 'Ok') return { isSuccess: true, data: this.value };
-        return { isSuccess: false, error: this.error };
+        if (this._tag === 'Err') return { isSuccess: false, error: this.error };
+        throw new InvalidResultStateError('Result.serialize');
     }
 
     /**
@@ -173,6 +174,7 @@ abstract class ResultBase extends Pipeable {
      */
     toUserFriendly<T, E>(this: Result<T, E>): { isSuccess: boolean; data?: T; error?: string } {
         if (this._tag === 'Ok') return { isSuccess: true, data: this.value };
+        if (this._tag !== 'Err') throw new InvalidResultStateError('Result.toUserFriendly');
 
         const error = this.error;
         const errorMessage =
