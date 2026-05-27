@@ -39,6 +39,7 @@ import { Result } from '@shirudo/result';
 
 const value = Result.ok(42);
 const failure = Result.err('something went wrong');
+const maybeUser: { id: string; name: string } | null = null;
 
 const parsed = Result.try(() => JSON.parse('{"valid": true}'));
 const safeParse = Result.fromThrowable(

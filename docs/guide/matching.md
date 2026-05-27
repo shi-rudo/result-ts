@@ -5,10 +5,14 @@ Use `.matchError()` for fluent Err-only matching after narrowing with `.isErr()`
 ```ts
 import { Result } from '@shirudo/result';
 
-class NetworkError extends Error {}
-class ValidationError extends Error {}
+class NetworkError extends Error {
+    readonly type = 'network';
+}
+class ValidationError extends Error {
+    readonly type = 'validation';
+}
 
-const result = Result.err(new NetworkError('timeout'));
+const result: Result<never, NetworkError | ValidationError> = Result.err(new NetworkError('timeout'));
 
 if (result.isErr()) {
     const message = result
@@ -26,6 +30,8 @@ if (result.isErr()) {
 Use `.whenTag(key, value, handler)` for tagged error unions.
 
 ```ts
+import { Result } from '@shirudo/result';
+
 type DomainError =
     | { type: 'network'; retryAfter: number }
     | { type: 'validation'; field: string };
@@ -65,7 +71,14 @@ Use `.matchErr()` when handlers should return a new `Result`. Handlers must expl
 ```ts
 import { Result, err, ok } from '@shirudo/result';
 
-const recovered = Result.err(new NetworkError('timeout'))
+class NetworkError extends Error {
+    readonly type = 'network';
+}
+class ValidationError extends Error {
+    readonly type = 'validation';
+}
+
+const recovered = Result.err<NetworkError | ValidationError, string>(new NetworkError('timeout'))
     .matchErr()
     .when(NetworkError, () => ok('cached fallback'))
     .when(ValidationError, error => err(error))

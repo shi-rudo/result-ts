@@ -70,12 +70,13 @@
     "test": "vitest",
     "test:coverage": "vitest run --coverage",
     "docs:dev": "vitepress dev docs",
+    "docs:check": "node scripts/check-docs-examples.mjs",
     "docs:build": "vitepress build docs",
     "docs:preview": "vitepress preview docs",
     "prebuild": "pnpm lint && pnpm test:types && pnpm test run",
     "build": "tsdown",
     "test:exports": "node scripts/check-package-exports.mjs",
-    "prepublishOnly": "pnpm build && pnpm test:exports"
+    "prepublishOnly": "pnpm build && pnpm docs:check && pnpm test:exports"
   },
   "devDependencies": {
     "@types/node": "^25.0.2",

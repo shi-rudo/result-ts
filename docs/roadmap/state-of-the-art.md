@@ -50,7 +50,7 @@ Every implementation task must follow TDD: write failing runtime or type tests f
   - Acceptance: package export tests prove ESM, CJS, and types resolve correctly.
   - Breaking: no.
 
-- [ ] Typecheck documentation examples.
+- [x] Typecheck documentation examples.
   - Problem: docs can drift from the public API.
   - Target: extract or mirror docs examples into compile-tested snippets.
   - Acceptance: docs examples are covered by `pnpm test:types` or a dedicated `pnpm docs:check`.

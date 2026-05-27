@@ -25,6 +25,17 @@ Use `.pipeAsync()` when one or more operators are async.
 ```ts
 import { mapAsync, ok, tryMapAsync } from '@shirudo/result';
 
+const db = {
+    async getUser(id: number) {
+        return { id, name: 'Ada' };
+    },
+};
+const externalService = {
+    async validate(name: string) {
+        return name.trim();
+    },
+};
+
 const result = await ok(1).pipeAsync(
     mapAsync(async id => {
         const user = await db.getUser(id);

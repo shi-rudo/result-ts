@@ -5,6 +5,10 @@
 ```ts
 import { err, ok, task } from '@shirudo/result';
 
+function validate(value: number) {
+    return value > 0 ? ok(value) : err('invalid value');
+}
+
 const calculate = task(function* () {
     const x = yield* ok(10);
     const y = yield* ok(20);
@@ -21,10 +25,22 @@ const calculate = task(function* () {
 Use the optional `onThrow` callback to convert thrown exceptions into typed error values.
 
 ```ts
+import { ok, task } from '@shirudo/result';
+
+class CustomError extends Error {}
+
+function fetchData() {
+    return ok('raw data');
+}
+
+function processData(data: string) {
+    return data.toUpperCase();
+}
+
 const result = await task(
     function* () {
         const data = yield* fetchData();
-        return process(data);
+        return processData(data);
     },
     error => new CustomError(`Failed: ${String(error)}`),
 );
@@ -35,7 +51,16 @@ const result = await task(
 Inside `task()`, use `yield* result`, not `yield result`.
 
 ```ts
-const value = yield* getResult();
+import { ok, task } from '@shirudo/result';
+
+function getResult() {
+    return ok(42);
+}
+
+const result = task(function* () {
+    const value = yield* getResult();
+    return value;
+});
 ```
 
 If a plain value is yielded, `task()` throws `TaskYieldNotResultError`.

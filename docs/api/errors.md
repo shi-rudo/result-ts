@@ -10,6 +10,12 @@ import {
     ResultTypeError,
     UnwrapOnErrError,
 } from '@shirudo/result/errors';
+import { err } from '@shirudo/result';
+
+const result = err('not available');
+const reportLibraryMisuse = (code: string, message: string) => {
+    console.error(code, message);
+};
 
 try {
     result.unwrap();
