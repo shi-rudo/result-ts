@@ -26,7 +26,7 @@ Every implementation task must follow TDD: write failing runtime or type tests f
 
 ## P2: API Completeness
 
-- [ ] Expand the `Result` namespace API.
+- [x] Expand the `Result` namespace API.
   - Target candidates: `Result.is`, `Result.tryAsync`, `Result.fromThrowable`, `Result.sequence`, `Result.all`, `Result.combine`.
   - Acceptance: namespace functions are aliases or thin wrappers over existing core implementations, with type tests for inference.
   - Breaking: no.

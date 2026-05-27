@@ -41,6 +41,10 @@ const value = Result.ok(42);
 const failure = Result.err('something went wrong');
 
 const parsed = Result.try(() => JSON.parse('{"valid": true}'));
+const safeParse = Result.fromThrowable(
+    JSON.parse,
+    error => ({ type: 'parse', cause: error }),
+);
 const user = Result.fromNullable(maybeUser, 'user not found');
 const response = await Result.fromPromise(
     fetch('/api/data'),

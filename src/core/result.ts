@@ -1,6 +1,9 @@
 import { Pipeable } from './pipeable';
 import { AsyncErrMatchBuilder, AsyncErrorMatchBuilder, ErrMatchBuilder, ErrorMatchBuilder } from './matcher';
 import { RESULT_BRAND } from './brand';
+import { isResult } from './isResult';
+import { all, sequence } from './sequence';
+import { combine } from './zip';
 import {
     ExpectErrError,
     ExpectOkError,
@@ -282,10 +285,39 @@ export function tryFn<T>(fn: () => T): Result<T, unknown> {
     }
 }
 
+export function fromThrowable<const Args extends readonly unknown[], T, E = unknown>(
+    fn: (...args: Args) => T,
+    errorMapper?: (error: unknown) => E
+): (...args: Args) => Result<T, E> {
+    return (...args) => {
+        try {
+            return ok<T, E>(fn(...args));
+        } catch (error) {
+            return err<E, T>(errorMapper ? errorMapper(error) : (error as E));
+        }
+    };
+}
+
+export async function tryAsync<T>(fn: () => Promise<T>): Promise<Result<T, unknown>>;
+export async function tryAsync<T, E>(fn: () => Promise<T>, errorMapper?: (error: unknown) => E): Promise<Result<T, E>>;
+export async function tryAsync<T, E>(fn: () => Promise<T>, errorMapper?: (error: unknown) => E): Promise<Result<T, E>> {
+    try {
+        return ok<T, E>(await fn());
+    } catch (error) {
+        return err<E, T>(errorMapper ? errorMapper(error) : (error as E));
+    }
+}
+
 export const Result = {
     ok,
     err,
+    is: isResult,
     fromNullable,
     fromPromise,
+    fromThrowable,
     try: tryFn,
+    tryAsync,
+    sequence,
+    all,
+    combine,
 };

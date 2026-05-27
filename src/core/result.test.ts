@@ -38,6 +38,41 @@ describe('Result class', () => {
                 }
             });
         });
+
+        describe('namespace helpers', () => {
+            it('checks Result values with Result.is', () => {
+                expect(Result.is(ok(1))).toBe(true);
+                expect(Result.is(err('boom'))).toBe(true);
+                expect(Result.is({ _tag: 'Ok', value: 1, isOk: () => true, isErr: () => false })).toBe(false);
+            });
+
+            it('wraps throwing functions with Result.fromThrowable', () => {
+                const parseNumber = Result.fromThrowable((input: string) => {
+                    const parsed = JSON.parse(input);
+                    if (typeof parsed !== 'number') throw new Error('not a number');
+                    return parsed as number;
+                }, error => `parse failed: ${(error as Error).message}`);
+
+                expect(parseNumber('42')).toEqual(ok(42));
+                expect(parseNumber('"nope"')).toEqual(err('parse failed: not a number'));
+            });
+
+            it('catches async functions with Result.tryAsync', async () => {
+                await expect(Result.tryAsync(async () => 42)).resolves.toEqual(ok(42));
+                await expect(Result.tryAsync(
+                    async () => {
+                        throw new Error('boom');
+                    },
+                    error => `mapped: ${(error as Error).message}`
+                )).resolves.toEqual(err('mapped: boom'));
+            });
+
+            it('exposes collection combinators on the Result namespace', () => {
+                expect(Result.sequence([ok(1), ok('a')] as const)).toEqual(ok([1, 'a']));
+                expect(Result.all([ok(1), ok('a')] as const)).toEqual(ok([1, 'a']));
+                expect(Result.combine(err('left'), err('right'))).toEqual(err(['left', 'right']));
+            });
+        });
     });
 
     describe('instance methods', () => {

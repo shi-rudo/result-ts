@@ -6,9 +6,14 @@
 - `okIf(condition, okValue, errValue)`: Conditionally create `Ok` or `Err`.
 - `okIfLazy(condition, okFn, errFn)`: Lazy conditional creation.
 - `Result.ok(value)` / `Result.err(error)`: Static factory variants.
+- `Result.is(value)`: Check whether a value is a valid branded `Result`.
 - `Result.try(fn)`: Execute a synchronous function and catch exceptions as `Err`.
+- `Result.fromThrowable(fn, errorMapper?)`: Wrap a throwing function and return a function that produces `Result`.
+- `Result.tryAsync(fn, errorMapper?)`: Execute an async function and catch rejections as `Err`.
 - `Result.fromNullable(value, fallback)`: Convert `null | undefined` to `Err`.
 - `Result.fromPromise(promise, errorMapper?)`: Convert a promise to `Promise<Result>`. Rejections become `Err`; exceptions thrown by `errorMapper` are rethrown.
+- `Result.sequence(results)` / `Result.all(results)`: Convert a tuple or array of Results into a Result of values.
+- `Result.combine(left, right)`: Combine two Results and collect one or both errors in an array.
 - `.toPromise()`: Convert `Ok` to a resolved promise and `Err` to a rejected promise.
 - `.toNullable()`: Convert `Ok` to the value and `Err` to `null`.
 
