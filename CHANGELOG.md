@@ -1,15 +1,10 @@
 # Changelog
 
-## 2.0.0 - Unreleased
-
-### Breaking Changes
-
-- `Ok` no longer exposes an `error` property and `Err` no longer exposes a `value` property. Access `result.value` or `result.error` only after narrowing with `.isOk()` or `.isErr()`.
-
 ## 1.0.0 - 2026-05-27
 
 ### Breaking Changes
 
+- `Ok` no longer exposes an `error` property and `Err` no longer exposes a `value` property. Access `result.value` or `result.error` only after narrowing with `.isOk()` or `.isErr()`.
 - `matchErr()` handlers must now return a `Result` explicitly. Return `ok(value)` for recovery and `err(error)` for mapped errors.
 - `matchErr().when(...)`, `matchErr().whenGuard(...)`, and `matchErr().otherwise(...)` now reject non-Result handler returns at runtime with `MatchErrHandlerNotResultError`.
 - The package is promoted to the `1.0.0` major line.
