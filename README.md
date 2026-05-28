@@ -5,7 +5,6 @@ Robust, type-safe error handling for TypeScript.
 `@shirudo/result` models expected failures as values instead of hidden exceptions. Functions return `Result<T, E>`, callers must handle both states, and TypeScript narrows access to `value` and `error` only when the state is known.
 
 [![CI](https://github.com/shi-rudo/result-ts/actions/workflows/ci.yml/badge.svg)](https://github.com/shi-rudo/result-ts/actions/workflows/ci.yml)
-[![codecov](https://codecov.io/gh/shi-rudo/result-ts/graph/badge.svg)](https://codecov.io/gh/shi-rudo/result-ts)
 [![npm version](https://img.shields.io/npm/v/@shirudo/result.svg)](https://www.npmjs.com/package/@shirudo/result)
 [![License: MIT](https://img.shields.io/badge/License-MIT-yellow.svg)](./LICENSE)
 [![TypeScript](https://img.shields.io/badge/TypeScript-5.7%2B-blue.svg)](https://www.typescriptlang.org/)
