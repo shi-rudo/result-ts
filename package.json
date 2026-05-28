@@ -70,7 +70,7 @@
     "test": "vitest",
     "test:coverage": "vitest run --coverage --coverage.reporter=text --coverage.reporter=json --coverage.reporter=lcov",
     "test:edge": "node scripts/check-edge-runtime.mjs",
-    "check": "pnpm typecheck && pnpm test:types && pnpm test run && pnpm docs:check && pnpm docs:build && pnpm build && pnpm test:edge && pnpm test:exports",
+    "check": "pnpm typecheck && pnpm test:types && pnpm test run && pnpm build && pnpm docs:check && pnpm docs:build && pnpm test:edge && pnpm test:exports",
     "check:clean": "git diff --exit-code && git diff --cached --exit-code",
     "docs:dev": "vitepress dev docs",
     "docs:check": "node scripts/check-docs-examples.mjs",
