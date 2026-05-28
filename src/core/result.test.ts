@@ -1,6 +1,6 @@
 import { describe, expect, it } from 'vitest';
 
-import { Result, ok, err, collectFirstOk } from './result';
+import { Result, ok, err, okIf, okIfLazy, collectFirstOk } from './result';
 import {
     ERR_EXPECT_ERR,
     ERR_EXPECT_OK,
@@ -57,6 +57,15 @@ describe('Result class', () => {
                 expect(parseNumber('"nope"')).toEqual(err('parse failed: not a number'));
             });
 
+            it('preserves thrown values when Result.fromThrowable has no mapper', () => {
+                const original = new Error('boom');
+                const fail = Result.fromThrowable(() => {
+                    throw original;
+                });
+
+                expect(fail()).toEqual(err(original));
+            });
+
             it('catches async functions with Result.tryAsync', async () => {
                 await expect(Result.tryAsync(async () => 42)).resolves.toEqual(ok(42));
                 await expect(Result.tryAsync(
@@ -67,10 +76,36 @@ describe('Result class', () => {
                 )).resolves.toEqual(err('mapped: boom'));
             });
 
+            it('preserves rejected values when Result.tryAsync has no mapper', async () => {
+                const original = new Error('boom');
+
+                await expect(Result.tryAsync(async () => {
+                    throw original;
+                })).resolves.toEqual(err(original));
+            });
+
             it('exposes collection combinators on the Result namespace', () => {
                 expect(Result.sequence([ok(1), ok('a')] as const)).toEqual(ok([1, 'a']));
                 expect(Result.all([ok(1), ok('a')] as const)).toEqual(ok([1, 'a']));
                 expect(Result.combine(err('left'), err('right'))).toEqual(err(['left', 'right']));
+            });
+
+            it('constructs conditional Results with eager and lazy values', () => {
+                expect(okIf(true, 1, 'boom')).toEqual(ok(1));
+                expect(okIf(false, 1, 'boom')).toEqual(err('boom'));
+
+                expect(okIfLazy(true, () => 2, () => 'lazy boom')).toEqual(ok(2));
+                expect(okIfLazy(false, () => 2, () => 'lazy boom')).toEqual(err('lazy boom'));
+            });
+
+            it('does not evaluate the unused lazy conditional branch', () => {
+                expect(okIfLazy(true, () => 1, () => {
+                    throw new Error('unexpected err branch');
+                })).toEqual(ok(1));
+
+                expect(okIfLazy(false, () => {
+                    throw new Error('unexpected ok branch');
+                }, () => 'boom')).toEqual(err('boom'));
             });
         });
     });
@@ -205,6 +240,16 @@ describe('Result class', () => {
 
                 expect(() => ok<number, string>(0).expectErr.call(malformed, 'must be err')).toThrow(InvalidResultStateError);
             });
+
+            it('unwrap utilities throw for malformed Result state', () => {
+                const malformed = { _tag: 'Invalid', value: undefined, error: undefined } as unknown as Result<number, string>;
+                const source = ok<number, string>(0);
+
+                expect(() => source.unwrap.call(malformed)).toThrow(InvalidResultStateError);
+                expect(() => source.unwrapErr.call(malformed)).toThrow(InvalidResultStateError);
+                expect(() => source.unwrapOrElse.call(malformed, () => 1)).toThrow(InvalidResultStateError);
+                expect(() => source.unwrapOrThrow.call(malformed)).toThrow(InvalidResultStateError);
+            });
         });
 
         describe('documented conversions', () => {
@@ -216,6 +261,14 @@ describe('Result class', () => {
             it('toNullable returns Ok value or null', () => {
                 expect(ok<number, string>(42).toNullable()).toBe(42);
                 expect(Result.err<string, number>('boom').toNullable()).toBeNull();
+            });
+
+            it('throws for malformed Result state', () => {
+                const malformed = { _tag: 'Invalid', value: undefined, error: undefined } as unknown as Result<number, string>;
+                const source = ok<number, string>(0);
+
+                expect(() => source.toPromise.call(malformed)).toThrow(InvalidResultStateError);
+                expect(() => source.toNullable.call(malformed)).toThrow(InvalidResultStateError);
             });
         });
 
@@ -236,6 +289,26 @@ describe('Result class', () => {
                 );
 
                 expect(result).toBe('err:boom');
+            });
+
+            it('throws for malformed Result state', () => {
+                const malformed = { _tag: 'Invalid', value: undefined, error: undefined } as unknown as Result<number, string>;
+
+                expect(() => ok<number, string>(0).fold.call(malformed, value => value, error => error.length)).toThrow(InvalidResultStateError);
+            });
+        });
+
+        describe('matchError', () => {
+            it('keeps deprecated match() guarded on Ok state', () => {
+                expect(() => ok<number, string>(0).match()).toThrow('match() can only be called on Err results');
+            });
+
+            it('throws for malformed Result state', () => {
+                const malformed = { _tag: 'Invalid' } as unknown as Result<number, string>;
+                const source = ok<number, string>(0);
+
+                expect(() => source.matchError.call(malformed)).toThrow(InvalidResultStateError);
+                expect(() => source.matchErrorAsync.call(malformed)).toThrow(InvalidResultStateError);
             });
         });
     });

@@ -1,6 +1,12 @@
 import { describe, expect, it, vi } from 'vitest';
 
-import { matchTag, type ErrorMatchBuilder, type ErrMatchBuilder } from './matcher';
+import {
+    matchTag,
+    type AsyncErrMatchBuilder,
+    type AsyncErrorMatchBuilder,
+    type ErrorMatchBuilder,
+    type ErrMatchBuilder,
+} from './matcher';
 import { Result, err, ok } from './result';
 import { ERR_MATCH_ERR_HANDLER_NOT_RESULT, InvalidResultStateError, MatchErrHandlerNotResultError } from '../errors';
 
@@ -111,6 +117,47 @@ describe('Result.match()', () => {
         })).toThrow('matchTag() can only be called on Err results');
     });
 
+    it('throws when object matching has no runtime handler for the tag', () => {
+        const result: Result<number, TaggedError> = Result.err({ type: 'network', retryAfter: 30 });
+
+        expect(() => matchTag(result, 'type', {
+            validation: error => `field:${error.field}`,
+        } as never)).toThrow(InvalidResultStateError);
+    });
+
+    it('throws when object matching receives a malformed Result-like state', () => {
+        const malformed = {
+            isOk: () => false,
+            isErr: () => false,
+        } as unknown as Result<number, TaggedError>;
+
+        expect(() => matchTag(malformed, 'type', {
+            network: error => `retry:${error.retryAfter}`,
+            validation: error => `field:${error.field}`,
+        })).toThrow(InvalidResultStateError);
+    });
+
+    it('falls through non-matching guards and tags to otherwise()', () => {
+        const result: Result<number, IOError | TaggedError> = Result.err({ type: 'network', retryAfter: 30 });
+
+        if (!result.isErr()) throw new Error('expected Err');
+
+        const guard = vi.fn((error: IOError | TaggedError): error is IOError => error instanceof IOError);
+        const guarded = vi.fn(() => 'guarded');
+        const tagged = vi.fn(() => 'tagged');
+
+        const message = result
+            .matchError()
+            .whenGuard(guard, guarded)
+            .whenTag('type', 'validation', tagged)
+            .otherwise(error => `fallback:${String('type' in error ? error.type : error.message)}`);
+
+        expect(guard).toHaveBeenCalledWith(result.error);
+        expect(guarded).not.toHaveBeenCalled();
+        expect(tagged).not.toHaveBeenCalled();
+        expect(message).toBe('fallback:network');
+    });
+
     it('skips further when-calls after first match', () => {
         const result: Result<number, ValidationError> = Result.err(new ValidationError('bad'));
 
@@ -127,6 +174,28 @@ describe('Result.match()', () => {
 
         expect(first).toHaveBeenCalled();
         expect(second).not.toHaveBeenCalled();
+        expect(message).toBe('first');
+    });
+
+    it('skips guarded and tagged handlers after first match', () => {
+        const result: Result<number, ValidationError | TaggedError> = Result.err(new ValidationError('bad'));
+
+        if (!result.isErr()) throw new Error('expected Err');
+
+        const guard = vi.fn((error: ValidationError | TaggedError): error is ValidationError => error instanceof ValidationError);
+        const guarded = vi.fn(() => 'guarded');
+        const tagged = vi.fn(() => 'tagged');
+
+        const message = result
+            .match()
+            .when(ValidationError, () => 'first')
+            .whenGuard(guard, guarded)
+            .whenTag('type', 'network', tagged)
+            .otherwise(() => 'fallback');
+
+        expect(guard).not.toHaveBeenCalled();
+        expect(guarded).not.toHaveBeenCalled();
+        expect(tagged).not.toHaveBeenCalled();
         expect(message).toBe('first');
     });
 
@@ -318,6 +387,33 @@ describe('Result.matchErr()', () => {
 
         expect(run).toThrow(ValidationError);
     });
+
+    it('falls through non-matching guarded and tagged handlers to otherwise()', () => {
+        const result: Result<number, TaggedError | IOError> = Result.err({ type: 'network', retryAfter: 30 });
+        const guard = vi.fn((error: TaggedError | IOError): error is IOError => error instanceof IOError);
+        const guarded = vi.fn(() => ok(1));
+        const tagged = vi.fn(() => ok(2));
+
+        const out = result
+            .matchErr()
+            .whenGuard(guard, guarded)
+            .whenTag('type', 'validation', tagged)
+            .otherwise(error => ok('type' in error ? error.retryAfter : 0));
+
+        expect(guard).toHaveBeenCalledWith(result.isErr() ? result.error : undefined);
+        expect(guarded).not.toHaveBeenCalled();
+        expect(tagged).not.toHaveBeenCalled();
+        expect(out).toEqual(ok(30));
+    });
+
+    it('throws for malformed Result state during construction', () => {
+        const malformed = {
+            isOk: () => false,
+            isErr: () => false,
+        } as unknown as Result<number, Error>;
+
+        expect(() => ok<number, Error>(0).matchErr.call(malformed)).toThrow(InvalidResultStateError);
+    });
 });
 
 describe('Result.matchErrorAsync()', () => {
@@ -333,6 +429,97 @@ describe('Result.matchErrorAsync()', () => {
             .run();
 
         expect(message).toBe('validation:bad');
+    });
+
+    it('names matchErrorAsync() in the Ok-state error message', () => {
+        expect(() => ok<number, Error>(1).matchErrorAsync()).toThrow('matchErrorAsync() can only be called on Err results');
+    });
+
+    it('supports async guard and tag handlers with otherwise fallback', async () => {
+        const result: Result<number, IOError | TaggedError> = Result.err({ type: 'validation', field: 'email' });
+
+        if (!result.isErr()) throw new Error('expected Err');
+
+        const guard = vi.fn((error: IOError | TaggedError): error is IOError => error instanceof IOError);
+        const guarded = vi.fn(async () => 'guarded');
+        const tagged = vi.fn(async (error: Extract<TaggedError, { type: 'validation' }>) => `tag:${error.field}`);
+        const otherwise = vi.fn(async () => 'fallback');
+
+        const message = await result
+            .matchErrorAsync()
+            .whenGuard(guard, guarded)
+            .whenTag('type', 'validation', tagged)
+            .otherwise(otherwise);
+
+        expect(guard).toHaveBeenCalledWith(result.error);
+        expect(guarded).not.toHaveBeenCalled();
+        expect(tagged).toHaveBeenCalledWith(result.error);
+        expect(otherwise).not.toHaveBeenCalled();
+        expect(message).toBe('tag:email');
+    });
+
+    it('supports matching async guarded handlers', async () => {
+        const result: Result<number, IOError | ValidationError> = Result.err(new ValidationError('bad'));
+
+        if (!result.isErr()) throw new Error('expected Err');
+
+        const message = await result
+            .matchErrorAsync()
+            .whenGuard(
+                (error): error is ValidationError => error instanceof ValidationError,
+                async error => `guard:${error.message}`
+            )
+            .run();
+
+        expect(message).toBe('guard:bad');
+    });
+
+    it('skips async guard and tag handlers after a prior match', async () => {
+        const result: Result<number, IOError | TaggedError> = Result.err(new IOError('io'));
+
+        if (!result.isErr()) throw new Error('expected Err');
+
+        const guard = vi.fn((error: IOError | TaggedError): error is IOError => error instanceof IOError);
+        const guarded = vi.fn(async () => 'guarded');
+        const tagged = vi.fn(async () => 'tagged');
+
+        const message = await result
+            .matchErrorAsync()
+            .when(IOError, async () => 'first')
+            .when(ValidationError, async () => 'second')
+            .whenGuard(guard, guarded)
+            .whenTag('type', 'network', tagged)
+            .otherwise(async () => 'fallback');
+
+        expect(guard).not.toHaveBeenCalled();
+        expect(guarded).not.toHaveBeenCalled();
+        expect(tagged).not.toHaveBeenCalled();
+        expect(message).toBe('first');
+    });
+
+    it('uses async otherwise when no handler matches', async () => {
+        const result: Result<number, IOError | ValidationError> = Result.err(new UnknownError('nope'));
+
+        if (!result.isErr()) throw new Error('expected Err');
+
+        const message = await result
+            .matchErrorAsync()
+            .when(IOError, async () => 'io')
+            .whenGuard((error): error is ValidationError => error instanceof ValidationError, async () => 'validation')
+            .whenTag('type', 'network', async () => 'tag')
+            .otherwise(async error => `fallback:${error.message}`);
+
+        expect(message).toBe('fallback:nope');
+    });
+
+    it('run() throws asynchronously if no match is present', async () => {
+        const result: Result<number, IOError | UnknownError> = Result.err(new UnknownError('nope'));
+
+        if (!result.isErr()) throw new Error('expected Err');
+
+        const builder = result.matchErrorAsync().when(IOError, async () => 'io');
+
+        await expect((builder as unknown as AsyncErrorMatchBuilder<never, string>).run()).rejects.toThrow(UnknownError);
     });
 });
 
@@ -350,5 +537,129 @@ describe('Result.matchErrAsync()', () => {
         if (out.isOk()) {
             expect(out.value).toBe(42);
         }
+    });
+
+    it('does not call async otherwise when source is Ok', async () => {
+        const result: Result<number, IOError | ValidationError> = ok(1);
+        const otherwise = vi.fn(async () => ok(2));
+
+        const out = await result
+            .matchErrAsync()
+            .when(IOError, async () => ok(3))
+            .otherwise(otherwise);
+
+        expect(otherwise).not.toHaveBeenCalled();
+        expect(out).toBe(result);
+    });
+
+    it('supports async whenGuard and whenTag fallthrough', async () => {
+        const result: Result<number, TaggedError | IOError> = Result.err({ type: 'validation', field: 'email' });
+        const guard = vi.fn((error: TaggedError | IOError): error is IOError => error instanceof IOError);
+        const guarded = vi.fn(async () => ok(1));
+        const tagged = vi.fn(async (error: Extract<TaggedError, { type: 'validation' }>) => ok(error.field.length));
+
+        const out = await result
+            .matchErrAsync()
+            .whenGuard(guard, guarded)
+            .whenTag('type', 'network', async error => ok(error.retryAfter))
+            .whenTag('type', 'validation', tagged)
+            .run();
+
+        expect(guard).toHaveBeenCalledWith(result.error);
+        expect(guarded).not.toHaveBeenCalled();
+        expect(tagged).toHaveBeenCalledWith(result.error);
+        expect(out).toEqual(ok(5));
+    });
+
+    it('skips async guarded and tagged Result handlers after source is already resolved', async () => {
+        const result: Result<number, TaggedError | IOError> = ok(1);
+        const guard = vi.fn((error: TaggedError | IOError): error is IOError => error instanceof IOError);
+        const guarded = vi.fn(async () => ok(2));
+        const tagged = vi.fn(async () => ok(3));
+
+        const out = await result
+            .matchErrAsync()
+            .whenGuard(guard, guarded)
+            .whenTag('type', 'network', tagged)
+            .run();
+
+        expect(guard).not.toHaveBeenCalled();
+        expect(guarded).not.toHaveBeenCalled();
+        expect(tagged).not.toHaveBeenCalled();
+        expect(out).toBe(result);
+    });
+
+    it('throws when async when handler returns a non-Result value', async () => {
+        const result: Result<number, IOError> = Result.err(new IOError('io'));
+
+        await expect(
+            result.matchErrAsync().when(IOError, async () => 123 as never).run()
+        ).rejects.toMatchObject({
+            code: ERR_MATCH_ERR_HANDLER_NOT_RESULT,
+            handlerName: 'when',
+            returnedValue: 123,
+        });
+    });
+
+    it('throws when async whenGuard handler returns a non-Result value', async () => {
+        const result: Result<number, ValidationError> = Result.err(new ValidationError('bad'));
+
+        await expect(
+            result
+                .matchErrAsync()
+                .whenGuard(
+                    (error): error is ValidationError => error instanceof ValidationError,
+                    async () => 'not result' as never
+                )
+                .run()
+        ).rejects.toMatchObject({
+            code: ERR_MATCH_ERR_HANDLER_NOT_RESULT,
+            handlerName: 'whenGuard',
+            returnedValue: 'not result',
+        });
+    });
+
+    it('throws when async whenTag handler returns a non-Result value', async () => {
+        const result: Result<number, TaggedError> = Result.err({ type: 'network', retryAfter: 30 });
+
+        await expect(
+            result
+                .matchErrAsync()
+                .whenTag('type', 'network', async () => 'not result' as never)
+                .run()
+        ).rejects.toMatchObject({
+            code: ERR_MATCH_ERR_HANDLER_NOT_RESULT,
+            handlerName: 'whenTag',
+            returnedValue: 'not result',
+        });
+    });
+
+    it('throws when async otherwise returns a non-Result value', async () => {
+        const result: Result<number, UnknownError> = Result.err(new UnknownError('nope'));
+
+        await expect(
+            result.matchErrAsync().otherwise(async () => 123 as never)
+        ).rejects.toMatchObject({
+            code: ERR_MATCH_ERR_HANDLER_NOT_RESULT,
+            handlerName: 'otherwise',
+            returnedValue: 123,
+        });
+    });
+
+    it('run() throws asynchronously if no resolution is present', async () => {
+        const result: Result<number, UnknownError> = Result.err(new UnknownError('nope'));
+
+        const builder = result.matchErrAsync().when(IOError, async () => ok(1));
+
+        await expect((builder as unknown as AsyncErrMatchBuilder<number, never, never, never>).run()).rejects.toThrow(UnknownError);
+    });
+
+    it('throws for malformed Result state during construction', () => {
+        const malformed = {
+            isOk: () => false,
+            isErr: () => false,
+        } as unknown as Result<number, Error>;
+
+        expect(() => ok<number, Error>(0).matchErrAsync.call(malformed)).toThrow(InvalidResultStateError);
     });
 });

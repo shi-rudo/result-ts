@@ -5,8 +5,10 @@ import { err, ok, Result as ResultClass } from './index';
 import { task } from './gen';
 import {
     ERR_TASK_YIELD_NOT_RESULT,
+    InvalidResultStateError,
     TaskYieldNotResultError,
 } from './errors';
+import { RESULT_BRAND } from './core/brand';
 
 describe('task/gen (Do-Notation)', () => {
     describe('Basic functionality', () => {
@@ -492,6 +494,20 @@ describe('task/gen (Do-Notation)', () => {
             expect(caughtError).toBeInstanceOf(TaskYieldNotResultError);
             expect((caughtError as TaskYieldNotResultError).code).toBe(ERR_TASK_YIELD_NOT_RESULT);
             expect((caughtError as TaskYieldNotResultError).yieldedValue).toBe(malformedResult);
+        });
+
+        it('throws InvalidResultStateError when a branded Result has inconsistent state', async () => {
+            const malformedResult = {
+                [RESULT_BRAND]: true,
+                _tag: 'Ok',
+                value: 1,
+                isOk: () => false,
+                isErr: () => false,
+            } as unknown as Result<number, string>;
+
+            await expect(task(function* () {
+                yield malformedResult as never;
+            })).rejects.toThrow(InvalidResultStateError);
         });
 
         it('handles iterator without return() method', async () => {
