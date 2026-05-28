@@ -1,5 +1,15 @@
 # Changelog
 
+## 1.0.1 - 2026-05-28
+
+### Fixed
+
+- Fixed the release-quality CI order so package exports are built before documentation examples are type-checked in clean checkouts.
+- Added Node 20 and Node 22 CI coverage for the quality workflow.
+- Added an edge-runtime compatibility check for built ESM artifacts.
+- Added the missing MIT license file.
+- Removed the Codecov badge from the README.
+
 ## 1.0.0 - 2026-05-27
 
 ### Breaking Changes
