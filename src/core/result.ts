@@ -308,7 +308,19 @@ export async function tryAsync<T, E>(fn: () => Promise<T>, errorMapper?: (error:
     }
 }
 
-export const Result = {
+export const Result: {
+    ok: typeof ok;
+    err: typeof err;
+    is: typeof isResult;
+    fromNullable: typeof fromNullable;
+    fromPromise: typeof fromPromise;
+    fromThrowable: typeof fromThrowable;
+    try: typeof tryFn;
+    tryAsync: typeof tryAsync;
+    sequence: typeof sequence;
+    all: typeof all;
+    combine: typeof combine;
+} = {
     ok,
     err,
     is: isResult,

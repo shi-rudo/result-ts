@@ -1,8 +1,8 @@
-import { defineConfig } from 'tsdown'
+import { defineConfig, type UserConfig } from 'tsdown'
 
 const isProd = process.env.NODE_ENV === 'production'
 
-export default defineConfig({
+const config: UserConfig = defineConfig({
     entry: {
         index: './src/index.ts',
         errors: './src/errors.ts',
@@ -30,3 +30,5 @@ export default defineConfig({
         sourcemap: true,
     }
 })
+
+export default config

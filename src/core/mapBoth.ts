@@ -21,4 +21,4 @@ export function mapBoth<T, E, U, F>(mapOk: (value: T) => U, mapErr: (error: E) =
 /**
  * Alias for `mapBoth`.
  */
-export const bimap = mapBoth;
+export const bimap: typeof mapBoth = mapBoth;

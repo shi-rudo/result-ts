@@ -6,8 +6,6 @@
       "skipLibCheck": true,
       // Emit modern JS for current runtimes
       "target": "es2022",
-      // Allow JS inputs for gradual migration
-      "allowJs": true,
       // Enable JSON imports
       "resolveJsonModule": true,
       // Treat files as modules to avoid global scope issues
@@ -16,6 +14,10 @@
       "isolatedModules": true,
       // Preserve import/export syntax for downstream tools
       "verbatimModuleSyntax": true,
+      // Required so isolatedDeclarations has declaration emit to validate
+      "declaration": true,
+      // Require explicit types on exports so .d.ts can be emitted per-file (TS 7 ready)
+      "isolatedDeclarations": true,
       // Enable strict type checking so you can catch bugs early
       "strict": true,
       // Make indexed access safer (adds undefined)

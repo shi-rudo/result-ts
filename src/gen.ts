@@ -88,4 +88,4 @@ export async function task<const Y, const R, EThrown>(
     }
 }
 
-export const gen = task;
+export const gen: typeof task = task;
