@@ -166,7 +166,7 @@ const validateAge = (age: string) =>
         return parsed;
     });
 
-const validateForm = (data: FormData) => {
+const validateForm = (data: FormData): Result<{ email: string; age: number }, unknown> => {
     const email = validateEmail(data.email);
     const age = validateAge(data.age);
 
