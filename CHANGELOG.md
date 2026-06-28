@@ -1,5 +1,15 @@
 # Changelog
 
+## 1.0.2 - 2026-06-28
+
+### Fixed
+
+- `task()` now runs the generator's `finally` blocks before the `TaskYieldNotResultError` and `InvalidResultStateError` paths, matching the cleanup already performed on the normal `Err` short-circuit.
+
+### Changed
+
+- Clarified the deprecated `Result.match()` JSDoc to distinguish it from the `match({ ok, err })` pipe operator.
+
 ## 1.0.1 - 2026-05-28
 
 ### Fixed
