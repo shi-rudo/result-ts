@@ -390,6 +390,48 @@ describe('task/gen (Do-Notation)', () => {
             );
         });
 
+        it('runs finally before throwing TaskYieldNotResultError', async () => {
+            let cleaned = false;
+            let caughtError: unknown;
+
+            try {
+                await task(function* () {
+                    try {
+                        yield 42; // Not a Result!
+                    } finally {
+                        cleaned = true;
+                    }
+                });
+            } catch (error) {
+                caughtError = error;
+            }
+
+            expect(cleaned).toBe(true);
+            expect(caughtError).toBeInstanceOf(TaskYieldNotResultError);
+        });
+
+        it('runs finally before throwing InvalidResultStateError', async () => {
+            const malformedResult = {
+                [RESULT_BRAND]: true,
+                _tag: 'Ok',
+                value: 1,
+                isOk: () => false,
+                isErr: () => false,
+            } as unknown as Result<number, string>;
+
+            let cleaned = false;
+
+            await expect(task(function* () {
+                try {
+                    yield malformedResult as never;
+                } finally {
+                    cleaned = true;
+                }
+            })).rejects.toThrow(InvalidResultStateError);
+
+            expect(cleaned).toBe(true);
+        });
+
         it('handles iterator.return() throwing with onThrow', async () => {
             // Create a generator that throws when return() is called
             const generator = function* () {

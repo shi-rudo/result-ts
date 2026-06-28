@@ -165,12 +165,17 @@ abstract class ResultBase extends Pipeable {
     }
 
     /**
-     * Matches on the Err value via `.when(...)` chain.
+     * Matches on the **Err** value via a `.when(...)` chain.
      *
-     * Note: for type safety reasons, `.match()` can only be called on a Result already narrowed to `Err`,
-     * e.g. inside `if (result.isErr()) { ... }`.
+     * Not the same as the `match({ ok, err })` pipe operator: that operator resolves
+     * **both** branches (Ok and Err) via callbacks, whereas this method is **Err-only**
+     * and returns an {@link ErrorMatchBuilder}.
      *
-     * @deprecated Use `.matchError()` for clearer Err-only semantics.
+     * Note: for type-safety reasons, `.match()` can only be called on a Result already
+     * narrowed to `Err`, e.g. inside `if (result.isErr()) { ... }`.
+     *
+     * @deprecated Use `.matchError()` for clearer Err-only semantics. For Ok+Err handling,
+     * use the `match({ ok, err })` pipe operator instead.
      */
     match<T, E>(this: Result<T, E>): ErrorMatchBuilder<E, never> {
         if (this._tag === 'Err') return new ErrorMatchBuilder(this.error);

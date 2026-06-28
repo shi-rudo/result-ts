@@ -39,6 +39,14 @@ export async function task<const Y, const R, EThrown>(
     const iterator = makeGenerator();
     let input: unknown = undefined;
 
+    // Resume the suspended generator as if it returned, so its `finally`
+    // blocks run before we abort the workflow (short-circuit or error path).
+    const runGeneratorReturn = async (): Promise<void> => {
+        if (typeof iterator.return === 'function') {
+            await iterator.return(undefined as unknown as R);
+        }
+    };
+
     while (true) {
         let step: IteratorResult<Y, R>;
         try {
@@ -63,6 +71,7 @@ export async function task<const Y, const R, EThrown>(
 
         const yielded = step.value as unknown;
         if (!isResult(yielded)) {
+            await runGeneratorReturn();
             throw new TaskYieldNotResultError(yielded);
         }
 
@@ -73,9 +82,7 @@ export async function task<const Y, const R, EThrown>(
 
         if (yielded.isErr()) {
             try {
-                if (typeof iterator.return === 'function') {
-                    await iterator.return(undefined as unknown as R);
-                }
+                await runGeneratorReturn();
             } catch (caught) {
                 if (!onThrow) throw caught;
                 return err<ErrorOfYield<Y> | ErrOfReturn<R> | EThrown, OkOfReturn<R>>(onThrow(caught));
@@ -84,6 +91,7 @@ export async function task<const Y, const R, EThrown>(
             return yielded as Result<OkOfReturn<R>, ErrorOfYield<Y> | ErrOfReturn<R> | EThrown>;
         }
 
+        await runGeneratorReturn();
         throw new InvalidResultStateError('task');
     }
 }
