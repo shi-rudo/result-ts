@@ -2,11 +2,23 @@
 
 ## Unreleased
 
+### Added
+
+- `toSerialized()` serializes a Result into the discriminated shape `{ _tag: 'Ok', value }` / `{ _tag: 'Err', error }`, and the new `fromSerialized()` rebuilds a real Result from it — including an unambiguous `Ok(undefined)` and JSON round-trips.
+
+### Deprecated
+
+- `serialize()` — its format cannot round-trip (`Ok(undefined)` is indistinguishable from a missing `data` field). Use `toSerialized()` / `fromSerialized()`.
+- `unwrapOrDefault()` — misleading name (Rust's `unwrap_or_default` takes no argument); use `unwrapOr()`.
+- `ERR_INVALID_STATE` — use `ERR_INVALID_RESULT_STATE`.
+
 ### Fixed
 
 - `matchErrorAsync()` and `matchErrAsync()` now evaluate handlers lazily on the first awaited `run()`/`otherwise()` call (memoized). Abandoned builder chains no longer start handler promises, so a rejecting handler can no longer cause an unhandled rejection, and handler side effects no longer run when the chain is never consumed.
 - `matchTag()` no longer resolves handlers from the prototype chain: a tag value like `"toString"` previously invoked `Object.prototype.toString` as a handler instead of failing. A missing handler now throws the new `MatchTagMissingHandlerError` (code `ERR_MATCH_TAG_MISSING_HANDLER`, carries `tagValue`) instead of a misleading `InvalidResultStateError`.
 - `expect()`, `expectErr()`, `expectResult()`, and the `expectErr` utility now preserve the original Result payload on the thrown error: `ExpectOkError` carries `errorValue`, `ExpectErrError` carries `okValue`, both set `cause` and include the value in the message.
+- `task()` now completes generator cleanup on all abort paths: cleanup errors on the yield-not-a-Result path route through `onThrow` when provided, and `finally` blocks containing `yield` are driven to completion instead of being abandoned mid-cleanup.
+- `contains()` and `containsErr()` compare with `Object.is` (SameValue), so `NaN` values are found; `+0`/`-0` are now distinct.
 
 ### Changed
 
