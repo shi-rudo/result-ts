@@ -272,7 +272,7 @@ export function fromNullable<T, E>(value: T, error: E): Result<NonNullable<T>, E
 }
 
 export function fromPromise<T>(promise: Promise<T>): Promise<Result<T, unknown>>;
-export function fromPromise<T, E>(promise: Promise<T>, errorMapper?: (error: unknown) => E): Promise<Result<T, E>>;
+export function fromPromise<T, E>(promise: Promise<T>, errorMapper: (error: unknown) => E): Promise<Result<T, E>>;
 export async function fromPromise<T, E>(promise: Promise<T>, errorMapper?: (error: unknown) => E): Promise<Result<T, E>> {
     try {
         const value = await promise;
@@ -290,7 +290,14 @@ export function tryFn<T>(fn: () => T): Result<T, unknown> {
     }
 }
 
-export function fromThrowable<const Args extends readonly unknown[], T, E = unknown>(
+export function fromThrowable<const Args extends readonly unknown[], T>(
+    fn: (...args: Args) => T
+): (...args: Args) => Result<T, unknown>;
+export function fromThrowable<const Args extends readonly unknown[], T, E>(
+    fn: (...args: Args) => T,
+    errorMapper: (error: unknown) => E
+): (...args: Args) => Result<T, E>;
+export function fromThrowable<const Args extends readonly unknown[], T, E>(
     fn: (...args: Args) => T,
     errorMapper?: (error: unknown) => E
 ): (...args: Args) => Result<T, E> {
@@ -304,7 +311,7 @@ export function fromThrowable<const Args extends readonly unknown[], T, E = unkn
 }
 
 export async function tryAsync<T>(fn: () => Promise<T>): Promise<Result<T, unknown>>;
-export async function tryAsync<T, E>(fn: () => Promise<T>, errorMapper?: (error: unknown) => E): Promise<Result<T, E>>;
+export async function tryAsync<T, E>(fn: () => Promise<T>, errorMapper: (error: unknown) => E): Promise<Result<T, E>>;
 export async function tryAsync<T, E>(fn: () => Promise<T>, errorMapper?: (error: unknown) => E): Promise<Result<T, E>> {
     try {
         return ok<T, E>(await fn());

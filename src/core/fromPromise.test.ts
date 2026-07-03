@@ -126,7 +126,8 @@ describe('fromPromise', () => {
     describe('TypeScript Generics', () => {
         it('works with explicit type parameters', async () => {
             const promise: Promise<string> = Promise.resolve('hello');
-            const result = await fromPromise<string, Error>(promise);
+            // An explicit error type requires an errorMapper that produces it.
+            const result = await fromPromise<string, Error>(promise, cause => new Error(String(cause)));
             expect(result).toEqual(ok('hello'));
         });
 

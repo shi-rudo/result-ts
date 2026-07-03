@@ -1,5 +1,15 @@
 # Changelog
 
+## Unreleased
+
+### Fixed
+
+- `matchErrorAsync()` and `matchErrAsync()` now evaluate handlers lazily on the first awaited `run()`/`otherwise()` call (memoized). Abandoned builder chains no longer start handler promises, so a rejecting handler can no longer cause an unhandled rejection, and handler side effects no longer run when the chain is never consumed.
+
+### Changed
+
+- `fromPromise`, `tryAsync`, `fromThrowable`, `tryCatch`, `tryCatchAsync`, `tryMap`, and `tryMapAsync` now require the `errorMapper` argument when an explicit error type parameter is supplied. Previously, calls like `fromPromise<T, MyError>(promise)` compiled without a mapper while the runtime error stayed unmapped (`unknown`), so the declared error type was a lie. Such calls are now compile errors; calls without explicit type parameters keep returning `unknown` errors as before.
+
 ## 1.0.2 - 2026-06-28
 
 ### Fixed

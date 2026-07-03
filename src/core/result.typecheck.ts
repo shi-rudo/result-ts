@@ -1,4 +1,4 @@
-import { err, ok, Result, type Result as ResultType } from '../index';
+import { err, fromPromise, ok, Result, tryCatch, tryCatchAsync, tryMap, tryMapAsync, type Result as ResultType } from '../index';
 
 type Equal<A, B> =
     (<T>() => T extends A ? 1 : 2) extends
@@ -67,3 +67,60 @@ const namespaceCombined = Result.combine(
 type ResultNamespaceCombineCollectsErrorArray = Expect<
     Equal<typeof namespaceCombined, ResultType<[number, string], Array<'left-error' | 'right-error'>>>
 >;
+
+// --- errorMapper is required when an explicit error type is supplied (result-ts-7er) ---
+// Without a mapper the caught value is passed through unmapped, so claiming a
+// typed error without providing a mapper would be a lie the type system allows.
+
+declare const numberPromise: Promise<number>;
+
+// @ts-expect-error fromPromise with an explicit error type must receive an errorMapper.
+fromPromise<number, Error>(numberPromise);
+
+const fromPromiseDefault = fromPromise(numberPromise);
+type FromPromiseWithoutMapperKeepsUnknownError = Expect<
+    Equal<typeof fromPromiseDefault, Promise<ResultType<number, unknown>>>
+>;
+
+const fromPromiseMapped = fromPromise(numberPromise, (cause): { type: 'mapped'; cause: unknown } => ({ type: 'mapped', cause }));
+type FromPromiseWithMapperUsesMappedError = Expect<
+    Equal<typeof fromPromiseMapped, Promise<ResultType<number, { type: 'mapped'; cause: unknown }>>>
+>;
+
+// @ts-expect-error tryAsync with an explicit error type must receive an errorMapper.
+Result.tryAsync<number, Error>(async () => 1);
+
+const tryAsyncDefault = Result.tryAsync(async (): Promise<number> => 1);
+type TryAsyncWithoutMapperKeepsUnknownError = Expect<
+    Equal<typeof tryAsyncDefault, Promise<ResultType<number, unknown>>>
+>;
+
+// @ts-expect-error fromThrowable with an explicit error type must receive an errorMapper.
+Result.fromThrowable<[string], number, Error>((input: string) => input.length);
+
+const fromThrowableDefault = Result.fromThrowable((input: string): number => input.length);
+type FromThrowableWithoutMapperKeepsUnknownError = Expect<
+    Equal<typeof fromThrowableDefault, (input: string) => ResultType<number, unknown>>
+>;
+
+// @ts-expect-error tryCatch with an explicit error type must receive an errorMapper.
+tryCatch<number, Error>(() => 1);
+
+const tryCatchMapped = tryCatch(() => 1, (): 'boom' => 'boom')(ok<string, 'src'>('x'));
+type TryCatchWithMapperUnionsSourceAndMappedErrors = Expect<
+    Equal<typeof tryCatchMapped, ResultType<number, 'src' | 'boom'>>
+>;
+
+// @ts-expect-error tryCatchAsync with an explicit error type must receive an errorMapper.
+tryCatchAsync<number, Error>(async () => 1);
+
+// @ts-expect-error tryMap with an explicit mapped-error type must receive an errorMapper.
+tryMap<number, string, number, Error>(value => value + 1);
+
+const tryMapMapped = ok<number, 'src'>(1).pipe(tryMap(value => value + 1, (): 'boom' => 'boom'));
+type TryMapWithMapperUnionsSourceAndMappedErrors = Expect<
+    Equal<typeof tryMapMapped, ResultType<number, 'src' | 'boom'>>
+>;
+
+// @ts-expect-error tryMapAsync with an explicit mapped-error type must receive an errorMapper.
+tryMapAsync<number, string, number, Error>(async value => value + 1);
