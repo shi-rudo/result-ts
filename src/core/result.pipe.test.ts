@@ -1,6 +1,6 @@
 import { describe, expect, it, vi } from 'vitest';
 
-import { Result, filter, filterAsync, flatMap, flatMapAsync, map, mapAsync, mapErr, mapErrAsync, match, matchAsync, ok, err, tap, tapAsync, tryCatch, tryCatchAsync, tryMap, tryMapAsync } from './result';
+import { Result, filter, filterAsync, flatMap, flatMapAsync, map, mapAsync, mapErr, mapErrAsync, match, matchAsync, ok, err, tap, tapAsync, tryCatch, tryCatchAsync, tryMap, tryMapAsync } from '../index';
 
 describe('Result.pipe', () => {
     it('returns same instance without operators', () => {

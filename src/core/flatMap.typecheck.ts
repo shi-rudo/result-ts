@@ -1,4 +1,6 @@
-import { err, flatMap, flatMapAsync, ok, type Result } from './result';
+import { err, ok, type Result } from './result';
+import { flatMap } from './flatMap';
+import { flatMapAsync } from './flatMapAsync';
 
 type Equal<A, B> =
     (<T>() => T extends A ? 1 : 2) extends

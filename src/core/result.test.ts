@@ -1,6 +1,7 @@
 import { describe, expect, it } from 'vitest';
 
-import { Result, ok, err, okIf, okIfLazy, collectFirstOk } from './result';
+import { Result, ok, err, okIf, okIfLazy } from './result';
+import { collectFirstOk } from './collectFirstOk';
 import {
     ERR_EXPECT_ERR,
     ERR_EXPECT_OK,

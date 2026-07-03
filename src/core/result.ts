@@ -13,31 +13,6 @@ import {
     UnwrapOnErrError,
 } from '../errors';
 
-// Re-export pipe operators for convenience
-export { map } from './map';
-export { mapErr } from './mapErr';
-export { bimap, mapBoth } from './mapBoth';
-export { flatMap } from './flatMap';
-export { zip, combine } from './zip';
-export { tap } from './tap';
-export { filter } from './filter';
-export { match } from './match';
-export { recover, recoverWith } from './recover';
-export { swap } from './swap';
-export { tryCatch } from './tryCatch';
-export { tryMap } from './tryMap';
-export { collectFirstOk } from './collectFirstOk';
-
-// Async variants
-export { mapAsync } from './mapAsync';
-export { mapErrAsync } from './mapErrAsync';
-export { flatMapAsync } from './flatMapAsync';
-export { tapAsync } from './tapAsync';
-export { filterAsync } from './filterAsync';
-export { matchAsync } from './matchAsync';
-export { tryCatchAsync } from './tryCatchAsync';
-export { tryMapAsync } from './tryMapAsync';
-
 // --- 1. Helper Types ---
 
 // An operator is a function that takes a Result and returns something else.

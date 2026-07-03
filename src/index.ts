@@ -11,6 +11,7 @@ export * from './core/flatMap';
 export * from './core/tap';
 export * from './core/filter';
 export * from './core/fold';
+export * from './core/match';
 export * from './core/tryCatch';
 export * from './core/tryMap';
 export * from './core/recover';
@@ -22,6 +23,7 @@ export * from './core/flatMapAsync';
 export * from './core/tapAsync';
 export * from './core/filterAsync';
 export * from './core/foldAsync';
+export * from './core/matchAsync';
 export * from './core/tryCatchAsync';
 export * from './core/tryMapAsync';
 
