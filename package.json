@@ -1,6 +1,6 @@
 {
   "name": "@shirudo/result",
-  "version": "1.0.2",
+  "version": "1.1.0",
   "description": "Robust, type-safe error handling for TypeScript using the Result pattern (Monad)",
   "type": "module",
   "private": false,
