@@ -573,3 +573,77 @@ describe('task/gen (Do-Notation)', () => {
         });
     });
 });
+
+describe('task() cleanup edge cases (result-ts-c55, result-ts-157)', () => {
+    it('routes cleanup errors through onThrow on the yield-not-a-Result path', async () => {
+        const cleanupError = new Error('cleanup failed');
+
+        const out = await task(
+            function* () {
+                try {
+                    yield 42 as never; // Not a Result — triggers cleanup before TaskYieldNotResultError
+                } finally {
+                    // eslint-disable-next-line no-unsafe-finally
+                    throw cleanupError;
+                }
+            },
+            error => ({ mapped: true, original: error })
+        );
+
+        expect(out.isErr()).toBe(true);
+        if (out.isErr()) {
+            expect(out.error).toEqual({ mapped: true, original: cleanupError });
+        }
+    });
+
+    it('rethrows cleanup errors on the yield-not-a-Result path without onThrow', async () => {
+        const cleanupError = new Error('cleanup failed');
+
+        await expect(task(function* () {
+            try {
+                yield 42 as never;
+            } finally {
+                // eslint-disable-next-line no-unsafe-finally
+                throw cleanupError;
+            }
+        })).rejects.toBe(cleanupError);
+    });
+
+    it('drives finally blocks containing yield to completion on Err short-circuit', async () => {
+        const log: string[] = [];
+
+        const out = await task(function* () {
+            try {
+                yield* err('boom');
+                return 1;
+            } finally {
+                log.push('before yield');
+                yield ok(99) as never;
+                log.push('after yield');
+            }
+        });
+
+        expect(out.isErr()).toBe(true);
+        if (out.isErr()) expect(out.error).toBe('boom');
+        expect(log).toEqual(['before yield', 'after yield']);
+    });
+
+    it('drives async finally blocks containing yield to completion', async () => {
+        const log: string[] = [];
+
+        const out = await task(async function* () {
+            try {
+                yield* err('boom');
+                return 1;
+            } finally {
+                log.push('before yield');
+                yield ok(99) as never;
+                log.push('after yield');
+            }
+        });
+
+        expect(out.isErr()).toBe(true);
+        if (out.isErr()) expect(out.error).toBe('boom');
+        expect(log).toEqual(['before yield', 'after yield']);
+    });
+});

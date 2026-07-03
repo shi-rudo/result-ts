@@ -42,8 +42,15 @@ export async function task<const Y, const R, EThrown>(
     // Resume the suspended generator as if it returned, so its `finally`
     // blocks run before we abort the workflow (short-circuit or error path).
     const runGeneratorReturn = async (): Promise<void> => {
-        if (typeof iterator.return === 'function') {
-            await iterator.return(undefined as unknown as R);
+        if (typeof iterator.return !== 'function') return;
+        // A `yield` inside a `finally` block suspends the generator again
+        // ({done: false}). Resume with next() so the remaining cleanup code
+        // still runs — calling return() again would abort the rest of that
+        // finally block. The pending return completion ends the generator
+        // once all finally blocks have finished.
+        let step = await iterator.return(undefined as unknown as R);
+        while (!step.done) {
+            step = await iterator.next(undefined);
         }
     };
 
@@ -71,7 +78,12 @@ export async function task<const Y, const R, EThrown>(
 
         const yielded = step.value as unknown;
         if (!isResult(yielded)) {
-            await runGeneratorReturn();
+            try {
+                await runGeneratorReturn();
+            } catch (caught) {
+                if (!onThrow) throw caught;
+                return err<ErrorOfYield<Y> | ErrOfReturn<R> | EThrown, OkOfReturn<R>>(onThrow(caught));
+            }
             throw new TaskYieldNotResultError(yielded);
         }
 
@@ -91,7 +103,12 @@ export async function task<const Y, const R, EThrown>(
             return yielded as Result<OkOfReturn<R>, ErrorOfYield<Y> | ErrOfReturn<R> | EThrown>;
         }
 
-        await runGeneratorReturn();
+        try {
+            await runGeneratorReturn();
+        } catch (caught) {
+            if (!onThrow) throw caught;
+            return err<ErrorOfYield<Y> | ErrOfReturn<R> | EThrown, OkOfReturn<R>>(onThrow(caught));
+        }
         throw new InvalidResultStateError('task');
     }
 }
