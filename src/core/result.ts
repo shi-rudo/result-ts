@@ -162,8 +162,27 @@ abstract class ResultBase extends Pipeable {
     }
 
     /**
+     * Serializes the Result into the discriminated shape
+     * `{ _tag: 'Ok', value }` / `{ _tag: 'Err', error }`.
+     *
+     * Unlike {@link serialize}, `Ok(undefined)` stays unambiguous, and the
+     * shape round-trips through `fromSerialized(...)`. It also matches what
+     * `JSON.stringify(result)` produces for a Result instance.
+     */
+    toSerialized<T, E>(this: Result<T, E>): ResultType<T, E> {
+        if (this._tag === 'Ok') return { _tag: 'Ok', value: this.value };
+        if (this._tag === 'Err') return { _tag: 'Err', error: this.error };
+        throw new InvalidResultStateError('Result.toSerialized');
+    }
+
+    /**
      * Serializes the Result into a simple object format.
      * Preserves the original types.
+     *
+     * @deprecated Use {@link toSerialized} instead: with this format,
+     * `Ok(undefined)` is indistinguishable from a missing `data` field, and
+     * there is no way to rebuild a Result from it. `toSerialized()`
+     * round-trips via `fromSerialized(...)`.
      */
     serialize<T, E>(this: Result<T, E>): { isSuccess: boolean; data?: T; error?: E } {
         if (this._tag === 'Ok') return { isSuccess: true, data: this.value };

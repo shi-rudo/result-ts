@@ -58,6 +58,7 @@ export * from './core/flatten';
 
 // Conversions
 export * from './core/fromPromise';
+export * from './core/fromSerialized';
 export * from './core/fromNullable';
 export * from './core/try';
 export * from './core/toPromise';
