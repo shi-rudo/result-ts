@@ -37,7 +37,10 @@ export default defineConfig({
             },
             {
                 text: 'Decisions',
-                items: [{ text: 'Lazy Async Abstraction', link: '/decisions/lazy-async-abstraction' }],
+                items: [
+                    { text: 'Lazy Async Abstraction', link: '/decisions/lazy-async-abstraction' },
+                    { text: 'Defensive State Checks', link: '/decisions/defensive-state-checks' },
+                ],
             },
         ],
         search: {
