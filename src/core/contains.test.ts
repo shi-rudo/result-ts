@@ -26,3 +26,14 @@ describe('contains', () => {
         expect(() => contains(malformed, 42)).toThrow(InvalidResultStateError);
     });
 });
+
+describe('contains uses Object.is semantics', () => {
+    it('finds NaN inside Ok', () => {
+        expect(contains(ok(Number.NaN), Number.NaN)).toBe(true);
+    });
+
+    it('distinguishes +0 and -0', () => {
+        expect(contains(ok(0), -0)).toBe(false);
+        expect(contains(ok(-0), -0)).toBe(true);
+    });
+});

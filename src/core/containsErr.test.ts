@@ -26,3 +26,9 @@ describe('containsErr', () => {
         expect(() => containsErr(malformed, 'boom')).toThrow(InvalidResultStateError);
     });
 });
+
+describe('containsErr uses Object.is semantics', () => {
+    it('finds NaN inside Err', () => {
+        expect(containsErr(err(Number.NaN), Number.NaN)).toBe(true);
+    });
+});
