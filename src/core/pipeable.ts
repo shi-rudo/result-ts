@@ -1,3 +1,6 @@
+// AUTO-GENERATED FILE — do not edit by hand.
+// Regenerate with: pnpm generate:pipeable (scripts/generate-pipeable.mjs)
+
 export type UnaryFunction<Input, Output> = (input: Input) => Output;
 export type Awaitable<T> = T | Promise<T>;
 
@@ -551,4 +554,3 @@ export abstract class Pipeable {
         return ret;
     }
 }
-
