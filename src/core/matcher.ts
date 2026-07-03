@@ -1,5 +1,5 @@
 import type { Result } from './result';
-import { InvalidResultStateError, MatchErrHandlerNotResultError, MatchOnOkError } from '../errors';
+import { InvalidResultStateError, MatchErrHandlerNotResultError, MatchOnOkError, MatchTagMissingHandlerError } from '../errors';
 import { isResult } from './isResult';
 
 export type Ctor<T> = abstract new (...args: any[]) => T;
@@ -33,9 +33,11 @@ export function matchTag<
     if (result.isErr()) {
         const error = result.error;
         const tag = error[key];
-        const handler = handlers[tag as unknown as keyof Handlers];
+        // Own-property lookup only: inherited members like Object.prototype.toString
+        // must never be picked up as handlers.
+        const handler = Object.hasOwn(handlers, tag) ? handlers[tag as unknown as keyof Handlers] : undefined;
 
-        if (typeof handler !== 'function') throw new InvalidResultStateError('matchTag');
+        if (typeof handler !== 'function') throw new MatchTagMissingHandlerError(tag);
 
         return (handler as (matchedError: never) => TagHandlerReturn<Handlers>)(error as never);
     }

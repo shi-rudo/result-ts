@@ -216,6 +216,8 @@ describe('Result class', () => {
                 expect(expectOkError).toBeInstanceOf(ExpectOkError);
                 expect((expectOkError as ExpectOkError).code).toBe(ERR_EXPECT_OK);
                 expect((expectOkError as ExpectOkError).expectedMessage).toBe('must be ok');
+                expect((expectOkError as ExpectOkError).errorValue).toBe('error');
+                expect((expectOkError as ExpectOkError).cause).toBe('error');
 
                 let expectErrError: unknown;
                 try {
@@ -227,6 +229,8 @@ describe('Result class', () => {
                 expect(expectErrError).toBeInstanceOf(ExpectErrError);
                 expect((expectErrError as ExpectErrError).code).toBe(ERR_EXPECT_ERR);
                 expect((expectErrError as ExpectErrError).expectedMessage).toBe('must be err');
+                expect((expectErrError as ExpectErrError).okValue).toBe(42);
+                expect((expectErrError as ExpectErrError).cause).toBe(42);
             });
 
             it('expect throws for malformed Result state', () => {

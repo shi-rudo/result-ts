@@ -3,6 +3,7 @@ export const ERR_INVALID_STATE: typeof ERR_INVALID_RESULT_STATE = ERR_INVALID_RE
 export const ERR_TASK_YIELD_NOT_RESULT = 'ERR_TASK_YIELD_NOT_RESULT' as const;
 export const ERR_MATCH_ON_OK = 'ERR_MATCH_ON_OK' as const;
 export const ERR_MATCH_ERR_HANDLER_NOT_RESULT = 'ERR_MATCH_ERR_HANDLER_NOT_RESULT' as const;
+export const ERR_MATCH_TAG_MISSING_HANDLER = 'ERR_MATCH_TAG_MISSING_HANDLER' as const;
 export const ERR_UNWRAP_ON_ERR = 'ERR_UNWRAP_ON_ERR' as const;
 export const ERR_UNWRAP_ERR_ON_OK = 'ERR_UNWRAP_ERR_ON_OK' as const;
 export const ERR_EXPECT_OK = 'ERR_EXPECT_OK' as const;
@@ -13,6 +14,7 @@ export type ResultErrorCode =
     | typeof ERR_TASK_YIELD_NOT_RESULT
     | typeof ERR_MATCH_ON_OK
     | typeof ERR_MATCH_ERR_HANDLER_NOT_RESULT
+    | typeof ERR_MATCH_TAG_MISSING_HANDLER
     | typeof ERR_UNWRAP_ON_ERR
     | typeof ERR_UNWRAP_ERR_ON_OK
     | typeof ERR_EXPECT_OK
@@ -85,6 +87,15 @@ export class MatchErrHandlerNotResultError extends ResultTypeError {
     }
 }
 
+export class MatchTagMissingHandlerError extends ResultTypeError {
+    readonly tagValue: unknown;
+
+    constructor(tagValue: unknown) {
+        super(`matchTag() has no handler for tag "${String(tagValue)}".`, ERR_MATCH_TAG_MISSING_HANDLER);
+        this.tagValue = tagValue;
+    }
+}
+
 export class UnwrapOnErrError extends ResultTypeError {
     readonly errorValue: unknown;
 
@@ -105,18 +116,24 @@ export class UnwrapErrOnOkError extends ResultTypeError {
 
 export class ExpectOkError extends ResultError {
     readonly expectedMessage: string;
+    readonly errorValue: unknown;
 
-    constructor(expectedMessage: string) {
-        super(expectedMessage, ERR_EXPECT_OK);
+    constructor(expectedMessage: string, errorValue?: unknown) {
+        super(errorValue === undefined ? expectedMessage : `${expectedMessage}: ${String(errorValue)}`, ERR_EXPECT_OK);
         this.expectedMessage = expectedMessage;
+        this.errorValue = errorValue;
+        if (errorValue !== undefined) this.cause = errorValue;
     }
 }
 
 export class ExpectErrError extends ResultError {
     readonly expectedMessage: string;
+    readonly okValue: unknown;
 
-    constructor(expectedMessage: string) {
-        super(expectedMessage, ERR_EXPECT_ERR);
+    constructor(expectedMessage: string, okValue?: unknown) {
+        super(okValue === undefined ? expectedMessage : `${expectedMessage}: ${String(okValue)}`, ERR_EXPECT_ERR);
         this.expectedMessage = expectedMessage;
+        this.okValue = okValue;
+        if (okValue !== undefined) this.cause = okValue;
     }
 }

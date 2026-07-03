@@ -10,7 +10,7 @@ export function expectResult<T, E>(result: Result<T, E>, message: string): T {
         return result.value;
     }
     if (result.isErr()) {
-        throw new ExpectOkError(message);
+        throw new ExpectOkError(message, result.error);
     }
     throw new InvalidResultStateError('expectResult');
 }

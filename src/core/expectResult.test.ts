@@ -22,6 +22,19 @@ describe('expectResult', () => {
         expect((caughtError as ExpectOkError).message).toContain('custom message');
     });
 
+    it('preserves the original Err value on the thrown error', () => {
+        const original = new Error('db down');
+        let caughtError: unknown;
+        try {
+            expectResult(Result.err(original), 'custom message');
+        } catch (error) {
+            caughtError = error;
+        }
+        expect((caughtError as ExpectOkError).errorValue).toBe(original);
+        expect((caughtError as ExpectOkError).cause).toBe(original);
+        expect((caughtError as ExpectOkError).message).toContain('db down');
+    });
+
     it('throws InvalidResultStateError for malformed Result values', () => {
         const malformed = {
             isOk: () => false,

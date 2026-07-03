@@ -8,7 +8,7 @@ import {
     type ErrMatchBuilder,
 } from './matcher';
 import { Result, err, ok } from './result';
-import { ERR_MATCH_ERR_HANDLER_NOT_RESULT, InvalidResultStateError, MatchErrHandlerNotResultError } from '../errors';
+import { ERR_MATCH_ERR_HANDLER_NOT_RESULT, ERR_MATCH_TAG_MISSING_HANDLER, InvalidResultStateError, MatchErrHandlerNotResultError, MatchTagMissingHandlerError } from '../errors';
 
 class IOError extends Error { }
 class ParseError extends Error { }
@@ -117,12 +117,27 @@ describe('Result.match()', () => {
         })).toThrow('matchTag() can only be called on Err results');
     });
 
-    it('throws when object matching has no runtime handler for the tag', () => {
+    it('throws MatchTagMissingHandlerError when object matching has no runtime handler for the tag', () => {
         const result: Result<number, TaggedError> = Result.err({ type: 'network', retryAfter: 30 });
 
-        expect(() => matchTag(result, 'type', {
-            validation: error => `field:${error.field}`,
-        } as never)).toThrow(InvalidResultStateError);
+        let caught: unknown;
+        try {
+            matchTag(result, 'type', {
+                validation: error => `field:${error.field}`,
+            } as never);
+        } catch (error) {
+            caught = error;
+        }
+
+        expect(caught).toBeInstanceOf(MatchTagMissingHandlerError);
+        expect((caught as MatchTagMissingHandlerError).code).toBe(ERR_MATCH_TAG_MISSING_HANDLER);
+        expect((caught as MatchTagMissingHandlerError).tagValue).toBe('network');
+    });
+
+    it('does not resolve handlers from the prototype chain (e.g. tag "toString")', () => {
+        const result = Result.err({ type: 'toString' }) as unknown as Result<number, TaggedError>;
+
+        expect(() => matchTag(result, 'type', {} as never)).toThrow(MatchTagMissingHandlerError);
     });
 
     it('throws when object matching receives a malformed Result-like state', () => {

@@ -5,6 +5,8 @@
 ### Fixed
 
 - `matchErrorAsync()` and `matchErrAsync()` now evaluate handlers lazily on the first awaited `run()`/`otherwise()` call (memoized). Abandoned builder chains no longer start handler promises, so a rejecting handler can no longer cause an unhandled rejection, and handler side effects no longer run when the chain is never consumed.
+- `matchTag()` no longer resolves handlers from the prototype chain: a tag value like `"toString"` previously invoked `Object.prototype.toString` as a handler instead of failing. A missing handler now throws the new `MatchTagMissingHandlerError` (code `ERR_MATCH_TAG_MISSING_HANDLER`, carries `tagValue`) instead of a misleading `InvalidResultStateError`.
+- `expect()`, `expectErr()`, `expectResult()`, and the `expectErr` utility now preserve the original Result payload on the thrown error: `ExpectOkError` carries `errorValue`, `ExpectErrError` carries `okValue`, both set `cause` and include the value in the message.
 
 ### Changed
 
