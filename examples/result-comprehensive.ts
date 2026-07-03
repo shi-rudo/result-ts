@@ -30,7 +30,7 @@ import {
     tryMap,
     zip,
     type Result,
-} from '../index';
+} from '../src/index';
 
 const logResult = <T, E>(label: string, result: Result<T, E>) => {
     result.fold(

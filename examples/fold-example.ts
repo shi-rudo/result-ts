@@ -1,4 +1,4 @@
-import { err, fold, ok, type Result } from '../index';
+import { err, fold, ok, type Result } from '../src/index';
 
 // Example 1: Simple fold with string output
 function processNumber(value: number): Result<number, string> {

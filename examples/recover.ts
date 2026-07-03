@@ -5,7 +5,7 @@
  * recoverWith: like recover, but the default value is derived from the error
  */
 
-import { err, map, ok, recover, recoverWith, type Result } from '../index';
+import { err, map, ok, recover, recoverWith, type Result } from '../src/index';
 
 // ============================================================================
 // Example 1: Simple fallback with recover

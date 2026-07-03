@@ -1,4 +1,4 @@
-import { err, ok, type Result } from '../index';
+import { err, ok, type Result } from '../src/index';
 
 type ValidationError = {
     readonly code: string;

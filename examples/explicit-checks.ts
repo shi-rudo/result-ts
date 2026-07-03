@@ -1,4 +1,4 @@
-import { Result, ok, err, isOk, isErr } from '../index';
+import { Result, ok, err, isOk, isErr } from '../src/index';
 
 type DomainError =
     | { kind: 'NotFound'; id: string }

@@ -5,7 +5,7 @@
  * Result instances from various sources.
  */
 
-import { Result, flatMap, map, recover, tryFn } from '../index';
+import { Result, flatMap, map, recover, tryFn } from '../src/index';
 
 const logResult = <T, E>(label: string, result: Result<T, E>) => {
     result.fold(
