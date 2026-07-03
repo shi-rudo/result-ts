@@ -10,6 +10,7 @@
 
 ### Changed
 
+- The internal Result brand symbol now lives on the shared prototype instead of being defined per instance, making `ok()`/`err()` construction roughly 5x faster (the remaining cost is the deliberate `Object.freeze` immutability guarantee). `isResult()` behavior is unchanged.
 - `fromPromise`, `tryAsync`, `fromThrowable`, `tryCatch`, `tryCatchAsync`, `tryMap`, and `tryMapAsync` now require the `errorMapper` argument when an explicit error type parameter is supplied. Previously, calls like `fromPromise<T, MyError>(promise)` compiled without a mapper while the runtime error stayed unmapped (`unknown`), so the declared error type was a lie. Such calls are now compile errors; calls without explicit type parameters keep returning `unknown` errors as before.
 
 ## 1.0.2 - 2026-06-28

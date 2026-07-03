@@ -11,14 +11,34 @@ describe('isResult', () => {
         expect(isResult(err('boom'))).toBe(true);
     });
 
-    it('brands Ok and Err with a stable non-enumerable symbol', () => {
+    it('brands Ok and Err with a stable non-enumerable symbol on the shared prototype', () => {
         const okResult = ok(1) as Record<PropertyKey, unknown>;
         const errResult = err('boom') as Record<PropertyKey, unknown>;
 
         expect(okResult[RESULT_BRAND]).toBe(true);
         expect(errResult[RESULT_BRAND]).toBe(true);
-        expect(Object.getOwnPropertyDescriptor(okResult, RESULT_BRAND)).toMatchObject({ enumerable: false });
-        expect(Object.getOwnPropertyDescriptor(errResult, RESULT_BRAND)).toMatchObject({ enumerable: false });
+
+        // The brand must live on the shared prototype, not on each instance:
+        // a per-instance defineProperty makes every Result construction pay
+        // for a slow object-shape transition.
+        expect(Object.getOwnPropertyDescriptor(okResult, RESULT_BRAND)).toBeUndefined();
+        expect(Object.getOwnPropertyDescriptor(errResult, RESULT_BRAND)).toBeUndefined();
+
+        const findBrandDescriptor = (value: object): PropertyDescriptor | undefined => {
+            for (let proto = Object.getPrototypeOf(value); proto !== null; proto = Object.getPrototypeOf(proto)) {
+                const descriptor = Object.getOwnPropertyDescriptor(proto, RESULT_BRAND);
+                if (descriptor) return descriptor;
+            }
+            return undefined;
+        };
+
+        expect(findBrandDescriptor(okResult)).toMatchObject({ value: true, enumerable: false, writable: false, configurable: false });
+        expect(findBrandDescriptor(errResult)).toMatchObject({ value: true, enumerable: false, writable: false, configurable: false });
+    });
+
+    it('keeps Ok and Err instances frozen', () => {
+        expect(Object.isFrozen(ok(1))).toBe(true);
+        expect(Object.isFrozen(err('boom'))).toBe(true);
     });
 
     it('accepts branded Result-like values with valid payload shape', () => {

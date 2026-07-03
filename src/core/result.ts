@@ -55,16 +55,6 @@ type OkValue<R> = R extends { readonly _tag: 'Ok'; readonly value: infer T } ? T
 abstract class ResultBase extends Pipeable {
     abstract readonly _tag: 'Ok' | 'Err';
 
-    protected constructor() {
-        super();
-        Object.defineProperty(this, RESULT_BRAND, {
-            value: true,
-            enumerable: false,
-            configurable: false,
-            writable: false,
-        });
-    }
-
     // Basic helpers for internal access in operators
     isOk<T, E>(this: Result<T, E>): this is Ok<T, E> {
         if (this._tag === 'Ok') return true;
@@ -223,6 +213,16 @@ abstract class ResultBase extends Pipeable {
         return { isSuccess: false, error: errorMessage };
     }
 }
+
+// The brand lives on the shared prototype instead of each instance: a
+// per-instance defineProperty forces a shape transition on every Result
+// construction. isResult() reads the brand through the prototype chain.
+Object.defineProperty(ResultBase.prototype, RESULT_BRAND, {
+    value: true,
+    enumerable: false,
+    configurable: false,
+    writable: false,
+});
 
 export class Ok<T, E = never> extends ResultBase {
     readonly _tag = 'Ok' as const;
