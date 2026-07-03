@@ -663,3 +663,102 @@ describe('Result.matchErrAsync()', () => {
         expect(() => ok<number, Error>(0).matchErrAsync.call(malformed)).toThrow(InvalidResultStateError);
     });
 });
+
+describe('Async matcher laziness (regression: unhandled rejection on abandoned chains)', () => {
+    const drainMicrotasks = async (): Promise<void> => {
+        for (let i = 0; i < 5; i++) await Promise.resolve();
+    };
+
+    it('matchErrorAsync: does not invoke the handler before the chain is consumed', async () => {
+        const result: Result<number, IOError> = Result.err(new IOError('io'));
+        if (!result.isErr()) throw new Error('expected Err');
+
+        const handler = vi.fn(async () => 'io');
+        // Chain is built but intentionally never consumed via run()/otherwise().
+        result.matchErrorAsync().when(IOError, handler);
+
+        await drainMicrotasks();
+        expect(handler).not.toHaveBeenCalled();
+    });
+
+    it('matchErrorAsync: a rejecting handler on an abandoned chain causes no unhandled rejection', async () => {
+        const result: Result<number, IOError> = Result.err(new IOError('io'));
+        if (!result.isErr()) throw new Error('expected Err');
+
+        const unhandled = vi.fn();
+        process.once('unhandledRejection', unhandled);
+
+        result.matchErrorAsync().when(IOError, async () => {
+            throw new Error('handler rejected');
+        });
+
+        await drainMicrotasks();
+        await new Promise(resolve => setTimeout(resolve, 0));
+        process.removeListener('unhandledRejection', unhandled);
+        expect(unhandled).not.toHaveBeenCalled();
+    });
+
+    it('matchErrorAsync: invokes the handler once even when run() is awaited twice', async () => {
+        const result: Result<number, IOError> = Result.err(new IOError('io'));
+        if (!result.isErr()) throw new Error('expected Err');
+
+        const handler = vi.fn(async () => 'io');
+        const builder = result
+            .matchErrorAsync()
+            .when(IOError, handler) as unknown as AsyncErrorMatchBuilder<never, string>;
+
+        expect(await builder.run()).toBe('io');
+        expect(await builder.run()).toBe('io');
+        expect(handler).toHaveBeenCalledTimes(1);
+    });
+
+    it('matchErrAsync: does not invoke the handler before the chain is consumed', async () => {
+        const result: Result<number, IOError> = Result.err(new IOError('io'));
+
+        const handler = vi.fn(async () => ok(1));
+        result.matchErrAsync().when(IOError, handler);
+
+        await drainMicrotasks();
+        expect(handler).not.toHaveBeenCalled();
+    });
+
+    it('matchErrAsync: a rejecting handler on an abandoned chain causes no unhandled rejection', async () => {
+        const result: Result<number, IOError> = Result.err(new IOError('io'));
+
+        const unhandled = vi.fn();
+        process.once('unhandledRejection', unhandled);
+
+        result.matchErrAsync().when(IOError, async () => {
+            throw new Error('handler rejected');
+        });
+
+        await drainMicrotasks();
+        await new Promise(resolve => setTimeout(resolve, 0));
+        process.removeListener('unhandledRejection', unhandled);
+        expect(unhandled).not.toHaveBeenCalled();
+    });
+
+    it('matchErrAsync: invokes the handler once even when run() is awaited twice', async () => {
+        const result: Result<number, IOError> = Result.err(new IOError('io'));
+
+        const handler = vi.fn(async () => ok(1));
+        const builder = result
+            .matchErrAsync()
+            .when(IOError, handler) as unknown as AsyncErrMatchBuilder<number, never, number, never>;
+
+        expect((await builder.run()).unwrapOr(0)).toBe(1);
+        expect((await builder.run()).unwrapOr(0)).toBe(1);
+        expect(handler).toHaveBeenCalledTimes(1);
+    });
+
+    it('matchErrAsync: Ok results still pass through untouched', async () => {
+        const result: Result<number, IOError> = ok(42);
+
+        const out = await result
+            .matchErrAsync()
+            .when(IOError, async () => ok(0))
+            .run();
+
+        expect(out.unwrapOr(0)).toBe(42);
+    });
+});

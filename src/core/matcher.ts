@@ -123,12 +123,15 @@ export class ErrorMatchBuilder<E, R> {
 export class AsyncErrorMatchBuilder<E, R> {
     readonly #error: unknown;
     readonly #matched: boolean;
-    readonly #value: Promise<unknown> | undefined;
+    readonly #handler: (() => Awaitable<unknown>) | undefined;
+    // Lazily created on first run()/otherwise() so abandoned chains never
+    // start the handler (and thus can never leak an unhandled rejection).
+    #memo: Promise<unknown> | undefined;
 
-    constructor(error: unknown, matched = false, value?: Promise<unknown>) {
+    constructor(error: unknown, matched = false, handler?: () => Awaitable<unknown>) {
         this.#error = error;
         this.#matched = matched;
-        this.#value = value;
+        this.#handler = handler;
         Object.freeze(this);
     }
 
@@ -139,8 +142,8 @@ export class AsyncErrorMatchBuilder<E, R> {
         if (this.#matched) return this as unknown as AsyncErrorMatchBuilder<Exclude<E, A>, R | R1>;
 
         if (this.#error instanceof ctor) {
-            const value = Promise.resolve().then(() => handler(this.#error as A));
-            return new AsyncErrorMatchBuilder(this.#error, true, value) as unknown as AsyncErrorMatchBuilder<Exclude<E, A>, R | R1>;
+            const run = (): Awaitable<R1> => handler(this.#error as A);
+            return new AsyncErrorMatchBuilder(this.#error, true, run) as unknown as AsyncErrorMatchBuilder<Exclude<E, A>, R | R1>;
         }
 
         return this as unknown as AsyncErrorMatchBuilder<Exclude<E, A>, R | R1>;
@@ -154,8 +157,8 @@ export class AsyncErrorMatchBuilder<E, R> {
 
         const error = this.#error as E;
         if (guard(error)) {
-            const value = Promise.resolve().then(() => handler(error));
-            return new AsyncErrorMatchBuilder(this.#error, true, value) as unknown as AsyncErrorMatchBuilder<Exclude<E, A>, R | R1>;
+            const run = (): Awaitable<R1> => handler(error);
+            return new AsyncErrorMatchBuilder(this.#error, true, run) as unknown as AsyncErrorMatchBuilder<Exclude<E, A>, R | R1>;
         }
 
         return this as unknown as AsyncErrorMatchBuilder<Exclude<E, A>, R | R1>;
@@ -169,21 +172,27 @@ export class AsyncErrorMatchBuilder<E, R> {
         if (this.#matched) return this as unknown as AsyncErrorMatchBuilder<Exclude<E, A>, R | R1>;
 
         if (matchesTag(this.#error, key, tag)) {
-            const value = Promise.resolve().then(() => handler(this.#error as A));
-            return new AsyncErrorMatchBuilder(this.#error, true, value) as unknown as AsyncErrorMatchBuilder<Exclude<E, A>, R | R1>;
+            const run = (): Awaitable<R1> => handler(this.#error as A);
+            return new AsyncErrorMatchBuilder(this.#error, true, run) as unknown as AsyncErrorMatchBuilder<Exclude<E, A>, R | R1>;
         }
 
         return this as unknown as AsyncErrorMatchBuilder<Exclude<E, A>, R | R1>;
     }
 
     async otherwise<R2>(handler: (error: E) => Awaitable<R2>): Promise<R | R2> {
-        if (this.#matched) return await this.#value as R;
+        if (this.#matched) return await this.#invoke() as R;
         return await handler(this.#error as E);
     }
 
     async run(this: AsyncErrorMatchBuilder<never, R>): Promise<R> {
-        if (this.#matched) return await this.#value as R;
+        if (this.#matched) return await this.#invoke() as R;
         throw this.#error;
+    }
+
+    #invoke(): Promise<unknown> {
+        // Private fields stay writable on frozen instances, so the memo works.
+        this.#memo ??= Promise.resolve().then(this.#handler);
+        return this.#memo;
     }
 }
 
@@ -299,16 +308,19 @@ export class ErrMatchBuilder<T, E, OutT, OutE> {
 
 export class AsyncErrMatchBuilder<T, E, OutT, OutE> {
     readonly #error: unknown;
-    readonly #resolved: Promise<Result<any, any>> | undefined;
+    readonly #resolve: (() => Awaitable<Result<any, any>>) | undefined;
+    // Lazily created on first run()/otherwise() so abandoned chains never
+    // start the handler (and thus can never leak an unhandled rejection).
+    #memo: Promise<Result<any, any>> | undefined;
 
-    private constructor(error: unknown, resolved?: Promise<Result<any, any>>) {
+    private constructor(error: unknown, resolve?: () => Awaitable<Result<any, any>>) {
         this.#error = error;
-        this.#resolved = resolved;
+        this.#resolve = resolve;
         Object.freeze(this);
     }
 
     static fromResult<T, E>(result: Result<T, E>): AsyncErrMatchBuilder<T, E, never, never> {
-        if (result.isOk()) return new AsyncErrMatchBuilder<T, E, never, never>(undefined, Promise.resolve(result));
+        if (result.isOk()) return new AsyncErrMatchBuilder<T, E, never, never>(undefined, () => result);
         if (result.isErr()) return new AsyncErrMatchBuilder<T, E, never, never>(result.error);
         throw new InvalidResultStateError('AsyncErrMatchBuilder.fromResult');
     }
@@ -317,11 +329,11 @@ export class AsyncErrMatchBuilder<T, E, OutT, OutE> {
         ctor: Ctor<A>,
         handler: (error: A) => Awaitable<R1>
     ): AsyncErrMatchBuilder<T, Exclude<E, A>, OutT | OkOfResult<R1>, OutE | ErrOfResult<R1>> {
-        if (this.#resolved) return this as unknown as AsyncErrMatchBuilder<T, Exclude<E, A>, OutT | OkOfResult<R1>, OutE | ErrOfResult<R1>>;
+        if (this.#resolve) return this as unknown as AsyncErrMatchBuilder<T, Exclude<E, A>, OutT | OkOfResult<R1>, OutE | ErrOfResult<R1>>;
 
         if (this.#error instanceof ctor) {
-            const resolved = Promise.resolve().then(() => handler(this.#error as A)).then(out => expectResultReturn(out, 'when'));
-            return new AsyncErrMatchBuilder(this.#error, resolved) as unknown as AsyncErrMatchBuilder<
+            const resolve = async (): Promise<Result<any, any>> => expectResultReturn(await handler(this.#error as A), 'when');
+            return new AsyncErrMatchBuilder(this.#error, resolve) as unknown as AsyncErrMatchBuilder<
                 T,
                 Exclude<E, A>,
                 OutT | OkOfResult<R1>,
@@ -336,12 +348,12 @@ export class AsyncErrMatchBuilder<T, E, OutT, OutE> {
         guard: TypeGuard<E, A>,
         handler: (error: A) => Awaitable<R1>
     ): AsyncErrMatchBuilder<T, Exclude<E, A>, OutT | OkOfResult<R1>, OutE | ErrOfResult<R1>> {
-        if (this.#resolved) return this as unknown as AsyncErrMatchBuilder<T, Exclude<E, A>, OutT | OkOfResult<R1>, OutE | ErrOfResult<R1>>;
+        if (this.#resolve) return this as unknown as AsyncErrMatchBuilder<T, Exclude<E, A>, OutT | OkOfResult<R1>, OutE | ErrOfResult<R1>>;
 
         const error = this.#error as E;
         if (guard(error)) {
-            const resolved = Promise.resolve().then(() => handler(error)).then(out => expectResultReturn(out, 'whenGuard'));
-            return new AsyncErrMatchBuilder(this.#error, resolved) as unknown as AsyncErrMatchBuilder<
+            const resolve = async (): Promise<Result<any, any>> => expectResultReturn(await handler(error), 'whenGuard');
+            return new AsyncErrMatchBuilder(this.#error, resolve) as unknown as AsyncErrMatchBuilder<
                 T,
                 Exclude<E, A>,
                 OutT | OkOfResult<R1>,
@@ -357,11 +369,11 @@ export class AsyncErrMatchBuilder<T, E, OutT, OutE> {
         tag: V,
         handler: (error: A) => Awaitable<R1>
     ): AsyncErrMatchBuilder<T, Exclude<E, A>, OutT | OkOfResult<R1>, OutE | ErrOfResult<R1>> {
-        if (this.#resolved) return this as unknown as AsyncErrMatchBuilder<T, Exclude<E, A>, OutT | OkOfResult<R1>, OutE | ErrOfResult<R1>>;
+        if (this.#resolve) return this as unknown as AsyncErrMatchBuilder<T, Exclude<E, A>, OutT | OkOfResult<R1>, OutE | ErrOfResult<R1>>;
 
         if (matchesTag(this.#error, key, tag)) {
-            const resolved = Promise.resolve().then(() => handler(this.#error as A)).then(out => expectResultReturn(out, 'whenTag'));
-            return new AsyncErrMatchBuilder(this.#error, resolved) as unknown as AsyncErrMatchBuilder<
+            const resolve = async (): Promise<Result<any, any>> => expectResultReturn(await handler(this.#error as A), 'whenTag');
+            return new AsyncErrMatchBuilder(this.#error, resolve) as unknown as AsyncErrMatchBuilder<
                 T,
                 Exclude<E, A>,
                 OutT | OkOfResult<R1>,
@@ -375,14 +387,20 @@ export class AsyncErrMatchBuilder<T, E, OutT, OutE> {
     async otherwise<R2 extends Result<any, any>>(
         handler: (error: E) => Awaitable<R2>
     ): Promise<Result<T | OutT | OkOfResult<R2>, OutE | ErrOfResult<R2>>> {
-        if (this.#resolved) return await this.#resolved as Result<T | OutT | OkOfResult<R2>, OutE | ErrOfResult<R2>>;
+        if (this.#resolve) return await this.#invoke() as Result<T | OutT | OkOfResult<R2>, OutE | ErrOfResult<R2>>;
 
         const out = await handler(this.#error as E);
         return expectResultReturn(out, 'otherwise') as Result<T | OutT | OkOfResult<R2>, OutE | ErrOfResult<R2>>;
     }
 
     async run(this: AsyncErrMatchBuilder<T, never, OutT, OutE>): Promise<Result<T | OutT, OutE>> {
-        if (this.#resolved) return await this.#resolved as Result<T | OutT, OutE>;
+        if (this.#resolve) return await this.#invoke() as Result<T | OutT, OutE>;
         throw this.#error;
+    }
+
+    #invoke(): Promise<Result<any, any>> {
+        // Private fields stay writable on frozen instances, so the memo works.
+        this.#memo ??= Promise.resolve().then(this.#resolve);
+        return this.#memo;
     }
 }
