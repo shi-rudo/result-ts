@@ -1,4 +1,5 @@
 export const ERR_INVALID_RESULT_STATE = 'ERR_INVALID_RESULT_STATE' as const;
+/** @deprecated Use {@link ERR_INVALID_RESULT_STATE} instead. */
 export const ERR_INVALID_STATE: typeof ERR_INVALID_RESULT_STATE = ERR_INVALID_RESULT_STATE;
 export const ERR_TASK_YIELD_NOT_RESULT = 'ERR_TASK_YIELD_NOT_RESULT' as const;
 export const ERR_MATCH_ON_OK = 'ERR_MATCH_ON_OK' as const;
