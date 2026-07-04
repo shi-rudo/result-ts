@@ -56,14 +56,22 @@ if (result.isOk()) {
 }
 ```
 
-## Why This Library
+## Why Result Instead of try/catch?
 
-- `Ok` does not expose `error`, and `Err` does not expose `value`; accidental reads require proper narrowing.
-- `isResult` uses a stable internal brand plus payload validation instead of accepting random lookalike objects.
-- `Result.fromPromise()` maps promise rejections but rethrows bugs inside the error mapper.
-- Sync, async, generator, collection, and matching workflows are first-class.
-- README and docs TypeScript snippets are compile-checked.
-- Package exports are tested for ESM, CJS, and TypeScript consumers.
+TypeScript cannot type a `catch` block: every thrown value arrives as `unknown`, and nothing in a function's signature reveals that it throws at all. Callers either remember to catch — or find out in production.
+
+A `Result<User, UserError>` puts the failure into the signature. The compiler forces both states to be handled, narrows `value` and `error` access to the matching state (as in the Quick Start above), and keeps the error type intact across every transformation.
+
+## Why This Library?
+
+There are several Result implementations for TypeScript. This one is built around a few hard guarantees:
+
+- **Error types that cannot lie.** Declaring an explicit error type requires an error mapper: `fromPromise<User, ApiError>(promise)` without one is a compile error, so `E` never silently holds an unmapped `unknown`. And bugs inside the mapper itself are rethrown instead of being disguised as `Err` values.
+- **Exhaustive matching, checked at compile time.** `matchError().when(NotFoundError, ...).run()` only compiles once every error case is handled, and `matchTag` does the same for discriminated unions — add a new error variant and every unhandled match site turns red.
+- **Four interchangeable styles, one type.** Explicit `isOk()`/`isErr()` checks, `pipe`/`pipeAsync` operator chains, generator-based do-notation (`task`), and builder-based error matching all work on the same immutable, frozen `Result` — use what fits each call site.
+- **Safe at runtime boundaries.** `isResult()` validates an internal brand plus payload shape instead of accepting lookalike objects, and `toSerialized()`/`fromSerialized()` round-trip Results through JSON without ambiguity.
+- **Zero dependencies, runs anywhere.** ESM and CJS builds, Node ≥ 20, edge-runtime compatible, tree-shakeable subpath exports.
+- **Verified, not promised.** Every TypeScript snippet in this README and the docs is compile-checked in CI, the API is covered by 400+ runtime tests plus compile-time type tests, and the package exports are verified for ESM, CJS, and TypeScript consumers.
 
 ## Common Workflows
 
@@ -186,7 +194,7 @@ The full documentation lives in `docs/` and is built with VitePress.
 - [Collections](docs/api/collections.md)
 - [Error Classes](docs/api/errors.md)
 - [Version 1 Migration](docs/migration/v1.md)
-- [Design Decisions](docs/decisions/lazy-async-abstraction.md)
+- [Design Decisions](docs/decisions/lazy-async-abstraction.md) ([Defensive State Checks](docs/decisions/defensive-state-checks.md))
 
 ## Development
 
