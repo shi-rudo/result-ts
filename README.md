@@ -1,8 +1,14 @@
 # @shirudo/result
 
-Robust, type-safe error handling for TypeScript.
+A `Result<T, E>` type for TypeScript. Functions return their failures instead of throwing them.
 
-`@shirudo/result` models expected failures as values instead of hidden exceptions. Functions return `Result<T, E>`, callers must handle both states, and TypeScript narrows access to `value` and `error` only when the state is known.
+```ts docs-check:skip
+function loadUser(id: string): Result<User, UserError>
+```
+
+The failure is part of the signature: callers see exactly what can go wrong, the compiler insists both cases are handled, and `value`/`error` are only accessible after narrowing. What used to be a forgotten `catch` is now a type error.
+
+The rest of the package is tooling around that one type: pipe operators, async variants, generator-based do-notation, exhaustive error matching, and collection helpers. The library has zero dependencies, ships as ESM and CJS, and runs on Node 20+ and edge runtimes.
 
 [![CI](https://github.com/shi-rudo/result-ts/actions/workflows/ci.yml/badge.svg)](https://github.com/shi-rudo/result-ts/actions/workflows/ci.yml)
 [![npm version](https://img.shields.io/npm/v/@shirudo/result.svg)](https://www.npmjs.com/package/@shirudo/result)
@@ -58,7 +64,7 @@ if (result.isOk()) {
 
 ## Why Result Instead of try/catch?
 
-TypeScript cannot type a `catch` block: every thrown value arrives as `unknown`, and nothing in a function's signature reveals that it throws at all. Callers either remember to catch — or find out in production.
+TypeScript cannot type a `catch` block: every thrown value arrives as `unknown`, and nothing in a function's signature reveals that it throws at all. Callers either remember to catch, or they find out in production.
 
 A `Result<User, UserError>` puts the failure into the signature. The compiler forces both states to be handled, narrows `value` and `error` access to the matching state (as in the Quick Start above), and keeps the error type intact across every transformation.
 
@@ -67,10 +73,10 @@ A `Result<User, UserError>` puts the failure into the signature. The compiler fo
 There are several Result implementations for TypeScript. This one is built around a few hard guarantees:
 
 - **Error types that cannot lie.** Declaring an explicit error type requires an error mapper: `fromPromise<User, ApiError>(promise)` without one is a compile error, so `E` never silently holds an unmapped `unknown`. And bugs inside the mapper itself are rethrown instead of being disguised as `Err` values.
-- **Exhaustive matching, checked at compile time.** `matchError().when(NotFoundError, ...).run()` only compiles once every error case is handled, and `matchTag` does the same for discriminated unions — add a new error variant and every unhandled match site turns red.
-- **Four interchangeable styles, one type.** Explicit `isOk()`/`isErr()` checks, `pipe`/`pipeAsync` operator chains, generator-based do-notation (`task`), and builder-based error matching all work on the same immutable, frozen `Result` — use what fits each call site.
+- **Exhaustive matching, checked at compile time.** `matchError().when(NotFoundError, ...).run()` only compiles once every error case is handled, and `matchTag` does the same for discriminated unions. Add a new error variant, and every unhandled match site turns red.
+- **Four interchangeable styles, one type.** Explicit `isOk()`/`isErr()` checks, `pipe`/`pipeAsync` operator chains, generator-based do-notation (`task`), and builder-based error matching all work on the same immutable, frozen `Result`. Use whichever style fits each call site.
 - **Safe at runtime boundaries.** `isResult()` validates an internal brand plus payload shape instead of accepting lookalike objects, and `toSerialized()`/`fromSerialized()` round-trip Results through JSON without ambiguity.
-- **Zero dependencies, runs anywhere.** ESM and CJS builds, Node ≥ 20, edge-runtime compatible, tree-shakeable subpath exports.
+- **Zero dependencies, runs anywhere.** The package ships ESM and CJS builds with tree-shakeable subpath exports, and it runs on Node 20+ and in edge runtimes.
 - **Verified, not promised.** Every TypeScript snippet in this README and the docs is compile-checked in CI, the API is covered by 400+ runtime tests plus compile-time type tests, and the package exports are verified for ESM, CJS, and TypeScript consumers.
 
 ## Common Workflows
