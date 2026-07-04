@@ -13,9 +13,6 @@ The rest of the package is tooling around that one type: pipe operators, async v
 [![CI](https://github.com/shi-rudo/result-ts/actions/workflows/ci.yml/badge.svg)](https://github.com/shi-rudo/result-ts/actions/workflows/ci.yml)
 [![npm version](https://img.shields.io/npm/v/@shirudo/result.svg)](https://www.npmjs.com/package/@shirudo/result)
 [![License: MIT](https://img.shields.io/badge/License-MIT-yellow.svg)](./LICENSE)
-[![TypeScript](https://img.shields.io/badge/TypeScript-5.7%2B-blue.svg)](https://www.typescriptlang.org/)
-[![Node](https://img.shields.io/badge/Node-%3E%3D20-green.svg)](https://nodejs.org/)
-![Edge Runtime](https://img.shields.io/badge/Edge_Runtime-compatible-brightgreen.svg)
 
 ## Installation
 
@@ -83,6 +80,12 @@ There are several Result implementations for TypeScript. This one is built aroun
 - **Safe at runtime boundaries.** `isResult()` validates an internal brand plus payload shape instead of accepting lookalike objects, and `toSerialized()`/`fromSerialized()` round-trip Results through JSON without ambiguity.
 - **Zero dependencies, runs anywhere.** The package ships ESM and CJS builds with tree-shakeable subpath exports, and it runs on Node 20+ and in edge runtimes.
 - **Verified, not promised.** Every TypeScript snippet in this README and the docs is compile-checked in CI, the API is covered by 400+ runtime tests plus compile-time type tests, and the package exports are verified for ESM, CJS, and TypeScript consumers.
+
+## When Not to Use It
+
+- If your codebase is already built on [Effect](https://effect.website/), you do not need this package. Its `Either`/`Exit` types come with the surrounding ecosystem.
+- For short scripts and prototypes, plain `try`/`catch` is often the simpler tool. The value of typed errors grows with the number of call sites that must handle them.
+- Keep throwing for programmer errors. Broken invariants and failed assertions should crash loudly; `Result` is for failures the caller is expected to handle.
 
 ## Common Workflows
 
@@ -153,10 +156,36 @@ function ensureEmail(user: { id: string; email?: string }) {
         : Result.err({ code: 'missing-email' as const, id: user.id });
 }
 
-const email = task(function* () {
+const emailResult = await task(function* () {
     const user = yield* findUser('1');
     return yield* ensureEmail(user);
 });
+```
+
+### Handle error classes exhaustively
+
+```ts
+import { Result } from '@shirudo/result';
+
+class NotFoundError extends Error {
+    readonly code = 'not-found';
+}
+class RateLimitError extends Error {
+    readonly code = 'rate-limited';
+    constructor(readonly retryAfter: number) {
+        super(`rate limited, retry in ${retryAfter}s`);
+    }
+}
+
+const result: Result<string, NotFoundError | RateLimitError> = Result.err(new RateLimitError(30));
+
+if (result.isErr()) {
+    const message = result
+        .matchError()
+        .when(NotFoundError, () => 'No such record')
+        .when(RateLimitError, error => `Retry in ${error.retryAfter}s`)
+        .run(); // run() only compiles because every error class is handled
+}
 ```
 
 ### Match discriminated-union errors
