@@ -36,7 +36,9 @@ type UserError =
     | { type: 'not-found'; id: string }
     | { type: 'inactive'; id: string };
 
-declare const users: Map<string, User>;
+const users = new Map<string, User>([
+    ['1', { id: '1', email: 'ada@example.com', active: true }],
+]);
 
 function loadUser(id: string): Result<User, UserError> {
     const user = users.get(id);
