@@ -236,6 +236,10 @@ The full documentation lives in `docs/` and is built with VitePress.
 - [Version 1 Migration](docs/migration/v1.md)
 - [Design Decisions](docs/decisions/lazy-async-abstraction.md) ([Defensive State Checks](docs/decisions/defensive-state-checks.md))
 
+## Agent Skill
+
+The repository ships an agent skill for AI coding assistants in [`skills/result-ts/`](skills/result-ts/). Copy the folder into your project's skill directory (for example `.claude/skills/` for Claude Code or `.agents/skills/` for other agents). It gives your assistant the API cheatsheet, refactoring patterns, and best practices for `@shirudo/result`; every snippet in it is compile-checked in this repository's CI.
+
 ## Development
 
 ```sh

@@ -23,7 +23,7 @@ async function listMarkdownFiles(dir) {
 const docs = [
     'README.md',
     ...(await listMarkdownFiles(join(repoRoot, 'docs'))).map(path => relative(repoRoot, path)),
-    ...(await listMarkdownFiles(join(repoRoot, '.agents', 'skills', 'result-ts'))).map(path => relative(repoRoot, path)),
+    ...(await listMarkdownFiles(join(repoRoot, 'skills'))).map(path => relative(repoRoot, path)),
 ];
 
 function extractTypeScriptBlocks(markdown, sourcePath) {

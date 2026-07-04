@@ -56,11 +56,11 @@ Thumbs.db
 *.bak
 *.orig
 
-# AI helper files
+# AI helper files (the result-ts entry is a tracked symlink to skills/result-ts/)
 .agents/*
 !/.agents/skills/
 /.agents/skills/*
-!/.agents/skills/result-ts/
+!/.agents/skills/result-ts
 .claude
 .codex
 .gemini
