@@ -1,18 +1,18 @@
 # Refactoring Patterns for `@shirudo/result`
 
-This guide provides patterns for refactoring existing TypeScript code to use the `@shirudo/result` library.
+Patterns for converting existing TypeScript code to `Result`. Every snippet in this file is compile-checked in CI (`pnpm docs:check`).
 
-## 1. Replacing `try...catch` blocks
+## 1. Replacing `try...catch` Blocks
 
-Instead of using `try...catch` to handle exceptions, you can use `tryCatch` to wrap functions that might throw errors.
+For a one-off call, use `tryFn` (alias `Result.try`). To create a reusable safe wrapper around a throwing function, use `fromThrowable`. Pass an error mapper to get a typed error instead of `unknown`.
 
 ### Before
 
 ```typescript
-function parseJson(json: string): any {
+function parseJson(json: string): unknown {
   try {
     return JSON.parse(json);
-  } catch (e) {
+  } catch {
     return { error: 'Failed to parse JSON' };
   }
 }
@@ -21,69 +21,72 @@ function parseJson(json: string): any {
 ### After
 
 ```typescript
-import { tryCatch, Result } from '@shirudo/result';
+import { fromThrowable, tryFn, type Result } from '@shirudo/result';
 
-function parseJson(json: string): Result<any, string> {
-  return tryCatch(
-    () => JSON.parse(json),
-    (e) => 'Failed to parse JSON'
-  );
-}
+type ParseError = { code: 'parse'; cause: unknown };
+
+// Reusable wrapper:
+const parseJson = fromThrowable(
+  JSON.parse,
+  (cause): ParseError => ({ code: 'parse', cause }),
+);
+const parsed: Result<any, ParseError> = parseJson('{"a":1}');
+
+// One-off call (error stays unknown without a mapper):
+const oneOff = tryFn(() => JSON.parse('{"a":1}'));
 ```
 
-## 2. Handling `null` or `undefined`
+Note: `tryCatch` also exists, but it is a curried **pipe operator** that runs only when the incoming Result is `Ok`. It is not the tool for converting a plain throwing call.
 
-Use `fromNullable` to convert `null` or `undefined` values into an `Err` result.
+## 2. Replacing `null`/`undefined` Checks
+
+Use `fromNullable` to convert nullable values into a `Result`.
 
 ### Before
 
 ```typescript
-function getUser(id: number): User | null {
-  // ... logic to fetch user
-}
+type User = { id: number; name: string };
+declare function fetchUser(id: number): User | undefined;
 
-const user = getUser(1);
-if (user === null) {
-  // handle error
-} else {
-  // use user
+function greet(id: number): string | null {
+  const user = fetchUser(id);
+  if (user === undefined) return null;
+  return `Hello, ${user.name}`;
 }
 ```
 
 ### After
 
 ```typescript
-import { fromNullable, Result } from '@shirudo/result';
+import { fromNullable, type Result } from '@shirudo/result';
+import { map } from '@shirudo/result/operators';
 
-function getUser(id: number): Result<User, 'User not found'> {
-  const user = // ... logic to fetch user
-  return fromNullable(user, 'User not found');
+type User = { id: number; name: string };
+declare function fetchUser(id: number): User | undefined;
+
+function getUser(id: number): Result<User, { code: 'not-found'; id: number }> {
+  return fromNullable(fetchUser(id), { code: 'not-found', id });
 }
 
-const userResult = getUser(1);
-userResult.pipe(
-  map((user) => {
-    // use user
-  })
-);
+const greeting = getUser(1).pipe(map(user => `Hello, ${user.name}`));
 ```
 
-## 3. Chaining Operations
+## 3. Replacing Early-Return Checks with a Chain
 
-Instead of nested `if` statements, use `flatMap` to chain operations that can fail.
+Chain fallible steps with `flatMap` inside one `.pipe(...)` call, then leave the pipe with `match` (or call `unwrapOr(result, fallback)` afterwards; `unwrapOr` is data-first and does not belong inside the pipe).
 
 ### Before
 
 ```typescript
+type Data = { raw: string };
+declare function step1(data: Data): { value?: string; error?: string };
+declare function step2(value: string): { value?: string; error?: string };
+
 function processData(data: Data): string {
-  const result1 = operation1(data);
-  if (result1.error) {
-    return 'default';
-  }
-  const result2 = operation2(result1.value);
-  if (result2.error) {
-    return 'default';
-  }
+  const result1 = step1(data);
+  if (result1.error || result1.value === undefined) return 'default';
+  const result2 = step2(result1.value);
+  if (result2.error || result2.value === undefined) return 'default';
   return result2.value;
 }
 ```
@@ -91,39 +94,35 @@ function processData(data: Data): string {
 ### After
 
 ```typescript
-import { Result, flatMap, map, unwrapOr } from '@shirudo/result';
+import { unwrapOr, type Result } from '@shirudo/result';
+import { flatMap } from '@shirudo/result/operators';
+
+type Data = { raw: string };
+declare function step1(data: Data): Result<string, { code: 'step1' }>;
+declare function step2(value: string): Result<string, { code: 'step2' }>;
 
 function processData(data: Data): string {
-  return operation1(data).pipe(
-    flatMap(operation2),
-    unwrapOr('default')
-  );
-}
-
-function operation1(data: Data): Result<string, string> {
-  // ...
-}
-
-function operation2(value: string): Result<string, string> {
-  // ...
+  const result = step1(data).pipe(flatMap(step2));
+  return unwrapOr(result, 'default');
 }
 ```
 
-## 4. Centralized Error Handling
+## 4. Centralizing Error Handling
 
-Use `mapErr` to transform errors and `orElse` or `recover` to handle them at the end of a chain.
+Normalize errors with `mapErr` along the way and resolve both branches once at the end with `match`.
 
 ### Before
 
 ```typescript
+class SpecificError extends Error {}
+declare function mightFail(): string;
+
 function doSomething(): string {
   try {
     const value = mightFail();
     return `Success: ${value}`;
   } catch (e) {
-    if (e instanceof SpecificError) {
-      return 'Handled specific error';
-    }
+    if (e instanceof SpecificError) return 'Handled specific error';
     return 'Generic error';
   }
 }
@@ -132,21 +131,64 @@ function doSomething(): string {
 ### After
 
 ```typescript
-import { Result, tryCatch, map, mapErr, fold } from '@shirudo/result';
+import { tryFn } from '@shirudo/result';
+import { map, mapErr, match } from '@shirudo/result/operators';
+
+class SpecificError extends Error {}
+declare function mightFail(): string;
 
 function doSomething(): string {
-  return tryCatch(mightFail).pipe(
-    map((value) => `Success: ${value}`),
-    mapErr((e) => {
-      if (e instanceof SpecificError) {
-        return 'Handled specific error';
-      }
-      return 'Generic error';
+  return tryFn(mightFail).pipe(
+    map(value => `Success: ${value}`),
+    mapErr(e => (e instanceof SpecificError ? 'Handled specific error' : 'Generic error')),
+    match({
+      ok: value => value,
+      err: error => error,
     }),
-    fold(
-      (value) => value,
-      (error) => error
-    )
   );
+}
+```
+
+## 5. Replacing Nested `await` + `try/catch` with `task`
+
+Sequential async flows with intermediate variables convert naturally to generator do-notation.
+
+### Before
+
+```typescript
+declare function loadUser(id: string): Promise<{ email?: string }>;
+declare function send(email: string): Promise<void>;
+
+async function notify(id: string): Promise<'sent' | 'failed'> {
+  try {
+    const user = await loadUser(id);
+    if (!user.email) return 'failed';
+    await send(user.email);
+    return 'sent';
+  } catch {
+    return 'failed';
+  }
+}
+```
+
+### After
+
+```typescript
+import { err, fromPromise, task } from '@shirudo/result';
+
+declare function loadUser(id: string): Promise<{ email?: string }>;
+declare function send(email: string): Promise<void>;
+
+async function notify(id: string): Promise<'sent' | 'failed'> {
+  const result = await task(
+    async function* () {
+      const user = yield* await fromPromise(loadUser(id), cause => ({ code: 'load' as const, cause }));
+      if (!user.email) return yield* err({ code: 'no-email' as const });
+      yield* await fromPromise(send(user.email), cause => ({ code: 'send' as const, cause }));
+      return 'sent' as const;
+    },
+  );
+
+  return result.isOk() ? result.value : 'failed';
 }
 ```

@@ -1,37 +1,23 @@
 ---
 name: result-ts
-description: A skill to help integrate, refactor, and guide the proper usage of the `@shirudo/result` library. Use this skill when you want to introduce `@shirudo/result` into a project, refactor existing code to use `Result` types, or get guidance on best practices and common patterns.
-version: 1.2
+description: Integrate, use, and refactor toward the @shirudo/result library (Result<T, E> error handling for TypeScript). Use when introducing @shirudo/result into a project, converting try/catch or null checks to Result types, composing Result pipelines, or answering questions about the library's API, operators, task do-notation, or error matching.
+version: 2.0.0
 ---
 
 # `@shirudo/result` Skill
 
-This skill helps you effectively use the package `@shirudo/result` in your TypeScript projects.
+`@shirudo/result` models expected failures as values: functions return `Result<T, E>` (an `Ok<T>` or an `Err<E>`) instead of throwing. The compiler forces both states to be handled and narrows `value`/`error` access after `isOk()`/`isErr()` checks. Failures short-circuit through compositions (`.pipe(...)`, `.pipeAsync(...)`, `task`).
 
-## What is a `Result`?
-A `Result<T, E>` is a typed return value that represents **either** success **or** failure:
+## Instructions
 
-- `Ok<T>`: the operation succeeded and contains a value of type `T`.
-- `Err<E>`: the operation failed and contains an error value of type `E`.
-
-This makes error handling **explicit** in the type system: functions return a `Result` instead of throwing.  
-You then **compose** operations (e.g. via `.pipe()` / `.pipeAsync()`), where failures short-circuit and propagate as `Err`.
-
-## When to Use
-
-Use this skill when you need to:
-
-- **Integrate `@shirudo/result`**: Introduce the library into an existing codebase.
-- **Refactor Code**: Convert existing code (e.g., `try/catch` blocks, null checks) to use `Result` types.
-- **Understand Core Concepts**: Get guidance on the library's functions and best practices.
-
-## How to Use
-
-1.  **Consult the References**: Depending on your needs, refer to the following guides in the `references/` directory:
-    *   `api-cheatsheet.md`: A quick reference for all major `@shirudo/result` functions.
-    *   `refactoring-patterns.md`: Provides concrete examples of how to refactor your code.
-    *   `best-practices.md`: Offers guidance on using the library idiomatically.
-
-2.  **Ask for Refactoring Help**: You can ask me to refactor a specific piece of code. For example: "Refactor this function to use @shirudo/result".
-
-3.  **Ask for Explanations**: You can ask for explanations of specific functions. For example: "Explain how to use `flatMap` in @shirudo/result".
+1. Consult the reference that matches the job:
+   - `references/api-cheatsheet.md`: signatures and a compiling example for every public function, grouped by task. Read this before writing code that uses an API you have not verified in this project.
+   - `references/refactoring-patterns.md`: before/after patterns for converting `try/catch`, null checks, early-return chains, and nested `await` code to `Result`.
+   - `references/best-practices.md`: idioms and conventions (error modeling with `code` discriminants, where to unwrap, async composition, serialization across boundaries).
+2. Respect the two calling conventions; confusing them is the most common generated-code bug:
+   - Operators from `@shirudo/result/operators` are curried and go inside `.pipe(...)`: `map`, `flatMap`, `mapErr`, `filter`, `tap`, `match`, `tryMap`, and their `...Async` variants.
+   - Utilities like `unwrapOr`, `mapOr`, `and`, `or`, `sequence` are data-first: the `Result` is the first argument, and they are called outside pipes.
+3. When declaring an explicit error type on `fromPromise`, `tryAsync`, `fromThrowable`, `tryCatch`, `tryMap`, or their variants, always pass the error mapper. The compiler rejects the explicit type without it.
+4. Model error unions with a literal `code` discriminant (`{ code: 'not-found'; id: string }`), matching the library's own `ResultError.code` convention. Give error classes a distinguishing readonly member so `matchError().when(...)` chains can narrow structurally.
+5. Return `Result` for failures the caller must handle; keep throwing for programmer errors (broken invariants, assertions). Async functions return `Promise<Result<T, E>>`; there is no `AsyncResult` wrapper type.
+6. Verify generated code compiles. In this repository, `pnpm docs:check` also compile-checks every snippet in this skill's references; treat compile errors against the current API as the source of truth over any prose.
