@@ -33,16 +33,16 @@ Use `.whenTag(key, value, handler)` for tagged error unions.
 import { Result } from '@shirudo/result';
 
 type DomainError =
-    | { type: 'network'; retryAfter: number }
-    | { type: 'validation'; field: string };
+    | { code: 'network'; retryAfter: number }
+    | { code: 'validation'; field: string };
 
-const result = Result.err<DomainError>({ type: 'validation', field: 'email' });
+const result = Result.err<DomainError>({ code: 'validation', field: 'email' });
 
 if (result.isErr()) {
     const message = result
         .matchError()
-        .whenTag('type', 'network', error => `Retry in ${error.retryAfter}s`)
-        .whenTag('type', 'validation', error => `Invalid field: ${error.field}`)
+        .whenTag('code', 'network', error => `Retry in ${error.retryAfter}s`)
+        .whenTag('code', 'validation', error => `Invalid field: ${error.field}`)
         .run();
 }
 ```
@@ -53,12 +53,12 @@ For object-style exhaustive handling, use `matchTag(result, key, handlers)`.
 import { Result, matchTag } from '@shirudo/result';
 
 type DomainError =
-    | { type: 'network'; retryAfter: number }
-    | { type: 'validation'; field: string };
+    | { code: 'network'; retryAfter: number }
+    | { code: 'validation'; field: string };
 
-const result = Result.err<DomainError>({ type: 'network', retryAfter: 30 });
+const result = Result.err<DomainError>({ code: 'network', retryAfter: 30 });
 
-const message = matchTag(result, 'type', {
+const message = matchTag(result, 'code', {
     network: error => `Retry in ${error.retryAfter}s`,
     validation: error => `Invalid field: ${error.field}`,
 });

@@ -33,8 +33,8 @@ import { map, match } from '@shirudo/result/operators';
 
 type User = { id: string; email: string; active: boolean };
 type UserError =
-    | { type: 'not-found'; id: string }
-    | { type: 'inactive'; id: string };
+    | { code: 'not-found'; id: string }
+    | { code: 'inactive'; id: string };
 
 const users = new Map<string, User>([
     ['1', { id: '1', email: 'ada@example.com', active: true }],
@@ -42,8 +42,8 @@ const users = new Map<string, User>([
 
 function loadUser(id: string): Result<User, UserError> {
     const user = users.get(id);
-    if (!user) return err({ type: 'not-found', id });
-    if (!user.active) return err({ type: 'inactive', id });
+    if (!user) return err({ code: 'not-found', id });
+    if (!user.active) return err({ code: 'inactive', id });
     return ok(user);
 }
 
@@ -60,7 +60,7 @@ const message = loadUser('1').pipe(
     match({
         ok: greeting => greeting,
         err: error =>
-            error.type === 'not-found'
+            error.code === 'not-found'
                 ? `No user with id ${error.id}`
                 : `User ${error.id} is deactivated`,
     }),
@@ -93,14 +93,14 @@ import { Result } from '@shirudo/result';
 
 const parseJson = Result.fromThrowable(
     JSON.parse,
-    error => ({ type: 'parse' as const, cause: error }),
+    error => ({ code: 'parse' as const, cause: error }),
 );
 
 const parsed = parseJson('{"valid": true}');
 
 const response = await Result.fromPromise(
     Promise.resolve({ ok: true }),
-    error => ({ type: 'network' as const, cause: error }),
+    error => ({ code: 'network' as const, cause: error }),
 );
 ```
 
@@ -150,7 +150,7 @@ function findUser(id: string) {
 function ensureEmail(user: { id: string; email?: string }) {
     return user.email
         ? Result.ok(user.email)
-        : Result.err({ type: 'missing-email' as const, id: user.id });
+        : Result.err({ code: 'missing-email' as const, id: user.id });
 }
 
 const email = task(function* () {
@@ -165,12 +165,12 @@ const email = task(function* () {
 import { Result, matchTag } from '@shirudo/result';
 
 type DomainError =
-    | { type: 'network'; retryAfter: number }
-    | { type: 'validation'; field: string };
+    | { code: 'network'; retryAfter: number }
+    | { code: 'validation'; field: string };
 
-const failed = Result.err<DomainError>({ type: 'network', retryAfter: 30 });
+const failed = Result.err<DomainError>({ code: 'network', retryAfter: 30 });
 
-const message = matchTag(failed, 'type', {
+const message = matchTag(failed, 'code', {
     network: error => `Retry in ${error.retryAfter}s`,
     validation: error => `Invalid field: ${error.field}`,
 });

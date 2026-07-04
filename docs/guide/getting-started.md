@@ -44,12 +44,12 @@ const maybeUser: { id: string; name: string } | null = null;
 const parsed = Result.try(() => JSON.parse('{"valid": true}'));
 const safeParse = Result.fromThrowable(
     JSON.parse,
-    error => ({ type: 'parse', cause: error }),
+    error => ({ code: 'parse', cause: error }),
 );
 const user = Result.fromNullable(maybeUser, 'user not found');
 const response = await Result.fromPromise(
     fetch('/api/data'),
-    error => ({ type: 'network', cause: error }),
+    error => ({ code: 'network', cause: error }),
 );
 ```
 
@@ -59,8 +59,8 @@ Use typed domain errors for expected failures:
 
 ```ts
 type UserError =
-    | { type: 'not-found'; id: string }
-    | { type: 'inactive'; id: string };
+    | { code: 'not-found'; id: string }
+    | { code: 'inactive'; id: string };
 ```
 
 Use exceptions only for programmer mistakes, unsafe unwraps, invalid state, or boundaries where throwing APIs are required. The library's exported error classes are documented in [Error Classes](/api/errors).
