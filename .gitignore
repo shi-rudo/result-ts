@@ -56,11 +56,8 @@ Thumbs.db
 *.bak
 *.orig
 
-# AI helper files (the result-ts entry is a tracked symlink to skills/result-ts/)
-.agents/*
-!/.agents/skills/
-/.agents/skills/*
-!/.agents/skills/result-ts
+# AI helper files (local only; the distributable skill lives in skills/)
+.agents/
 .claude
 .codex
 .gemini
