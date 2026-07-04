@@ -1,5 +1,12 @@
 # Changelog
 
+## 1.1.1 - 2026-07-04
+
+### Changed
+
+- Documentation only, no code changes. The README was rewritten: the intro leads with the signature payoff, the Why sections argue the pattern and the library's guarantees, the Quick Start shows pipe composition instead of a switch block, error discriminants use `code` instead of `type` across all examples, an exhaustive `matchError` workflow example and a When Not to Use It section were added, and static version badges were removed.
+- CI actions were updated to their current majors (checkout v7, setup-node v6, codecov v7).
+
 ## 1.1.0 - 2026-07-04
 
 ### Added
