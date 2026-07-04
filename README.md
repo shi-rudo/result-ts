@@ -28,38 +28,41 @@ yarn add @shirudo/result
 ## Quick Start
 
 ```ts
-import { Result } from '@shirudo/result';
+import { err, ok, type Result } from '@shirudo/result';
+import { map, match } from '@shirudo/result/operators';
 
 type User = { id: string; email: string; active: boolean };
 type UserError =
     | { type: 'not-found'; id: string }
     | { type: 'inactive'; id: string };
 
-const users = new Map<string, User>([
-    ['1', { id: '1', email: 'ada@example.com', active: true }],
-]);
+declare const users: Map<string, User>;
 
 function loadUser(id: string): Result<User, UserError> {
     const user = users.get(id);
-    if (!user) return Result.err({ type: 'not-found', id });
-    if (!user.active) return Result.err({ type: 'inactive', id });
-    return Result.ok(user);
+    if (!user) return err({ type: 'not-found', id });
+    if (!user.active) return err({ type: 'inactive', id });
+    return ok(user);
 }
 
+// Narrow explicitly:
 const result = loadUser('1');
-
 if (result.isOk()) {
-    console.log(result.value.email);
-} else {
-    switch (result.error.type) {
-        case 'not-found':
-            console.error(`Missing user ${result.error.id}`);
-            break;
-        case 'inactive':
-            console.error(`Inactive user ${result.error.id}`);
-            break;
-    }
+    console.log(result.value.email); // `value` is only accessible in this branch
 }
+
+// Or compose and resolve in one expression. `map` only runs on Ok,
+// and the error keeps its type all the way to `match`:
+const message = loadUser('1').pipe(
+    map(user => `Welcome back, ${user.email}`),
+    match({
+        ok: greeting => greeting,
+        err: error =>
+            error.type === 'not-found'
+                ? `No user with id ${error.id}`
+                : `User ${error.id} is deactivated`,
+    }),
+);
 ```
 
 ## Why Result Instead of try/catch?
