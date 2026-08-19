@@ -316,13 +316,13 @@ const cached = Result.err<CacheMissError, number>(new CacheMissError())
 
 ## Serialization
 
-`toSerialized()` round-trips through `fromSerialized()`, including `Ok(undefined)`. The older `serialize()` is deprecated because its format cannot round-trip.
+`toSerialized()` returns the plain discriminated shape `ResultType<T, E>`, the same thing `JSON.stringify(result)` produces, and it keeps `Ok(undefined)` unambiguous. Rebuild with `ok`/`err` after validating foreign payloads. The older `serialize()` is deprecated because its format cannot round-trip.
 
 ```typescript
-import { ok, fromSerialized } from '@shirudo/result';
+import { ok, err } from '@shirudo/result';
 
 const wire = ok(42).toSerialized();       // { _tag: 'Ok', value: 42 }
-const restored = fromSerialized(wire);    // a real Result instance again
+const restored = wire._tag === 'Ok' ? ok(wire.value) : err(wire.error);
 console.log(restored.unwrapOr(0));        // 42
 
 const friendly = ok(42).toUserFriendly(); // { isSuccess: true, data: 42 }
@@ -350,7 +350,8 @@ Codes: `ERR_UNWRAP_ON_ERR`, `ERR_UNWRAP_ERR_ON_OK`, `ERR_EXPECT_OK`, `ERR_EXPECT
 
 ## Deprecated
 
-- `serialize()`: use `toSerialized()`/`fromSerialized()`.
+- `serialize()`: use `toSerialized()`.
+- `fromSerialized(data)`: validate the payload yourself, then `data._tag === 'Ok' ? ok(data.value) : err(data.error)`.
 - `unwrapOrDefault(result, value)`: alias of `unwrapOr` with a misleading name.
 - `ERR_INVALID_STATE`: use `ERR_INVALID_RESULT_STATE`.
 - Instance `match()`: use `matchError()` (Err-only builder) or the `match({ ok, err })` pipe operator.

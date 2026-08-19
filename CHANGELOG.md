@@ -1,5 +1,16 @@
 # Changelog
 
+## 1.2.0 - 2026-08-19
+
+### Deprecated
+
+- `fromSerialized()` is deprecated and will be removed in 2.0. It validates only the envelope (`_tag` plus the presence of `value`/`error`) while its type parameters claim `T` and `E` for whatever `JSON.parse` returned, the same kind of unverified type claim that 1.1.0 removed from `fromPromise<T, MyError>(promise)`; and it throws `InvalidResultStateError` for malformed input at exactly the boundary where a Result should be returned. Validate foreign payloads with your schema tool and rebuild with `parsed._tag === 'Ok' ? ok(parsed.value) : err(parsed.error)`; the shape is exported as `ResultType<T, E>`.
+
+### Changed
+
+- `toSerialized()` documentation no longer promises a `fromSerialized()` round-trip; it describes the plain discriminated `ResultType<T, E>` shape (identical to `JSON.stringify(result)`) and the `ok`/`err` rebuild. The `serialize()` deprecation notice points to `toSerialized()` alone. README, the API reference, and the agent skill were updated accordingly, and the skill's boundary example now validates the payload instead of asserting its type.
+- `toSerialized()` is now tested on its own in `result.test.ts` (shape, `Ok(undefined)`, `JSON.stringify` equivalence, JSON round-trip via `ok`/`err`, malformed state) instead of only through the `fromSerialized()` tests.
+
 ## 1.1.1 - 2026-07-04
 
 ### Changed
