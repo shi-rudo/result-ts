@@ -94,4 +94,40 @@ describe('collectFirstOkParallelAsync', () => {
 
         await expect(collectFirstOkParallelAsync([malformed])).rejects.toBeInstanceOf(InvalidResultStateError);
     });
+
+    it('collects the raw rejection reason without errorMapper', async () => {
+        const result = await collectFirstOkParallelAsync([
+            Promise.reject('promise error'),
+            Promise.resolve(err('error2')),
+        ] as const);
+
+        expect(result.isErr()).toBe(true);
+        if (result.isErr()) {
+            expect(result.error).toEqual(['promise error', 'error2']);
+        }
+    });
+
+    it('maps rejection reasons through errorMapper and leaves Err values untouched', async () => {
+        const result = await collectFirstOkParallelAsync(
+            [
+                Promise.resolve(err('error1')),
+                Promise.reject(new Error('down')),
+                Promise.resolve(err('error3')),
+            ] as const,
+            reason => `rejected: ${(reason as Error).message}`,
+        );
+
+        expect(result.isErr()).toBe(true);
+        if (result.isErr()) {
+            expect(result.error).toEqual(['error1', 'rejected: down', 'error3']);
+        }
+    });
+
+    it('rethrows errorMapper failures as programmer errors', async () => {
+        const bug = new Error('mapper bug');
+
+        await expect(
+            collectFirstOkParallelAsync([Promise.reject('promise error')] as const, () => { throw bug; }),
+        ).rejects.toBe(bug);
+    });
 });

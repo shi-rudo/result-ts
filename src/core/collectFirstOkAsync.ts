@@ -17,11 +17,26 @@ type ErrValueOfInput<I> = ResolvedResult<I> extends Result<any, infer E> ? E : n
  * - Takes either already started Promises or "Thunks" (`() => Awaitable<Result<...>>`).
  * - Processes inputs strictly sequentially (like `for ... of` + `await`).
  * - Returns the first `Ok` and collects all errors if no `Ok` is found.
+ * - A rejected input counts as a failed attempt. Without `errorMapper` the
+ *   collected errors are `unknown[]`, because a rejection reason can be
+ *   anything. `errorMapper` turns each rejection reason into a typed error;
+ *   `Err` values pass through untouched, and bugs inside the mapper are rethrown.
  */
-export async function collectFirstOkAsync<const Inputs extends readonly CollectFirstOkAsyncInput[]>(
+export function collectFirstOkAsync<const Inputs extends readonly CollectFirstOkAsyncInput[]>(
     inputs: Inputs
-): Promise<Result<OkValueOfInput<Inputs[number]>, ErrValueOfInput<Inputs[number]>[]>> {
-    const errors: Array<ErrValueOfInput<Inputs[number]>> = [];
+): Promise<Result<OkValueOfInput<Inputs[number]>, unknown[]>>;
+export function collectFirstOkAsync<const Inputs extends readonly CollectFirstOkAsyncInput[], F>(
+    inputs: Inputs,
+    errorMapper: (error: unknown) => F
+): Promise<Result<OkValueOfInput<Inputs[number]>, Array<ErrValueOfInput<Inputs[number]> | F>>>;
+export async function collectFirstOkAsync<const Inputs extends readonly CollectFirstOkAsyncInput[], F>(
+    inputs: Inputs,
+    errorMapper?: (error: unknown) => F
+): Promise<Result<OkValueOfInput<Inputs[number]>, Array<ErrValueOfInput<Inputs[number]> | F>>> {
+    type OkValue = OkValueOfInput<Inputs[number]>;
+    type ErrValue = ErrValueOfInput<Inputs[number]> | F;
+
+    const errors: ErrValue[] = [];
 
     for (const input of inputs) {
         const pendingResult = typeof input === 'function' ? input() : input;
@@ -29,21 +44,19 @@ export async function collectFirstOkAsync<const Inputs extends readonly CollectF
         try {
             result = await pendingResult;
         } catch (error) {
-            errors.push(error as ErrValueOfInput<Inputs[number]>);
+            errors.push(errorMapper ? errorMapper(error) : (error as F));
             continue;
         }
 
         if (result.isOk()) {
-            return ok<OkValueOfInput<Inputs[number]>, ErrValueOfInput<Inputs[number]>[]>(
-                result.value as OkValueOfInput<Inputs[number]>
-            );
+            return ok<OkValue, ErrValue[]>(result.value as OkValue);
         }
         if (result.isErr()) {
-            errors.push(result.error as ErrValueOfInput<Inputs[number]>);
+            errors.push(result.error as ErrValue);
             continue;
         }
         throw new InvalidResultStateError('collectFirstOkAsync');
     }
 
-    return err<ErrValueOfInput<Inputs[number]>[], OkValueOfInput<Inputs[number]>>(errors);
+    return err<ErrValue[], OkValue>(errors);
 }

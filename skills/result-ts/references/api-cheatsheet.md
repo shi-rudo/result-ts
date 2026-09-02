@@ -196,7 +196,7 @@ const firstOk = collectFirstOk([err<string, number>('a'), ok<number, string>(2)]
 const [oks, errs] = partition([ok<number, string>(1), err<string, number>('e')]);
 ```
 
-Async variants take promises or thunks: `collectFirstOkAsync` runs them sequentially, `collectFirstOkParallelAsync` starts all and resolves with the first `Ok`.
+Async variants take promises or thunks: `collectFirstOkAsync` runs them sequentially, `collectFirstOkParallelAsync` starts all and resolves with the first `Ok`. A rejected input counts as a failed attempt. Without `errorMapper` the error array is `unknown[]`, because a rejection reason can be anything; pass `errorMapper` to keep the error array typed.
 
 ```typescript
 import { ok, err, collectFirstOkAsync, collectFirstOkParallelAsync } from '@shirudo/result';
@@ -204,12 +204,17 @@ import { ok, err, collectFirstOkAsync, collectFirstOkParallelAsync } from '@shir
 const sequential = await collectFirstOkAsync([
   () => Promise.resolve(err<'a', number>('a')),
   () => Promise.resolve(ok<number, 'b'>(2)),
-]); // Ok(2); thunks after the first Ok are never started
+]); // Ok(2); thunks after the first Ok are never started; Err type is unknown[]
 
 const parallel = await collectFirstOkParallelAsync([
   Promise.resolve(err<'a', number>('a')),
   Promise.resolve(ok<number, 'b'>(2)),
 ]); // Ok(2); all inputs start immediately
+
+const typed = await collectFirstOkAsync(
+  [() => Promise.resolve(err<'a', number>('a')), () => Promise.reject(new Error('down'))],
+  reason => ({ code: 'rejected' as const, reason }),
+); // Err(['a', { code: 'rejected', reason: Error }]); Err type is Array<'a' | { code: 'rejected'; reason: unknown }>
 ```
 
 ## Async Composition

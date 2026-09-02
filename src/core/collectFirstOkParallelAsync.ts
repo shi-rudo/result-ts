@@ -15,16 +15,27 @@ type ErrValueOfInput<I> = ResolvedResult<I> extends Result<any, infer E> ? E : n
  * - Starts all inputs immediately (Promises or Thunks).
  * - Returns the first `Ok` as soon as it is available.
  * - If no `Ok` is found, returns an `Err` with all error values (in input order).
- * - Rejections are treated as `ErrValue` (`caught as ErrValue`).
+ * - A rejected input counts as a failed attempt. Without `errorMapper` the
+ *   collected errors are `unknown[]`, because a rejection reason can be
+ *   anything. `errorMapper` turns each rejection reason into a typed error;
+ *   `Err` values pass through untouched, and bugs inside the mapper are rethrown.
  * - If multiple inputs provide an `Ok`, the one that completes first wins.
  *   In case of simultaneous completion, the first observed result wins.
  * - If no `Ok` arrives and at least one input never settles, the Promise remains pending.
  */
-export async function collectFirstOkParallelAsync<const Inputs extends readonly CollectFirstOkAsyncInput[]>(
+export function collectFirstOkParallelAsync<const Inputs extends readonly CollectFirstOkAsyncInput[]>(
     inputs: Inputs
-): Promise<Result<OkValueOfInput<Inputs[number]>, ErrValueOfInput<Inputs[number]>[]>> {
+): Promise<Result<OkValueOfInput<Inputs[number]>, unknown[]>>;
+export function collectFirstOkParallelAsync<const Inputs extends readonly CollectFirstOkAsyncInput[], F>(
+    inputs: Inputs,
+    errorMapper: (error: unknown) => F
+): Promise<Result<OkValueOfInput<Inputs[number]>, Array<ErrValueOfInput<Inputs[number]> | F>>>;
+export async function collectFirstOkParallelAsync<const Inputs extends readonly CollectFirstOkAsyncInput[], F>(
+    inputs: Inputs,
+    errorMapper?: (error: unknown) => F
+): Promise<Result<OkValueOfInput<Inputs[number]>, Array<ErrValueOfInput<Inputs[number]> | F>>> {
     type OkValue = OkValueOfInput<Inputs[number]>;
-    type ErrValue = ErrValueOfInput<Inputs[number]>;
+    type ErrValue = ErrValueOfInput<Inputs[number]> | F;
 
     if (inputs.length === 0) {
         return err<ErrValue[], OkValue>([]);
@@ -59,7 +70,7 @@ export async function collectFirstOkParallelAsync<const Inputs extends readonly 
                     throw new InvalidResultStateError('collectFirstOkParallelAsync');
                 }
             } else {
-                errors.push(entry.reason as ErrValue);
+                errors.push(errorMapper ? errorMapper(entry.reason) : (entry.reason as F));
             }
         }
         return err<ErrValue[], OkValue>(errors);

@@ -66,8 +66,23 @@ const collectedFirstOkAsync = collectFirstOkAsync([
     async () => ok<string, 'string-error'>('a'),
 ] as const);
 
-type CollectFirstOkAsyncUnionsOkValuesAndErrorArray = Expect<
-    Equal<typeof collectedFirstOkAsync, Promise<Result<number | string, Array<'number-error' | 'string-error'>>>>
+type CollectFirstOkAsyncWithoutMapperCollectsUnknownErrors = Expect<
+    Equal<typeof collectedFirstOkAsync, Promise<Result<number | string, unknown[]>>>
+>;
+
+const collectedFirstOkAsyncMapped = collectFirstOkAsync(
+    [
+        Promise.resolve(err<'number-error', number>('number-error')),
+        async () => ok<string, 'string-error'>('a'),
+    ] as const,
+    reason => ({ rejected: reason }),
+);
+
+type CollectFirstOkAsyncWithMapperUnionsErrValuesAndMappedRejections = Expect<
+    Equal<
+        typeof collectedFirstOkAsyncMapped,
+        Promise<Result<number | string, Array<'number-error' | 'string-error' | { rejected: unknown }>>>
+    >
 >;
 
 const collectedFirstOkParallelAsync = collectFirstOkParallelAsync([
@@ -75,6 +90,21 @@ const collectedFirstOkParallelAsync = collectFirstOkParallelAsync([
     () => ok<string, 'string-error'>('a'),
 ] as const);
 
-type CollectFirstOkParallelAsyncUnionsOkValuesAndErrorArray = Expect<
-    Equal<typeof collectedFirstOkParallelAsync, Promise<Result<number | string, Array<'number-error' | 'string-error'>>>>
+type CollectFirstOkParallelAsyncWithoutMapperCollectsUnknownErrors = Expect<
+    Equal<typeof collectedFirstOkParallelAsync, Promise<Result<number | string, unknown[]>>>
+>;
+
+const collectedFirstOkParallelAsyncMapped = collectFirstOkParallelAsync(
+    [
+        Promise.resolve(err<'number-error', number>('number-error')),
+        () => ok<string, 'string-error'>('a'),
+    ] as const,
+    reason => ({ rejected: reason }),
+);
+
+type CollectFirstOkParallelAsyncWithMapperUnionsErrValuesAndMappedRejections = Expect<
+    Equal<
+        typeof collectedFirstOkParallelAsyncMapped,
+        Promise<Result<number | string, Array<'number-error' | 'string-error' | { rejected: unknown }>>>
+    >
 >;

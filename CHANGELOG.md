@@ -10,6 +10,7 @@
 
 - `toSerialized()` documentation no longer promises a `fromSerialized()` round-trip; it describes the plain discriminated `ResultType<T, E>` shape (identical to `JSON.stringify(result)`) and the `ok`/`err` rebuild. The `serialize()` deprecation notice points to `toSerialized()` alone. README, the API reference, and the agent skill were updated accordingly, and the skill's boundary example now validates the payload instead of asserting its type.
 - `toSerialized()` is now tested on its own in `result.test.ts` (shape, `Ok(undefined)`, `JSON.stringify` equivalence, JSON round-trip via `ok`/`err`, malformed state) instead of only through the `fromSerialized()` tests.
+- `collectFirstOkAsync()` and `collectFirstOkParallelAsync()` now type the collected errors honestly and accept an optional `errorMapper`. Both collect a rejected input as a failed attempt, but they pushed the raw rejection reason into an array typed as the inputs' `E`, so `E[]` could hold an unmapped `unknown` at runtime. Without `errorMapper` the error array is now `unknown[]`; with `errorMapper: (error: unknown) => F` it is `Array<E | F>`, `Err` values pass through untouched, and bugs inside the mapper are rethrown, the same contract as `fromPromise` and `tryAsync`. Callers that relied on the old `E[]` type without a mapper must add one.
 
 ### Fixed
 
