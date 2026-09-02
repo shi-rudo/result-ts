@@ -235,7 +235,7 @@ const message = await ok<number, string>(1).pipeAsync(
 
 ## Do-Notation with `task`
 
-`yield*` unwraps `Ok` values and short-circuits on the first `Err`. Works with sync and async generators; `finally` blocks run before the short-circuit returns. The optional second argument maps thrown exceptions to a typed `Err`.
+`yield*` unwraps `Ok` values and short-circuits on the first `Err`. Works with sync and async generators; `finally` blocks run before the short-circuit returns, and `yield*` inside them follows the same protocol (an `Err` yielded there replaces the pending `Err`, as a `throw` inside `finally` would). The optional second argument maps thrown exceptions to a typed `Err`.
 
 ```typescript
 import { err, task, type Result } from '@shirudo/result';

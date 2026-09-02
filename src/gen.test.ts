@@ -647,3 +647,130 @@ describe('task() cleanup edge cases (result-ts-c55, result-ts-157)', () => {
         expect(log).toEqual(['before yield', 'after yield']);
     });
 });
+
+describe('task() yield protocol inside finally blocks (result-ts-46w)', () => {
+    it('sends the Ok value back to a yield* inside finally on Err short-circuit', async () => {
+        const log: string[] = [];
+
+        const out = await task(function* () {
+            try {
+                yield* err('first');
+                return 1;
+            } finally {
+                const conn = yield* ok({ close: () => log.push('closed') });
+                conn.close();
+            }
+        });
+
+        expect(out.isErr()).toBe(true);
+        if (out.isErr()) expect(out.error).toBe('first');
+        expect(log).toEqual(['closed']);
+    });
+
+    it('sends the Ok value back to a yield* inside an async finally on Err short-circuit', async () => {
+        const log: string[] = [];
+
+        const out = await task(async function* () {
+            try {
+                yield* err('first');
+                return 1;
+            } finally {
+                const conn = yield* ok({ close: () => log.push('closed') });
+                conn.close();
+            }
+        });
+
+        expect(out.isErr()).toBe(true);
+        if (out.isErr()) expect(out.error).toBe('first');
+        expect(log).toEqual(['closed']);
+    });
+
+    it('keeps the original Err when a yield* inside finally succeeds, also with onThrow', async () => {
+        const out = await task(
+            function* () {
+                try {
+                    yield* err('first');
+                    return 1;
+                } finally {
+                    const conn = yield* ok({ close: () => undefined });
+                    conn.close();
+                }
+            },
+            error => ({ mapped: String(error) })
+        );
+
+        expect(out.isErr()).toBe(true);
+        if (out.isErr()) expect(out.error).toBe('first');
+    });
+
+    it('an Err yielded inside finally replaces the pending Err and skips the rest of that finally', async () => {
+        const log: string[] = [];
+
+        const out = await task(function* () {
+            try {
+                yield* err('first');
+                return 1;
+            } finally {
+                yield* err('second');
+                log.push('after second');
+            }
+        });
+
+        expect(out.isErr()).toBe(true);
+        if (out.isErr()) expect(out.error).toBe('second');
+        expect(log).toEqual([]);
+    });
+
+    it('an Err yielded inside an inner finally still runs the outer finally', async () => {
+        const log: string[] = [];
+
+        const out = await task(function* () {
+            try {
+                try {
+                    yield* err('first');
+                    return 1;
+                } finally {
+                    yield* err('second');
+                }
+            } finally {
+                log.push('outer finally');
+            }
+        });
+
+        expect(out.isErr()).toBe(true);
+        if (out.isErr()) expect(out.error).toBe('second');
+        expect(log).toEqual(['outer finally']);
+    });
+
+    it('sends the Ok value back to a yield* inside finally on the yield-not-a-Result path', async () => {
+        const log: string[] = [];
+
+        await expect(task(function* () {
+            try {
+                yield 42 as never;
+            } finally {
+                const value = yield* ok('cleanup value');
+                log.push(value);
+            }
+        })).rejects.toBeInstanceOf(TaskYieldNotResultError);
+        expect(log).toEqual(['cleanup value']);
+    });
+
+    it('a non-Result yielded inside finally throws TaskYieldNotResultError after the outer finally', async () => {
+        const log: string[] = [];
+
+        await expect(task(function* () {
+            try {
+                try {
+                    yield* err('first');
+                    return 1;
+                } finally {
+                    yield 42 as never;
+                }
+            } finally {
+                log.push('outer finally');
+            }
+        })).rejects.toBeInstanceOf(TaskYieldNotResultError);
+        expect(log).toEqual(['outer finally']);
+    });
+});

@@ -11,6 +11,10 @@
 - `toSerialized()` documentation no longer promises a `fromSerialized()` round-trip; it describes the plain discriminated `ResultType<T, E>` shape (identical to `JSON.stringify(result)`) and the `ok`/`err` rebuild. The `serialize()` deprecation notice points to `toSerialized()` alone. README, the API reference, and the agent skill were updated accordingly, and the skill's boundary example now validates the payload instead of asserting its type.
 - `toSerialized()` is now tested on its own in `result.test.ts` (shape, `Ok(undefined)`, `JSON.stringify` equivalence, JSON round-trip via `ok`/`err`, malformed state) instead of only through the `fromSerialized()` tests.
 
+### Fixed
+
+- `task()` now applies the yield protocol inside `finally` blocks that run during an `Err` short-circuit or before a `TaskYieldNotResultError`: `yield*` on an `Ok` receives the Ok value, an `Err` yielded there replaces the pending `Err` (as a `throw` inside `finally` replaces a pending exception) and skips the rest of that block while outer `finally` blocks still run, and a plain value yielded there throws `TaskYieldNotResultError`. Previously the cleanup was resumed with `undefined`, so `const conn = yield* ok(resource)` in a `finally` block produced a `TypeError` that hid the original `Err`, and an `Err` yielded during cleanup was silently dropped.
+
 ## 1.1.1 - 2026-07-04
 
 ### Changed
