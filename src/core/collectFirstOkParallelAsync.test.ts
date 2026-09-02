@@ -95,6 +95,39 @@ describe('collectFirstOkParallelAsync', () => {
         await expect(collectFirstOkParallelAsync([malformed])).rejects.toBeInstanceOf(InvalidResultStateError);
     });
 
+    it('rejects with InvalidResultStateError when a non-Result input is observed before any Ok', async () => {
+        const notAResult = Promise.resolve(undefined) as unknown as Promise<Result<number, string>>;
+
+        await expect(
+            collectFirstOkParallelAsync([notAResult, Promise.resolve(ok(1))] as const),
+        ).rejects.toBeInstanceOf(InvalidResultStateError);
+    });
+
+    it('rejects with InvalidResultStateError when a non-Result input arrives and no Ok wins', async () => {
+        const notAResult = Promise.resolve(undefined) as unknown as Promise<Result<number, string>>;
+
+        await expect(
+            collectFirstOkParallelAsync([notAResult, Promise.resolve(err('error1'))] as const),
+        ).rejects.toBeInstanceOf(InvalidResultStateError);
+    });
+
+    it('keeps an Ok that won before a non-Result input was observed, without an unhandled rejection', async () => {
+        const notAResult = Promise.resolve(undefined) as unknown as Promise<Result<number, string>>;
+        const unhandled = vi.fn();
+        process.once('unhandledRejection', unhandled);
+
+        const result = await collectFirstOkParallelAsync([Promise.resolve(ok(1)), notAResult] as const);
+
+        expect(result.isOk()).toBe(true);
+        if (result.isOk()) {
+            expect(result.value).toBe(1);
+        }
+
+        await new Promise(resolve => setTimeout(resolve, 0));
+        process.removeListener('unhandledRejection', unhandled);
+        expect(unhandled).not.toHaveBeenCalled();
+    });
+
     it('collects the raw rejection reason without errorMapper', async () => {
         const result = await collectFirstOkParallelAsync([
             Promise.reject('promise error'),

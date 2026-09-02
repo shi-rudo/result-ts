@@ -1,6 +1,7 @@
 import type { Result } from './result';
 import { ok, err } from './result';
 import type { Awaitable } from './pipeable';
+import { isResult } from './isResult';
 import { InvalidResultStateError } from '../errors';
 
 type CollectFirstOkAsyncInput =
@@ -19,6 +20,8 @@ type ErrValueOfInput<I> = ResolvedResult<I> extends Result<any, infer E> ? E : n
  *   with that exception.
  * - Processes inputs strictly sequentially (like `for ... of` + `await`).
  * - Returns the first `Ok` and collects all errors if no `Ok` is found.
+ * - A fulfilled value that is not a `Result` is a programmer error: the call
+ *   rejects with `InvalidResultStateError`.
  * - A rejected input counts as a failed attempt. Without `errorMapper` the
  *   collected errors are `unknown[]`, because a rejection reason can be
  *   anything. `errorMapper` turns each rejection reason into a typed error;
@@ -42,7 +45,7 @@ export async function collectFirstOkAsync<const Inputs extends readonly CollectF
 
     for (const input of inputs) {
         const pendingResult = typeof input === 'function' ? input() : input;
-        let result: Result<any, any>;
+        let result: unknown;
         try {
             result = await pendingResult;
         } catch (error) {
@@ -50,12 +53,14 @@ export async function collectFirstOkAsync<const Inputs extends readonly CollectF
             continue;
         }
 
-        if (result.isOk()) {
-            return ok<OkValue, ErrValue[]>(result.value as OkValue);
-        }
-        if (result.isErr()) {
-            errors.push(result.error as ErrValue);
-            continue;
+        if (isResult(result)) {
+            if (result.isOk()) {
+                return ok<OkValue, ErrValue[]>(result.value as OkValue);
+            }
+            if (result.isErr()) {
+                errors.push(result.error as ErrValue);
+                continue;
+            }
         }
         throw new InvalidResultStateError('collectFirstOkAsync');
     }

@@ -81,6 +81,14 @@ describe('collectFirstOkAsync', () => {
         await expect(collectFirstOkAsync([malformed])).rejects.toBeInstanceOf(InvalidResultStateError);
     });
 
+    it('rejects with InvalidResultStateError when an input fulfils with a non-Result', async () => {
+        const notAResult = Promise.resolve(undefined) as unknown as Promise<Result<number, string>>;
+
+        await expect(collectFirstOkAsync([notAResult, Promise.resolve(ok(1))])).rejects.toBeInstanceOf(
+            InvalidResultStateError
+        );
+    });
+
     it('rethrows synchronous thunk errors as programmer errors', async () => {
         const bug = new Error('bug');
         const throwingThunk = () => {

@@ -1,6 +1,7 @@
 import type { Awaitable } from './pipeable';
 import type { Result } from './result';
 import { err, ok } from './result';
+import { isResult } from './isResult';
 import { InvalidResultStateError } from '../errors';
 
 type CollectFirstOkAsyncInput = Promise<Result<any, any>> | (() => Awaitable<Result<any, any>>);
@@ -17,6 +18,8 @@ type ErrValueOfInput<I> = ResolvedResult<I> extends Result<any, infer E> ? E : n
  *   as `collectFirstOkAsync` does.
  * - Returns the first `Ok` as soon as it is available.
  * - If no `Ok` is found, returns an `Err` with all error values (in input order).
+ * - A fulfilled value that is not a `Result` is a programmer error: the call
+ *   rejects with `InvalidResultStateError`, unless an `Ok` already won the race.
  * - A rejected input counts as a failed attempt. Without `errorMapper` the
  *   collected errors are `unknown[]`, because a rejection reason can be
  *   anything. `errorMapper` turns each rejection reason into a typed error;
@@ -45,7 +48,7 @@ export async function collectFirstOkParallelAsync<const Inputs extends readonly 
 
     // Discarding the outcomes of the attempts that already started keeps an
     // abandoned rejection from surfacing as an unhandled rejection.
-    const started: Promise<Result<any, any>>[] = [];
+    const started: Promise<unknown>[] = [];
     try {
         for (const input of inputs) {
             started.push(typeof input === 'function' ? Promise.resolve(input()) : input);
@@ -55,33 +58,39 @@ export async function collectFirstOkParallelAsync<const Inputs extends readonly 
         throw bug;
     }
 
-    const firstOk = new Promise<Result<OkValue, ErrValue[]>>((resolve) => {
+    const firstOk = new Promise<Result<OkValue, ErrValue[]>>((resolve, reject) => {
         for (const promise of started) {
-            promise
-                .then((result) => {
-                    if (result.isOk()) {
-                        resolve(ok<OkValue, ErrValue[]>(result.value as OkValue));
+            promise.then(
+                (value) => {
+                    if (!isResult(value)) {
+                        reject(new InvalidResultStateError('collectFirstOkParallelAsync'));
+                    } else if (value.isOk()) {
+                        resolve(ok<OkValue, ErrValue[]>(value.value as OkValue));
                     }
-                })
-                .catch(() => {
-                    // Ignored here; handled in allSettled below.
-                });
+                },
+                () => {
+                    // A rejection is a failed attempt; allSettled below collects it.
+                }
+            );
         }
     });
 
     const allErrors = Promise.allSettled(started).then((settled) => {
         const errors: ErrValue[] = [];
         for (const entry of settled) {
-            if (entry.status === 'fulfilled') {
-                const result = entry.value;
+            if (entry.status === 'rejected') {
+                errors.push(errorMapper ? errorMapper(entry.reason) : (entry.reason as F));
+                continue;
+            }
+            const result = entry.value;
+            if (isResult(result)) {
                 if (result.isErr()) {
                     errors.push(result.error as ErrValue);
-                } else if (!result.isOk()) {
-                    throw new InvalidResultStateError('collectFirstOkParallelAsync');
+                    continue;
                 }
-            } else {
-                errors.push(errorMapper ? errorMapper(entry.reason) : (entry.reason as F));
+                if (result.isOk()) continue;
             }
+            throw new InvalidResultStateError('collectFirstOkParallelAsync');
         }
         return err<ErrValue[], OkValue>(errors);
     });
