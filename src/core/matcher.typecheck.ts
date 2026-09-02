@@ -1,4 +1,13 @@
-import { err, matchTag, ok, type Result } from '../index';
+import {
+    err,
+    matchTag,
+    ok,
+    type AsyncErrMatchBuilder,
+    type AsyncErrorMatchBuilder,
+    type ErrMatchBuilder,
+    type ErrorMatchBuilder,
+    type Result,
+} from '../index';
 
 type Equal<A, B> =
     (<T>() => T extends A ? 1 : 2) extends
@@ -139,3 +148,24 @@ type MatchErrAsyncWhenTagPreservesResultTypes = Expect<
 
 // @ts-expect-error matchErrAsync handlers must return Result explicitly.
 tagged.matchErrAsync().whenTag('type', 'network', async error => error.retryAfter);
+
+const errorBuilder = result.matchError();
+const asyncErrorBuilder = result.matchErrorAsync();
+const errBuilder = result.matchErr();
+const asyncErrBuilder = result.matchErrAsync();
+
+type MatchErrorReturnsTheExportedBuilder = Expect<
+    Equal<typeof errorBuilder, ErrorMatchBuilder<NetworkError | ValidationError, never>>
+>;
+
+type MatchErrorAsyncReturnsTheExportedBuilder = Expect<
+    Equal<typeof asyncErrorBuilder, AsyncErrorMatchBuilder<NetworkError | ValidationError, never>>
+>;
+
+type MatchErrReturnsTheExportedBuilder = Expect<
+    Equal<typeof errBuilder, ErrMatchBuilder<number, NetworkError | ValidationError, never, never>>
+>;
+
+type MatchErrAsyncReturnsTheExportedBuilder = Expect<
+    Equal<typeof asyncErrBuilder, AsyncErrMatchBuilder<number, NetworkError | ValidationError, never, never>>
+>;
