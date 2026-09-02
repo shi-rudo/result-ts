@@ -196,7 +196,7 @@ const firstOk = collectFirstOk([err<string, number>('a'), ok<number, string>(2)]
 const [oks, errs] = partition([ok<number, string>(1), err<string, number>('e')]);
 ```
 
-Async variants take promises or thunks: `collectFirstOkAsync` runs them sequentially, `collectFirstOkParallelAsync` starts all and resolves with the first `Ok`. A rejected input counts as a failed attempt. Without `errorMapper` the error array is `unknown[]`, because a rejection reason can be anything; pass `errorMapper` to keep the error array typed.
+Async variants take promises or thunks: `collectFirstOkAsync` runs them sequentially, `collectFirstOkParallelAsync` starts all and resolves with the first `Ok`. A thunk that throws synchronously is a programmer error and rejects the call. A rejected input counts as a failed attempt. Without `errorMapper` the error array is `unknown[]`, because a rejection reason can be anything; pass `errorMapper` to keep the error array typed.
 
 ```typescript
 import { ok, err, collectFirstOkAsync, collectFirstOkParallelAsync } from '@shirudo/result';

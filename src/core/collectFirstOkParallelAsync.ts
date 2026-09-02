@@ -12,7 +12,9 @@ type ErrValueOfInput<I> = ResolvedResult<I> extends Result<any, infer E> ? E : n
 /**
  * Parallel version of `collectFirstOkAsync`.
  *
- * - Starts all inputs immediately (Promises or Thunks).
+ * - Starts all inputs immediately (Promises or Thunks). A thunk that throws
+ *   synchronously is a programmer error: the call rejects with that exception,
+ *   as `collectFirstOkAsync` does.
  * - Returns the first `Ok` as soon as it is available.
  * - If no `Ok` is found, returns an `Err` with all error values (in input order).
  * - A rejected input counts as a failed attempt. Without `errorMapper` the
@@ -41,9 +43,17 @@ export async function collectFirstOkParallelAsync<const Inputs extends readonly 
         return err<ErrValue[], OkValue>([]);
     }
 
-    const started = inputs.map((input) =>
-        typeof input === 'function' ? Promise.resolve().then(input) : input
-    );
+    // Discarding the outcomes of the attempts that already started keeps an
+    // abandoned rejection from surfacing as an unhandled rejection.
+    const started: Promise<Result<any, any>>[] = [];
+    try {
+        for (const input of inputs) {
+            started.push(typeof input === 'function' ? Promise.resolve(input()) : input);
+        }
+    } catch (bug) {
+        for (const promise of started) promise.catch(() => {});
+        throw bug;
+    }
 
     const firstOk = new Promise<Result<OkValue, ErrValue[]>>((resolve) => {
         for (const promise of started) {

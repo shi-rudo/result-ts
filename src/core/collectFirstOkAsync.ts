@@ -15,6 +15,8 @@ type ErrValueOfInput<I> = ResolvedResult<I> extends Result<any, infer E> ? E : n
  * Async version of collectFirstOk.
  *
  * - Takes either already started Promises or "Thunks" (`() => Awaitable<Result<...>>`).
+ *   A thunk that throws synchronously is a programmer error: the call rejects
+ *   with that exception.
  * - Processes inputs strictly sequentially (like `for ... of` + `await`).
  * - Returns the first `Ok` and collects all errors if no `Ok` is found.
  * - A rejected input counts as a failed attempt. Without `errorMapper` the

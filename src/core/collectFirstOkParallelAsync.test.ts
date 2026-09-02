@@ -1,4 +1,4 @@
-import { describe, expect, it } from 'vitest';
+import { describe, expect, it, vi } from 'vitest';
 
 import type { Result } from './result';
 import { err, ok } from './result';
@@ -129,5 +129,41 @@ describe('collectFirstOkParallelAsync', () => {
         await expect(
             collectFirstOkParallelAsync([Promise.reject('promise error')] as const, () => { throw bug; }),
         ).rejects.toBe(bug);
+    });
+
+    it('rethrows synchronous thunk errors as programmer errors', async () => {
+        const bug = new Error('bug');
+        const throwingThunk = () => {
+            throw bug;
+        };
+
+        await expect(collectFirstOkParallelAsync([throwingThunk])).rejects.toBe(bug);
+    });
+
+    it('rethrows a synchronous thunk error even when another input yields Ok', async () => {
+        const bug = new Error('bug');
+        const throwingThunk = () => {
+            throw bug;
+        };
+
+        await expect(
+            collectFirstOkParallelAsync([throwingThunk, () => Promise.resolve(ok(1))] as const),
+        ).rejects.toBe(bug);
+    });
+
+    it('abandons already started attempts without an unhandled rejection when a later thunk throws', async () => {
+        const bug = new Error('bug');
+        const late = deferred<Result<number, string>>();
+        const unhandled = vi.fn();
+        process.once('unhandledRejection', unhandled);
+
+        await expect(
+            collectFirstOkParallelAsync([() => late.promise, () => { throw bug; }] as const),
+        ).rejects.toBe(bug);
+        late.reject('late rejection');
+
+        await new Promise(resolve => setTimeout(resolve, 0));
+        process.removeListener('unhandledRejection', unhandled);
+        expect(unhandled).not.toHaveBeenCalled();
     });
 });
