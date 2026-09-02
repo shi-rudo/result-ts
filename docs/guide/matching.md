@@ -25,6 +25,51 @@ if (result.isErr()) {
 
 `.match()` remains available as a compatibility alias for `.matchError()`.
 
+## Distinguishing Error Classes
+
+The exhaustiveness check of `.run()` is structural. TypeScript cannot tell two classes of the same shape apart, so one `.when(...)` removes both from the remaining cases, `.run()` compiles, and the unhandled error is rethrown at runtime.
+
+```ts
+import { Result } from '@shirudo/result';
+
+class NotFound extends Error {}
+class Timeout extends Error {}
+
+const result: Result<never, NotFound | Timeout> = Result.err(new Timeout('slow'));
+
+if (result.isErr()) {
+    result
+        .matchError()
+        .when(NotFound, () => 'not found')
+        .run(); // compiles, throws the Timeout at runtime
+}
+```
+
+Give each error class a distinguishing member. A literal `readonly code` works, and so does a private brand field such as `private readonly __timeout!: void`. The examples on this page use `readonly type` the same way.
+
+```ts
+import { Result } from '@shirudo/result';
+
+class NotFound extends Error {
+    readonly code = 'not-found';
+}
+class Timeout extends Error {
+    readonly code = 'timeout';
+}
+
+const result: Result<never, NotFound | Timeout> = Result.err(new Timeout('slow'));
+
+if (result.isErr()) {
+    result
+        .matchError()
+        .when(NotFound, () => 'not found')
+        .when(Timeout, () => 'timed out')
+        .run(); // only compiles with both cases handled
+}
+```
+
+Tagged unions matched with `.whenTag(...)` or `matchTag(...)` do not need this, because literal tags are always distinguishable.
+
 ## Discriminated Unions
 
 Use `.whenTag(key, value, handler)` for tagged error unions.

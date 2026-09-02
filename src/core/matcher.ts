@@ -50,7 +50,9 @@ export function matchTag<
  *
  * - `.when(Ctor, handler)` matches via `instanceof`
  * - `.whenGuard(guard, handler)` matches via Type-Guard
- * - `.run()` is only allowed if all error cases have been handled (`E` has been reduced to `never`)
+ * - `.run()` is only allowed if all error cases have been handled (`E` has been reduced to `never`).
+ *   The reduction is structural: two error classes of the same shape count as one case, so each
+ *   class needs a distinguishing member, for example a literal `readonly code`.
  */
 export class ErrorMatchBuilder<E, R> {
     readonly #error: unknown;

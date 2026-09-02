@@ -169,3 +169,19 @@ type MatchErrReturnsTheExportedBuilder = Expect<
 type MatchErrAsyncReturnsTheExportedBuilder = Expect<
     Equal<typeof asyncErrBuilder, AsyncErrMatchBuilder<number, NetworkError | ValidationError, never, never>>
 >;
+
+// @ts-expect-error run() requires every distinguishable error class to be handled.
+result.matchError().when(NetworkError, () => 'network' as const).run();
+
+class LookalikeNotFound extends Error {}
+class LookalikeTimeout extends Error {}
+
+const lookalike: Result<number, LookalikeNotFound | LookalikeTimeout> = err(new LookalikeTimeout('slow'));
+
+if (!lookalike.isErr()) {
+    throw new Error('expected Err');
+}
+
+// Documented limit: classes of the same shape count as one case, so this compiles
+// and rethrows the Timeout at runtime. A distinguishing member per class restores the guard.
+lookalike.matchError().when(LookalikeNotFound, () => 'not found' as const).run();
