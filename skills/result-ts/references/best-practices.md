@@ -131,13 +131,18 @@ const sent = await task(function* () {
 
 ## 9. Cross Process Boundaries with `toSerialized()`
 
-Result instances carry methods and a brand, so raw `JSON.parse` output is not a `Result`. Serialize with `toSerialized()` and rebuild with `fromSerialized()`; validate foreign values with `isResult()`.
+Result instances carry methods and a brand, so raw `JSON.parse` output is not a `Result`. Send `toSerialized()` (the discriminated `ResultType<T, E>` shape, identical to what `JSON.stringify` produces). On the receiving side `JSON.parse` returns `any`, so validate the envelope and the payload before you claim a type, then rebuild with `ok`/`err`. Do not reach for a type assertion; the deprecated `fromSerialized()` only ever checked the envelope and let `T`/`E` go unverified.
 
 ```typescript
-import { ok, fromSerialized, isResult } from '@shirudo/result';
+import { ok, err, isResult, type ResultType } from '@shirudo/result';
 
-const wire = JSON.stringify(ok({ id: 1 }).toSerialized());
-const restored = fromSerialized<{ id: number }, never>(JSON.parse(wire));
+// Your schema step (Zod, Valibot, or a hand-written guard) owns the payload types.
+declare function validate(input: unknown): ResultType<{ id: number }, string>;
+
+const wire = JSON.stringify(ok({ id: 1 }).toSerialized()); // {"_tag":"Ok","value":{"id":1}}
+
+const parsed = validate(JSON.parse(wire));
+const restored = parsed._tag === 'Ok' ? ok(parsed.value) : err(parsed.error);
 
 console.log(isResult(restored)); // true
 console.log(isResult(JSON.parse(wire))); // false: plain data, not a Result

@@ -162,12 +162,21 @@ abstract class ResultBase extends Pipeable {
     }
 
     /**
-     * Serializes the Result into the discriminated shape
-     * `{ _tag: 'Ok', value }` / `{ _tag: 'Err', error }`.
+     * Converts the Result into its plain discriminated shape
+     * `{ _tag: 'Ok', value }` / `{ _tag: 'Err', error }` (`ResultType<T, E>`),
+     * with no prototype, methods, or brand attached.
      *
-     * Unlike {@link serialize}, `Ok(undefined)` stays unambiguous, and the
-     * shape round-trips through `fromSerialized(...)`. It also matches what
-     * `JSON.stringify(result)` produces for a Result instance.
+     * Unlike {@link serialize}, `Ok(undefined)` stays unambiguous because the
+     * `value` key is always present. The shape is exactly what
+     * `JSON.stringify(result)` produces for a Result instance, so it is safe
+     * for JSON, `structuredClone`, and `postMessage`.
+     *
+     * To rebuild a Result on the other side, validate the payload with your
+     * schema tool and then call `ok`/`err` on the discriminant:
+     *
+     * ```ts
+     * const restored = parsed._tag === 'Ok' ? ok(parsed.value) : err(parsed.error);
+     * ```
      */
     toSerialized<T, E>(this: Result<T, E>): ResultType<T, E> {
         if (this._tag === 'Ok') return { _tag: 'Ok', value: this.value };
@@ -181,8 +190,9 @@ abstract class ResultBase extends Pipeable {
      *
      * @deprecated Use {@link toSerialized} instead: with this format,
      * `Ok(undefined)` is indistinguishable from a missing `data` field, and
-     * there is no way to rebuild a Result from it. `toSerialized()`
-     * round-trips via `fromSerialized(...)`.
+     * the shape does not match what `JSON.stringify(result)` produces.
+     * `toSerialized()` returns the discriminated `ResultType<T, E>`, which
+     * rebuilds unambiguously via `ok`/`err`.
      */
     serialize<T, E>(this: Result<T, E>): { isSuccess: boolean; data?: T; error?: E } {
         if (this._tag === 'Ok') return { isSuccess: true, data: this.value };

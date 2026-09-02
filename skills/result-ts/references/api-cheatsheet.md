@@ -196,7 +196,7 @@ const firstOk = collectFirstOk([err<string, number>('a'), ok<number, string>(2)]
 const [oks, errs] = partition([ok<number, string>(1), err<string, number>('e')]);
 ```
 
-Async variants take promises or thunks: `collectFirstOkAsync` runs them sequentially, `collectFirstOkParallelAsync` starts all and resolves with the first `Ok`.
+Async variants take promises or thunks: `collectFirstOkAsync` runs them sequentially, `collectFirstOkParallelAsync` starts all and resolves with the first `Ok`. A thunk that throws synchronously is a programmer error and rejects the call. A rejected input counts as a failed attempt. Without `errorMapper` the error array is `unknown[]`, because a rejection reason can be anything; pass `errorMapper` to keep the error array typed.
 
 ```typescript
 import { ok, err, collectFirstOkAsync, collectFirstOkParallelAsync } from '@shirudo/result';
@@ -204,12 +204,17 @@ import { ok, err, collectFirstOkAsync, collectFirstOkParallelAsync } from '@shir
 const sequential = await collectFirstOkAsync([
   () => Promise.resolve(err<'a', number>('a')),
   () => Promise.resolve(ok<number, 'b'>(2)),
-]); // Ok(2); thunks after the first Ok are never started
+]); // Ok(2); thunks after the first Ok are never started; Err type is unknown[]
 
 const parallel = await collectFirstOkParallelAsync([
   Promise.resolve(err<'a', number>('a')),
   Promise.resolve(ok<number, 'b'>(2)),
 ]); // Ok(2); all inputs start immediately
+
+const typed = await collectFirstOkAsync(
+  [() => Promise.resolve(err<'a', number>('a')), () => Promise.reject(new Error('down'))],
+  reason => ({ code: 'rejected' as const, reason }),
+); // Err(['a', { code: 'rejected', reason: Error }]); Err type is Array<'a' | { code: 'rejected'; reason: unknown }>
 ```
 
 ## Async Composition
@@ -235,7 +240,7 @@ const message = await ok<number, string>(1).pipeAsync(
 
 ## Do-Notation with `task`
 
-`yield*` unwraps `Ok` values and short-circuits on the first `Err`. Works with sync and async generators; `finally` blocks run before the short-circuit returns. The optional second argument maps thrown exceptions to a typed `Err`.
+`yield*` unwraps `Ok` values and short-circuits on the first `Err`. Works with sync and async generators; `finally` blocks run before the short-circuit returns, and `yield*` inside them follows the same protocol (an `Err` yielded there replaces the pending `Err`, as a `throw` inside `finally` would). The optional second argument maps thrown exceptions to a typed `Err`.
 
 ```typescript
 import { err, task, type Result } from '@shirudo/result';
@@ -316,13 +321,13 @@ const cached = Result.err<CacheMissError, number>(new CacheMissError())
 
 ## Serialization
 
-`toSerialized()` round-trips through `fromSerialized()`, including `Ok(undefined)`. The older `serialize()` is deprecated because its format cannot round-trip.
+`toSerialized()` returns the plain discriminated shape `ResultType<T, E>`, the same thing `JSON.stringify(result)` produces, and it keeps `Ok(undefined)` unambiguous. Rebuild with `ok`/`err` after validating foreign payloads. The older `serialize()` is deprecated because its format cannot round-trip.
 
 ```typescript
-import { ok, fromSerialized } from '@shirudo/result';
+import { ok, err } from '@shirudo/result';
 
 const wire = ok(42).toSerialized();       // { _tag: 'Ok', value: 42 }
-const restored = fromSerialized(wire);    // a real Result instance again
+const restored = wire._tag === 'Ok' ? ok(wire.value) : err(wire.error);
 console.log(restored.unwrapOr(0));        // 42
 
 const friendly = ok(42).toUserFriendly(); // { isSuccess: true, data: 42 }
@@ -350,7 +355,8 @@ Codes: `ERR_UNWRAP_ON_ERR`, `ERR_UNWRAP_ERR_ON_OK`, `ERR_EXPECT_OK`, `ERR_EXPECT
 
 ## Deprecated
 
-- `serialize()`: use `toSerialized()`/`fromSerialized()`.
+- `serialize()`: use `toSerialized()`.
+- `fromSerialized(data)`: validate the payload yourself, then `data._tag === 'Ok' ? ok(data.value) : err(data.error)`.
 - `unwrapOrDefault(result, value)`: alias of `unwrapOr` with a misleading name.
 - `ERR_INVALID_STATE`: use `ERR_INVALID_RESULT_STATE`.
 - Instance `match()`: use `matchError()` (Err-only builder) or the `match({ ok, err })` pipe operator.

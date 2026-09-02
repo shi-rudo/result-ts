@@ -8,6 +8,19 @@ import { InvalidResultStateError } from '../errors';
  * by `Result.toSerialized()` and by `JSON.stringify` on a Result.
  *
  * Throws `InvalidResultStateError` for data that is not in that shape.
+ *
+ * @deprecated Rebuild the Result yourself after validating the payload:
+ *
+ * ```ts
+ * const restored = parsed._tag === 'Ok' ? ok(parsed.value) : err(parsed.error);
+ * ```
+ *
+ * `fromSerialized` only checks the envelope (`_tag` plus the presence of
+ * `value`/`error`), never the payload, while its type parameters claim `T`
+ * and `E` for whatever `JSON.parse` returned. It also throws for malformed
+ * input at exactly the boundary where a Result should be returned. Validate
+ * foreign data with your schema tool and then call `ok`/`err`; the shape is
+ * exported as `ResultType<T, E>`. This function will be removed in 2.0.
  */
 export function fromSerialized<T, E>(data: ResultType<T, E>): Result<T, E> {
     if (data !== null && typeof data === 'object') {

@@ -36,7 +36,10 @@
 - `.match()`: Compatibility alias for `.matchError()`.
 - `.matchErr()`: Transform Err cases while returning a `Result`.
 - `.matchErrAsync()`: Async variant of `.matchErr()`.
-- `.serialize()`: Convert to `{ isSuccess, data?, error? }`.
+
+The matcher methods return the builder types `ErrorMatchBuilder`, `AsyncErrorMatchBuilder`, `ErrMatchBuilder`, and `AsyncErrMatchBuilder`. The package exports them as types, so a function that returns a started builder can be annotated and compiled with `declaration: true`.
+- `.toSerialized()`: Convert to the plain discriminated shape `{ _tag: 'Ok', value } | { _tag: 'Err', error }` (`ResultType<T, E>`), identical to what `JSON.stringify` produces. Rebuild with `ok`/`err`.
+- `.serialize()`: Convert to `{ isSuccess, data?, error? }`. Deprecated: `Ok(undefined)` is indistinguishable from a missing `data` field; use `.toSerialized()`.
 - `.toUserFriendly()`: Convert an Err to user-facing serialization with string error messages.
 
 ## Utilities

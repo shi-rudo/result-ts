@@ -92,6 +92,52 @@ try {
     `);
 
     await run('node', [join(repoRoot, 'node_modules/typescript/bin/tsc'), '-p', 'tsconfig.json']);
+
+    // A consumer that is itself a library: declaration emit must be able to
+    // name every type the public API returns.
+    await writeFile(join(tempDir, 'tsconfig.declaration.json'), JSON.stringify({
+        compilerOptions: {
+            strict: true,
+            target: 'ES2022',
+            module: 'NodeNext',
+            moduleResolution: 'NodeNext',
+            skipLibCheck: false,
+            declaration: true,
+            emitDeclarationOnly: true,
+            outDir: 'declaration-out',
+        },
+        include: ['library-consumer.ts'],
+    }, null, 2));
+
+    await writeFile(join(tempDir, 'library-consumer.ts'), `
+        import {
+            err,
+            type AsyncErrMatchBuilder,
+            type AsyncErrorMatchBuilder,
+            type ErrMatchBuilder,
+            type ErrorMatchBuilder,
+        } from '@shirudo/result';
+
+        export function startMatchError(error: Error) {
+            return err(error).matchError();
+        }
+        export function startMatchErrorAsync(error: Error) {
+            return err(error).matchErrorAsync();
+        }
+        export function startMatchErr(error: Error) {
+            return err<Error, number>(error).matchErr();
+        }
+        export function startMatchErrAsync(error: Error) {
+            return err<Error, number>(error).matchErrAsync();
+        }
+
+        export const annotatedMatchError: ErrorMatchBuilder<Error, never> = startMatchError(new Error('x'));
+        export const annotatedMatchErrorAsync: AsyncErrorMatchBuilder<Error, never> = startMatchErrorAsync(new Error('x'));
+        export const annotatedMatchErr: ErrMatchBuilder<number, Error, never, never> = startMatchErr(new Error('x'));
+        export const annotatedMatchErrAsync: AsyncErrMatchBuilder<number, Error, never, never> = startMatchErrAsync(new Error('x'));
+    `);
+
+    await run('node', [join(repoRoot, 'node_modules/typescript/bin/tsc'), '-p', 'tsconfig.declaration.json']);
 } finally {
     await rm(tempDir, { recursive: true, force: true });
 }

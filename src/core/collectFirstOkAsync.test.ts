@@ -81,6 +81,14 @@ describe('collectFirstOkAsync', () => {
         await expect(collectFirstOkAsync([malformed])).rejects.toBeInstanceOf(InvalidResultStateError);
     });
 
+    it('rejects with InvalidResultStateError when an input fulfils with a non-Result', async () => {
+        const notAResult = Promise.resolve(undefined) as unknown as Promise<Result<number, string>>;
+
+        await expect(collectFirstOkAsync([notAResult, Promise.resolve(ok(1))])).rejects.toBeInstanceOf(
+            InvalidResultStateError
+        );
+    });
+
     it('rethrows synchronous thunk errors as programmer errors', async () => {
         const bug = new Error('bug');
         const throwingThunk = () => {
@@ -88,5 +96,41 @@ describe('collectFirstOkAsync', () => {
         };
 
         await expect(collectFirstOkAsync([throwingThunk])).rejects.toBe(bug);
+    });
+
+    it('collects the raw rejection reason without errorMapper', async () => {
+        const promises = [
+            Promise.reject('promise error'),
+            Promise.resolve(err('error2')),
+        ];
+
+        const result = await collectFirstOkAsync(promises);
+
+        expect(result.isErr()).toBe(true);
+        if (result.isErr()) {
+            expect(result.error).toEqual(['promise error', 'error2']);
+        }
+    });
+
+    it('maps rejection reasons through errorMapper and leaves Err values untouched', async () => {
+        const promises = [
+            Promise.resolve(err('error1')),
+            Promise.reject(new Error('down')),
+            Promise.resolve(err('error3')),
+        ];
+
+        const result = await collectFirstOkAsync(promises, reason => `rejected: ${(reason as Error).message}`);
+
+        expect(result.isErr()).toBe(true);
+        if (result.isErr()) {
+            expect(result.error).toEqual(['error1', 'rejected: down', 'error3']);
+        }
+    });
+
+    it('rethrows errorMapper failures as programmer errors', async () => {
+        const bug = new Error('mapper bug');
+        const promises = [Promise.reject('promise error')];
+
+        await expect(collectFirstOkAsync(promises, () => { throw bug; })).rejects.toBe(bug);
     });
 });

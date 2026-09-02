@@ -1,5 +1,24 @@
 # Changelog
 
+## 1.2.0 - 2026-08-19
+
+### Deprecated
+
+- `fromSerialized()` is deprecated and will be removed in 2.0. It validates only the envelope (`_tag` plus the presence of `value`/`error`) while its type parameters claim `T` and `E` for whatever `JSON.parse` returned, the same kind of unverified type claim that 1.1.0 removed from `fromPromise<T, MyError>(promise)`; and it throws `InvalidResultStateError` for malformed input at exactly the boundary where a Result should be returned. Validate foreign payloads with your schema tool and rebuild with `parsed._tag === 'Ok' ? ok(parsed.value) : err(parsed.error)`; the shape is exported as `ResultType<T, E>`.
+
+### Changed
+
+- `toSerialized()` documentation no longer promises a `fromSerialized()` round-trip; it describes the plain discriminated `ResultType<T, E>` shape (identical to `JSON.stringify(result)`) and the `ok`/`err` rebuild. The `serialize()` deprecation notice points to `toSerialized()` alone. README, the API reference, and the agent skill were updated accordingly, and the skill's boundary example now validates the payload instead of asserting its type.
+- `toSerialized()` is now tested on its own in `result.test.ts` (shape, `Ok(undefined)`, `JSON.stringify` equivalence, JSON round-trip via `ok`/`err`, malformed state) instead of only through the `fromSerialized()` tests.
+- `collectFirstOkAsync()` and `collectFirstOkParallelAsync()` now type the collected errors honestly and accept an optional `errorMapper`. Both collect a rejected input as a failed attempt, but they pushed the raw rejection reason into an array typed as the inputs' `E`, so `E[]` could hold an unmapped `unknown` at runtime. Without `errorMapper` the error array is now `unknown[]`; with `errorMapper: (error: unknown) => F` it is `Array<E | F>`, `Err` values pass through untouched, and bugs inside the mapper are rethrown, the same contract as `fromPromise` and `tryAsync`. Callers that relied on the old `E[]` type without a mapper must add one.
+
+### Fixed
+
+- `collectFirstOkAsync()` and `collectFirstOkParallelAsync()` now validate every fulfilled value with `isResult()` and reject with `InvalidResultStateError` when an input fulfils with something that is not a Result. Previously the sequential variant, and the parallel variant when no `Ok` arrived, leaked a raw `TypeError` from calling `isOk()` on the value, and the parallel variant's first-Ok race swallowed that `TypeError` in its rejection guard, so a malformed input was hidden entirely whenever another input was observed as `Ok` first. An `Ok` that won the race before the malformed value was observed still wins.
+- `collectFirstOkParallelAsync()` now rethrows a thunk's synchronous exception as a programmer error, as `collectFirstOkAsync()` always did. Previously the parallel variant deferred the thunk call into a promise chain, so a synchronous throw was silently collected as an error value, or hidden entirely when another input yielded `Ok`. Attempts that already started are abandoned without an unhandled rejection.
+- The matcher builder classes `ErrorMatchBuilder`, `AsyncErrorMatchBuilder`, `ErrMatchBuilder`, and `AsyncErrMatchBuilder` are now exported as types from the root entry. They are the return types of `.matchError()`, `.matchErrorAsync()`, `.matchErr()`, and `.matchErrAsync()`, but a consumer could not name them: a library compiled with `declaration: true` that exported a function returning a builder failed with TS4094 and TS7056, and an explicit annotation was impossible because the import failed with TS2305. The package export check now compiles such a library consumer with declaration emit.
+- `task()` now applies the yield protocol inside `finally` blocks that run during an `Err` short-circuit or before a `TaskYieldNotResultError`: `yield*` on an `Ok` receives the Ok value, an `Err` yielded there replaces the pending `Err` (as a `throw` inside `finally` replaces a pending exception) and skips the rest of that block while outer `finally` blocks still run, and a plain value yielded there throws `TaskYieldNotResultError`. Previously the cleanup was resumed with `undefined`, so `const conn = yield* ok(resource)` in a `finally` block produced a `TypeError` that hid the original `Err`, and an `Err` yielded during cleanup was silently dropped.
+
 ## 1.1.1 - 2026-07-04
 
 ### Changed

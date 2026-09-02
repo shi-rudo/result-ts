@@ -1,6 +1,6 @@
 import { describe, expect, it } from 'vitest';
 
-import { Result, ok, err, okIf, okIfLazy } from './result';
+import { Result, ok, err, okIf, okIfLazy, type ResultType } from './result';
 import { collectFirstOk } from './collectFirstOk';
 import {
     ERR_EXPECT_ERR,
@@ -512,6 +512,39 @@ describe('Result class', () => {
                     expect(filtered.error).toBe('too small');
                 }
             });
+        });
+    });
+
+    describe('toSerialized', () => {
+        it('serializes Ok into the discriminated shape', () => {
+            expect(ok(42).toSerialized()).toEqual({ _tag: 'Ok', value: 42 });
+        });
+
+        it('serializes Err into the discriminated shape', () => {
+            expect(err('boom').toSerialized()).toEqual({ _tag: 'Err', error: 'boom' });
+        });
+
+        it('keeps Ok(undefined) unambiguous by always emitting the value key', () => {
+            const serialized = ok(undefined).toSerialized();
+            expect(serialized._tag).toBe('Ok');
+            expect(Object.hasOwn(serialized, 'value')).toBe(true);
+        });
+
+        it('matches what JSON.stringify produces for a Result instance', () => {
+            const result: Result<{ id: number }, string> = ok({ id: 1 });
+            expect(JSON.stringify(result.toSerialized())).toBe(JSON.stringify(result));
+        });
+
+        it('round-trips through JSON via ok/err on the discriminated shape', () => {
+            const parsed: ResultType<{ id: number }, string> = JSON.parse(JSON.stringify(ok({ id: 1 }).toSerialized()));
+            const restored = parsed._tag === 'Ok' ? ok<{ id: number }, string>(parsed.value) : err<string, { id: number }>(parsed.error);
+            expect(restored.unwrap()).toEqual({ id: 1 });
+        });
+
+        it('throws for malformed Result state', () => {
+            const malformed = { _tag: 'Invalid', value: undefined, error: undefined } as unknown as Result<number, string>;
+
+            expect(() => ok<number, string>(0).toSerialized.call(malformed)).toThrow(InvalidResultStateError);
         });
     });
 

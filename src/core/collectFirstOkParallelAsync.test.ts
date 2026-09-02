@@ -1,4 +1,4 @@
-import { describe, expect, it } from 'vitest';
+import { describe, expect, it, vi } from 'vitest';
 
 import type { Result } from './result';
 import { err, ok } from './result';
@@ -93,5 +93,110 @@ describe('collectFirstOkParallelAsync', () => {
         }) as unknown as Promise<Result<number, string>>;
 
         await expect(collectFirstOkParallelAsync([malformed])).rejects.toBeInstanceOf(InvalidResultStateError);
+    });
+
+    it('rejects with InvalidResultStateError when a non-Result input is observed before any Ok', async () => {
+        const notAResult = Promise.resolve(undefined) as unknown as Promise<Result<number, string>>;
+
+        await expect(
+            collectFirstOkParallelAsync([notAResult, Promise.resolve(ok(1))] as const),
+        ).rejects.toBeInstanceOf(InvalidResultStateError);
+    });
+
+    it('rejects with InvalidResultStateError when a non-Result input arrives and no Ok wins', async () => {
+        const notAResult = Promise.resolve(undefined) as unknown as Promise<Result<number, string>>;
+
+        await expect(
+            collectFirstOkParallelAsync([notAResult, Promise.resolve(err('error1'))] as const),
+        ).rejects.toBeInstanceOf(InvalidResultStateError);
+    });
+
+    it('keeps an Ok that won before a non-Result input was observed, without an unhandled rejection', async () => {
+        const notAResult = Promise.resolve(undefined) as unknown as Promise<Result<number, string>>;
+        const unhandled = vi.fn();
+        process.once('unhandledRejection', unhandled);
+
+        const result = await collectFirstOkParallelAsync([Promise.resolve(ok(1)), notAResult] as const);
+
+        expect(result.isOk()).toBe(true);
+        if (result.isOk()) {
+            expect(result.value).toBe(1);
+        }
+
+        await new Promise(resolve => setTimeout(resolve, 0));
+        process.removeListener('unhandledRejection', unhandled);
+        expect(unhandled).not.toHaveBeenCalled();
+    });
+
+    it('collects the raw rejection reason without errorMapper', async () => {
+        const result = await collectFirstOkParallelAsync([
+            Promise.reject('promise error'),
+            Promise.resolve(err('error2')),
+        ] as const);
+
+        expect(result.isErr()).toBe(true);
+        if (result.isErr()) {
+            expect(result.error).toEqual(['promise error', 'error2']);
+        }
+    });
+
+    it('maps rejection reasons through errorMapper and leaves Err values untouched', async () => {
+        const result = await collectFirstOkParallelAsync(
+            [
+                Promise.resolve(err('error1')),
+                Promise.reject(new Error('down')),
+                Promise.resolve(err('error3')),
+            ] as const,
+            reason => `rejected: ${(reason as Error).message}`,
+        );
+
+        expect(result.isErr()).toBe(true);
+        if (result.isErr()) {
+            expect(result.error).toEqual(['error1', 'rejected: down', 'error3']);
+        }
+    });
+
+    it('rethrows errorMapper failures as programmer errors', async () => {
+        const bug = new Error('mapper bug');
+
+        await expect(
+            collectFirstOkParallelAsync([Promise.reject('promise error')] as const, () => { throw bug; }),
+        ).rejects.toBe(bug);
+    });
+
+    it('rethrows synchronous thunk errors as programmer errors', async () => {
+        const bug = new Error('bug');
+        const throwingThunk = () => {
+            throw bug;
+        };
+
+        await expect(collectFirstOkParallelAsync([throwingThunk])).rejects.toBe(bug);
+    });
+
+    it('rethrows a synchronous thunk error even when another input yields Ok', async () => {
+        const bug = new Error('bug');
+        const throwingThunk = () => {
+            throw bug;
+        };
+
+        await expect(
+            collectFirstOkParallelAsync([throwingThunk, () => Promise.resolve(ok(1))] as const),
+        ).rejects.toBe(bug);
+    });
+
+    it('abandons already started attempts without an unhandled rejection when a later thunk throws', async () => {
+        const bug = new Error('bug');
+        const late = deferred<Result<number, string>>();
+        const unhandled = vi.fn();
+        process.once('unhandledRejection', unhandled);
+
+        await expect(
+            collectFirstOkParallelAsync([() => late.promise, () => { throw bug; }] as const),
+        ).rejects.toBe(bug);
+        late.reject('late rejection');
+
+        await new Promise(resolve => setTimeout(resolve, 0));
+        process.removeListener('unhandledRejection', unhandled);
+        expect(unhandled).not.toHaveBeenCalled();
     });
 });
