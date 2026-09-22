@@ -16,6 +16,25 @@ describe('sequenceRecord', () => {
         }
     });
 
+    it('ignores non-enumerable own properties', () => {
+        const record = Object.defineProperty({ a: ok(1) }, 'hidden', { value: 'not a Result', enumerable: false });
+
+        const result = sequenceRecord(record);
+
+        expect(result.isOk()).toBe(true);
+        expect(result.unwrap()).toEqual({ a: 1 });
+    });
+
+    it('ignores a non-enumerable symbol property', () => {
+        const hidden = Symbol('hidden');
+        const record = Object.defineProperty({ a: ok(1) }, hidden, { value: 'not a Result', enumerable: false });
+
+        const result = sequenceRecord(record);
+
+        expect(result.isOk()).toBe(true);
+        expect(result.unwrap()).toEqual({ a: 1 });
+    });
+
     it('preserves symbol keys', () => {
         const id = Symbol('id');
         const result = sequenceRecord({ [id]: ok(1), name: ok('alice') } as const);
