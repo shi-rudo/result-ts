@@ -23,3 +23,20 @@ export function describeValue(value: unknown): string {
         return describeUnprintable(value);
     }
 }
+
+/**
+ * Formats the `message` of a foreign error value, or the value itself when it
+ * carries none. The property access belongs to the value, not to this library:
+ * a getter or a Proxy trap can throw, and then the value itself is described.
+ */
+export function describeErrorMessage(value: unknown): string {
+    try {
+        if (value !== null && typeof value === 'object' && 'message' in value) {
+            return describeValue((value as { message: unknown }).message);
+        }
+    } catch {
+        // The `in` check or the getter threw, so fall through to the value.
+    }
+
+    return describeValue(value);
+}
