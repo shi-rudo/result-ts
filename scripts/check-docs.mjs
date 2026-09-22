@@ -58,8 +58,12 @@ function extractEntryHead(text) {
     const item = /^\s*-\s+(`.*)$/.exec(text);
     if (!item) return null;
 
-    const description = item[1].indexOf('`: ');
-    return description === -1 ? item[1] : item[1].slice(0, description + 1);
+    // The head is the leading run of code spans, which an entry can separate
+    // with a slash or a comma. The description starts at the first prose, and
+    // an entry that writes prose without a colon keeps its names checked while
+    // its prose does not.
+    const head = /^(?:`[^`\n]+`[\s,/]*)+/.exec(item[1]);
+    return head === null ? null : head[0];
 }
 
 // A span that starts with a dot documents a method of Result, not a module
@@ -67,7 +71,10 @@ function extractEntryHead(text) {
 function extractApiEntryNames(markdown, sourcePath) {
     const names = [];
 
-    markdown.split('\n').forEach((text, index) => {
+    // A fenced block is compiled as an example, so its lines are not entries.
+    const withoutFences = markdown.replaceAll(/^```[\s\S]*?^```/gm, match => match.replaceAll(/[^\n]/g, ''));
+
+    withoutFences.split('\n').forEach((text, index) => {
         const head = extractEntryHead(text);
         if (head === null) return;
 
@@ -185,7 +192,7 @@ try {
 
         const snippetRelativePath = relative(tempDir, snippetPath);
         locations.forEach((source, index) => {
-            sourceByLocation.set(`${snippetRelativePath}:${index + 1}`, source);
+            sourceByLocation.set(`${snippetRelativePath.replaceAll('\\', '/')}:${index + 1}`, source);
         });
         snippetPaths.push(snippetRelativePath);
     }
