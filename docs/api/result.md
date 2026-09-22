@@ -54,4 +54,3 @@ All APIs remain available from the package root. Focused subpath exports are als
 - `matchTag(result, key, handlers)`: Exhaustively match discriminated-union Err values by tag.
 - `contains(result, value)`: Check whether an `Ok` contains a value.
 - `containsErr(result, error)`: Check whether an `Err` contains an error.
-- `fromResult(fn)`: Execute a function and catch exceptions.
