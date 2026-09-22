@@ -127,17 +127,14 @@ tryMapAsync<number, string, number, Error>(async value => value + 1);
 
 // `JSON.stringify` drops a key whose value is `undefined`, so the serialized
 // shape must describe the payload that arrives without it.
-const voidPayload: ResultType<void, string> = { _tag: 'Ok' };
-voidPayload satisfies ResultType<void, string>;
+const voidPayload = { _tag: 'Ok' } satisfies ResultType<void, string>;
 
-const optionalValuePayload: ResultType<number | undefined, string> = { _tag: 'Ok' };
-optionalValuePayload satisfies ResultType<number | undefined, string>;
+const optionalValuePayload = { _tag: 'Ok' } satisfies ResultType<number | undefined, string>;
 
-const undefinedErrorPayload: ResultType<number, undefined> = { _tag: 'Err' };
-undefinedErrorPayload satisfies ResultType<number, undefined>;
+const undefinedErrorPayload = { _tag: 'Err' } satisfies ResultType<number, undefined>;
 
 // @ts-expect-error A value that cannot be undefined must carry the value key.
-const missingValue: ResultType<number, string> = { _tag: 'Ok' };
+const missingValue = { _tag: 'Ok' } satisfies ResultType<number, string>;
 
 // @ts-expect-error An error that cannot be undefined must carry the error key.
-const missingError: ResultType<number, string> = { _tag: 'Err' };
+const missingError = { _tag: 'Err' } satisfies ResultType<number, string>;
