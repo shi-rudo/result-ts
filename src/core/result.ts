@@ -168,10 +168,10 @@ abstract class ResultBase extends Pipeable {
      *
      * Unlike {@link serialize}, `Ok(undefined)` stays unambiguous, because the
      * `_tag` discriminant carries the state. The returned object always holds
-     * the `value` key. The shape is exactly what `JSON.stringify(result)`
-     * produces for a Result instance, so it is safe for JSON,
-     * `structuredClone`, and `postMessage`. `JSON.stringify` drops a key whose
-     * value is `undefined`, so `Ok(undefined)` crosses the wire as
+     * the `value` key, and `JSON.stringify` encodes it exactly as it encodes
+     * the Result instance, so the shape is safe for JSON, `structuredClone`,
+     * and `postMessage`. JSON is the lossy step: `JSON.stringify` drops a key
+     * whose value is `undefined`, so `Ok(undefined)` crosses the wire as
      * `{"_tag":"Ok"}`, and `ok(parsed.value)` rebuilds it.
      *
      * To rebuild a Result on the other side, validate the payload with your

@@ -131,7 +131,7 @@ const sent = await task(function* () {
 
 ## 9. Cross Process Boundaries with `toSerialized()`
 
-Result instances carry methods and a brand, so raw `JSON.parse` output is not a `Result`. Send `toSerialized()` (the discriminated `ResultType<T, E>` shape, identical to what `JSON.stringify` produces). On the receiving side `JSON.parse` returns `any`, so validate the envelope and the payload before you claim a type, then rebuild with `ok`/`err`. Do not reach for a type assertion; the deprecated `fromSerialized()` only ever checked the envelope and let `T`/`E` go unverified.
+Result instances carry methods and a brand, so raw `JSON.parse` output is not a `Result`. Send `toSerialized()` (the discriminated `ResultType<T, E>` shape, identical to what `JSON.stringify` produces). On the receiving side `JSON.parse` returns `any`, so validate the envelope and the payload before you claim a type, then rebuild with `ok`/`err`. Do not reach for a type assertion; the deprecated `fromSerialized()` only ever checked the `_tag` discriminant and let `T`/`E` go unverified.
 
 ```typescript
 import { ok, err, isResult, type ResultType } from '@shirudo/result';
