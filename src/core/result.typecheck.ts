@@ -138,3 +138,22 @@ const missingValue = { _tag: 'Ok' } satisfies ResultType<number, string>;
 
 // @ts-expect-error An error that cannot be undefined must carry the error key.
 const missingError = { _tag: 'Err' } satisfies ResultType<number, string>;
+
+// At a concrete instantiation the rebuild that the docs promote compiles.
+function rebuildConcrete(parsed: ResultType<void, string>): Result<void, string> {
+    if (parsed._tag === 'Ok') return ok<void, string>(parsed.value);
+    return err<string, void>(parsed.error);
+}
+void rebuildConcrete;
+
+// In a generic wrapper TypeScript cannot resolve the conditional, so it widens
+// the payload and the same rebuild needs a cast. `fromSerialized` carries that
+// cast for the same reason. If a future TypeScript resolves the conditional,
+// these directives turn into errors and the limit can be documented away.
+function rebuildGeneric<T, E>(parsed: ResultType<T, E>): Result<T, E> {
+    // @ts-expect-error The deferred conditional widens the payload to `T | undefined`.
+    if (parsed._tag === 'Ok') return ok<T, E>(parsed.value);
+    // @ts-expect-error The deferred conditional widens the payload to `E | undefined`.
+    return err<E, T>(parsed.error);
+}
+void rebuildGeneric;

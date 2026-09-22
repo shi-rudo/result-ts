@@ -47,24 +47,39 @@ function extractTypeScriptBlocks(markdown, sourcePath) {
     return blocks;
 }
 
-// Every entry of the API reference is a list item that opens with the signature
-// of the export. A name in that position claims an export; the prose around it
-// does not, so only the first span of an item is checked. A span that starts
-// with a dot documents a method of Result, not a module export.
+// The API reference documents an entry either as a list item that opens with
+// the signature, or as a table row whose first cell holds it. Everything up to
+// the description is the head of the entry, and every name in the head claims
+// an export. The prose of the description does not, so it stays unchecked.
+function extractEntryHead(text) {
+    const row = /^\s*\|([^|]+)\|/.exec(text);
+    if (row) return row[1];
+
+    const item = /^\s*-\s+(`.*)$/.exec(text);
+    if (!item) return null;
+
+    const description = item[1].indexOf('`: ');
+    return description === -1 ? item[1] : item[1].slice(0, description + 1);
+}
+
+// A span that starts with a dot documents a method of Result, not a module
+// export.
 function extractApiEntryNames(markdown, sourcePath) {
     const names = [];
 
     markdown.split('\n').forEach((text, index) => {
-        const item = /^\s*-\s+`([^`]+)`/.exec(text);
-        if (!item) return;
+        const head = extractEntryHead(text);
+        if (head === null) return;
 
-        const span = item[1];
-        if (span.startsWith('.')) return;
+        for (const match of head.matchAll(/`([^`\n]+)`/g)) {
+            const span = match[1];
+            if (span.startsWith('.')) continue;
 
-        const entry = /^([A-Za-z_$][\w$]*)(?:\.([A-Za-z_$][\w$]*))?\s*[(<]/.exec(span);
-        if (!entry) return;
+            const entry = /^([A-Za-z_$][\w$]*)(?:\.([A-Za-z_$][\w$]*))?(?:\s*[(<].*)?$/.exec(span.trim());
+            if (!entry) continue;
 
-        names.push({ sourcePath, line: index + 1, name: entry[1], member: entry[2] });
+            names.push({ sourcePath, line: index + 1, name: entry[1], member: entry[2] });
+        }
     });
 
     return names;
