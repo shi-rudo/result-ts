@@ -44,6 +44,14 @@ describe('fromSerialized (deprecated)', () => {
         expect(() => fromSerialized({ _tag: 'Err', value: 42 } as never)).toThrow(InvalidResultStateError);
     });
 
+    it('ignores a key of the other state that sits on the prototype chain', () => {
+        const inherited = Object.assign(Object.create({ error: 'inherited' }), { _tag: 'Ok' as const, value: 1 });
+
+        const restored = fromSerialized<number, string>(inherited);
+
+        expect(restored.unwrap()).toBe(1);
+    });
+
     it('rejects malformed serialized data', () => {
         expect(() => fromSerialized({ _tag: 'Nope' } as never)).toThrow(InvalidResultStateError);
         expect(() => fromSerialized(null as never)).toThrow(InvalidResultStateError);
