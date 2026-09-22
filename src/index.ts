@@ -3,29 +3,14 @@ export * from './core/result';
 export * from './gen';
 export * from './errors';
 
-// Pipe Operators (Sync)
-export * from './core/map';
-export * from './core/mapErr';
-export * from './core/mapBoth';
-export * from './core/flatMap';
-export * from './core/tap';
-export * from './core/filter';
-export * from './core/fold';
-export * from './core/match';
-export * from './core/tryCatch';
-export * from './core/tryMap';
-export * from './core/recover';
+// Pipe Operators and Combinators
+// The ./operators entry owns the list. A new operator belongs there, and this
+// re-export carries it to the root entry.
+export * from './operators';
 
-// Pipe Operators (Async)
-export * from './core/mapAsync';
-export * from './core/mapErrAsync';
-export * from './core/flatMapAsync';
-export * from './core/tapAsync';
-export * from './core/filterAsync';
-export * from './core/foldAsync';
-export * from './core/matchAsync';
-export * from './core/tryCatchAsync';
-export * from './core/tryMapAsync';
+// Collections
+// The ./collections entry owns the list, as above.
+export * from './collections';
 
 // Unwrap Utilities
 export * from './core/unwrap';
@@ -36,25 +21,6 @@ export * from './core/unwrapOrThrow';
 export * from './core/unwrapErr';
 export * from './core/expectResult';
 export * from './core/expectErr';
-
-// Combinators
-export * from './core/and';
-export * from './core/or';
-export * from './core/orElse';
-export * from './core/mapOr';
-export * from './core/mapOrElse';
-export * from './core/zip';
-export * from './core/swap';
-
-// Collections
-export * from './core/sequence';
-export * from './core/sequenceRecord';
-export * from './core/collectFirstOk';
-export * from './core/collectFirstOkAsync';
-export * from './core/collectFirstOkParallelAsync';
-export * from './core/collectAllErrors';
-export * from './core/partition';
-export * from './core/flatten';
 
 // Conversions
 export * from './core/fromPromise';
