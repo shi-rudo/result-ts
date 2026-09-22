@@ -1,6 +1,6 @@
 import { Pipeable } from './pipeable';
 import { AsyncErrMatchBuilder, AsyncErrorMatchBuilder, ErrMatchBuilder, ErrorMatchBuilder } from './matcher';
-import { describeValue } from '../describeValue';
+import { describeErrorMessage } from '../describeValue';
 import { RESULT_BRAND } from './brand';
 import { isResult } from './isResult';
 import { all, sequence } from './sequence';
@@ -221,13 +221,7 @@ abstract class ResultBase extends Pipeable {
         if (this._tag === 'Ok') return { isSuccess: true, data: this.value };
         if (this._tag !== 'Err') throw new InvalidResultStateError('Result.toUserFriendly');
 
-        const error = this.error;
-        const errorMessage =
-            error && typeof error === 'object' && 'message' in error
-                ? describeValue((error as { message: unknown }).message)
-                : describeValue(error);
-
-        return { isSuccess: false, error: errorMessage };
+        return { isSuccess: false, error: describeErrorMessage(this.error) };
     }
 }
 
