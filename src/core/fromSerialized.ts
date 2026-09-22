@@ -25,8 +25,9 @@ import { InvalidResultStateError } from '../errors';
  */
 export function fromSerialized<T, E>(data: ResultType<T, E>): Result<T, E> {
     if (data !== null && typeof data === 'object') {
-        if (data._tag === 'Ok' && !('error' in data)) return ok<T, E>(data.value);
-        if (data._tag === 'Err' && !('value' in data)) return err<E, T>(data.error);
+        // The key is absent only where `T` or `E` admits `undefined`, see `ResultType`.
+        if (data._tag === 'Ok' && !('error' in data)) return ok<T, E>(data.value as T);
+        if (data._tag === 'Err' && !('value' in data)) return err<E, T>(data.error as E);
     }
     throw new InvalidResultStateError('fromSerialized');
 }
