@@ -16,7 +16,7 @@ Version 2 removes the APIs that 1.x deprecated. `docs/migration/v2.md` shows the
 
 - The `MatchOnOkError` constructor requires the name of the method that was called on an `Ok`. The default was `'match'`, the name of the removed method, and every caller inside the library already passed a name. Code that constructs the error without an argument no longer compiles.
 
-## 1.2.0 - 2026-08-19
+## 1.2.0 - 2026-09-22
 
 ### Deprecated
 
@@ -31,6 +31,7 @@ Version 2 removes the APIs that 1.x deprecated. `docs/migration/v2.md` shows the
 - The compile-time exhaustiveness guarantee of `matchError()`, `matchErr()` and their async variants is now documented with its precondition. The check is structural, so each error class needs a distinguishing member such as a literal `readonly code`; two classes of the same shape count as one case, `run()` compiles with one of them unhandled, and the unhandled error is rethrown at runtime. README, the matching guide and the builder docstring state the rule, and the type tests pin both the guard for distinguishable classes and the limit for look-alike classes.
 
 - The `./operators` and `./collections` entries now re-export their modules with `export *`, and the root entry re-exports those two entries instead of listing their modules a second time. The exported names of all four entries are unchanged. Before, every operator and collection stood in three hand-maintained lists that nothing compared, so a new export in a core module reached the root entry and could miss its subpath entry in silence. `pnpm check` now also verifies that every value export of `./errors`, `./operators` and `./collections` reaches the root entry.
+- A GitHub release now publishes the package. The workflow `release.yml` checks that the release tag matches the version in `package.json`, and it publishes through npm trusted publishing, so npm attaches a provenance attestation to the version. `SECURITY.md` describes this release pipeline and the other trust boundaries of the library.
 
 ### Fixed
 
