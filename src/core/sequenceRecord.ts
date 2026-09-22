@@ -9,12 +9,22 @@ type ErrValueOf<R> = R extends Result<any, infer E> ? E : never;
 /**
  * Like `sequence`, but for Records/Objects.
  * Short-circuits on the first Err.
+ *
+ * A non-enumerable own property is an input only when it holds a `Result`, so a
+ * hidden helper field of another type is ignored. An array throws, because its
+ * indices would sequence into an object; use `sequence` for a list.
  */
 export function sequenceRecord<const R extends { readonly [K in keyof R]: Result<any, any> }>(
     record: R
 ): Result<{ [K in keyof R]: OkValueOf<R[K]> }, ErrValueOf<R[keyof R]>> {
     type Out = { [K in keyof R]: OkValueOf<R[K]> };
     type E = ErrValueOf<R[keyof R]>;
+
+    // An array reaches this point only from JavaScript, and it would sequence
+    // into an object keyed by its indices: `length` is a non-enumerable
+    // non-Result and the rule below would skip it. A list of Results belongs to
+    // `sequence()`, so the mistake fails here instead of returning a wrong shape.
+    if (Array.isArray(record)) throw new InvalidResultStateError('sequenceRecord');
 
     const out: Partial<Out> = {};
 
