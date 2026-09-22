@@ -16,6 +16,10 @@ describe('sequenceRecord', () => {
         }
     });
 
+    it('rejects an array, which belongs to sequence()', () => {
+        expect(() => sequenceRecord([ok(1), ok(2)] as never)).toThrow(InvalidResultStateError);
+    });
+
     it('keeps a non-enumerable own property that holds a Result', () => {
         const record = Object.defineProperty(
             { a: ok(1) } as { a: Result<number, never>; b: Result<number, never> },
