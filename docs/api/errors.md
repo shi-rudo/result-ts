@@ -36,6 +36,7 @@ try {
 | `TaskYieldNotResultError` | `ResultTypeError` | `ERR_TASK_YIELD_NOT_RESULT` | `task()` receives a yielded value that is not a `Result`; usually caused by `yield` instead of `yield*`. | `yieldedValue: unknown` |
 | `MatchOnOkError` | `ResultTypeError` | `ERR_MATCH_ON_OK` | Err-only fluent matchers such as `.matchError()` are called on an `Ok`. | none |
 | `MatchErrHandlerNotResultError` | `ResultTypeError` | `ERR_MATCH_ERR_HANDLER_NOT_RESULT` | A `.matchErr()` / `.matchErrAsync()` handler returns a naked value instead of `ok(...)` or `err(...)`. | `handlerName: string`, `returnedValue: unknown` |
+| `MatchTagMissingHandlerError` | `ResultTypeError` | `ERR_MATCH_TAG_MISSING_HANDLER` | `matchTag()` finds no own handler for the tag of the `Err` value, or the handler is not a function. | `tagValue: unknown` |
 | `UnwrapOnErrError` | `ResultTypeError` | `ERR_UNWRAP_ON_ERR` | `.unwrap()` is called on an `Err`. | `errorValue: unknown` |
 | `UnwrapErrOnOkError` | `ResultTypeError` | `ERR_UNWRAP_ERR_ON_OK` | `.unwrapErr()` is called on an `Ok`. | `okValue: unknown` |
 | `ExpectOkError` | `ResultError` | `ERR_EXPECT_OK` | `.expect(message)` is called on an `Err`. | `expectedMessage: string` |
@@ -47,6 +48,7 @@ try {
 - `ERR_TASK_YIELD_NOT_RESULT`
 - `ERR_MATCH_ON_OK`
 - `ERR_MATCH_ERR_HANDLER_NOT_RESULT`
+- `ERR_MATCH_TAG_MISSING_HANDLER`
 - `ERR_UNWRAP_ON_ERR`
 - `ERR_UNWRAP_ERR_ON_OK`
 - `ERR_EXPECT_OK`
