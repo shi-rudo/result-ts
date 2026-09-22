@@ -72,7 +72,7 @@ export class TaskYieldNotResultError extends ResultTypeError {
 }
 
 export class MatchOnOkError extends ResultTypeError {
-    constructor(methodName = 'match') {
+    constructor(methodName: string) {
         super(`${methodName}() can only be called on Err results. Use \`if (result.isErr()) { ... }\` first.`, ERR_MATCH_ON_OK);
     }
 }

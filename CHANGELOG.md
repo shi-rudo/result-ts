@@ -12,6 +12,10 @@ Version 2 removes the APIs that 1.x deprecated. `docs/migration/v2.md` shows the
 - `ERR_INVALID_STATE`, deprecated in 1.1.0. Use `ERR_INVALID_RESULT_STATE`, which holds the same string.
 - The `.match()` method of a Result, deprecated in 1.0.0 as an alias of `.matchError()`. Use `.matchError()`, which returns the same builder. The `match({ ok, err })` pipe operator stays.
 
+### Changed
+
+- The `MatchOnOkError` constructor requires the name of the method that was called on an `Ok`. The default was `'match'`, the name of the removed method, and every caller inside the library already passed a name. Code that constructs the error without an argument no longer compiles.
+
 ## 1.2.0 - 2026-08-19
 
 ### Deprecated
