@@ -39,6 +39,11 @@ describe('fromSerialized (deprecated)', () => {
         expect(restored.unwrapErr()).toBeUndefined();
     });
 
+    it('rejects a payload that carries the key of the other state', () => {
+        expect(() => fromSerialized({ _tag: 'Ok', error: 'boom' } as never)).toThrow(InvalidResultStateError);
+        expect(() => fromSerialized({ _tag: 'Err', value: 42 } as never)).toThrow(InvalidResultStateError);
+    });
+
     it('rejects malformed serialized data', () => {
         expect(() => fromSerialized({ _tag: 'Nope' } as never)).toThrow(InvalidResultStateError);
         expect(() => fromSerialized(null as never)).toThrow(InvalidResultStateError);
