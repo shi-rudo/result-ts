@@ -47,6 +47,53 @@ function extractTypeScriptBlocks(markdown, sourcePath) {
     return blocks;
 }
 
+// Every entry of the API reference is a list item that opens with the signature
+// of the export. A name in that position claims an export; the prose around it
+// does not, so only the first span of an item is checked. A span that starts
+// with a dot documents a method of Result, not a module export.
+function extractApiEntryNames(markdown, sourcePath) {
+    const names = [];
+
+    markdown.split('\n').forEach((text, index) => {
+        const item = /^\s*-\s+`([^`]+)`/.exec(text);
+        if (!item) return;
+
+        const span = item[1];
+        if (span.startsWith('.')) return;
+
+        const entry = /^([A-Za-z_$][\w$]*)(?:\.([A-Za-z_$][\w$]*))?\s*[(<]/.exec(span);
+        if (!entry) return;
+
+        names.push({ sourcePath, line: index + 1, name: entry[1], member: entry[2] });
+    });
+
+    return names;
+}
+
+// The class table and the code list of errors.md claim to be the reference of
+// the exported error classes. A new class that nobody adds there stays
+// invisible, which no snippet can catch.
+async function checkErrorReferenceIsComplete() {
+    const source = await readFile(join(repoRoot, 'src/errors.ts'), 'utf8');
+    const exported = [
+        ...source.matchAll(/^export class (\w+)/gm),
+        ...source.matchAll(/^export const (ERR_\w+)/gm),
+    ].map(match => match[1]);
+
+    const reference = await readFile(join(repoRoot, 'docs/api/errors.md'), 'utf8');
+    const missing = exported.filter(name => !reference.includes(`\`${name}\``));
+
+    if (missing.length > 0) {
+        throw new Error(`docs/api/errors.md does not mention: ${missing.join(', ')}`);
+    }
+}
+
+function rewriteSnippetLocations(output, sourceByLocation) {
+    return output.replaceAll(/^(\S+)\((\d+),\d+\)/gm, (match, file, line) => {
+        return sourceByLocation.get(`${file.replaceAll('\\', '/')}:${line}`) ?? match;
+    });
+}
+
 async function run(command, args) {
     try {
         return await exec(command, args, {
@@ -68,7 +115,10 @@ try {
     await symlink(repoRoot, join(scopedDir, 'result'), 'dir');
     await writeFile(join(tempDir, 'package.json'), JSON.stringify({ type: 'module' }, null, 2));
 
+    await checkErrorReferenceIsComplete();
+
     const snippetPaths = [];
+    const sourceByLocation = new Map();
 
     for (const doc of docs) {
         const markdown = await readFile(join(repoRoot, doc), 'utf8');
@@ -84,6 +134,45 @@ try {
             ].join('\n'));
             snippetPaths.push(relative(tempDir, snippetPath));
         }
+
+        if (!doc.startsWith('docs/api/')) continue;
+
+        // Every documented name must be importable from the root entry, which
+        // re-exports the errors, operators and collections entries.
+        const entryNames = extractApiEntryNames(markdown, doc);
+        if (entryNames.length === 0) continue;
+
+        // A documented member such as `Result.try(fn)` needs the value import, so
+        // that `typeof` can prove the member exists. Every other name is checked
+        // as a type import, which also covers the type-only exports.
+        const namesWithMember = new Set(entryNames.filter(entry => entry.member).map(entry => entry.name));
+        const lines = [];
+        const locations = [];
+        const imported = new Set();
+
+        for (const entry of entryNames) {
+            if (!imported.has(entry.name)) {
+                imported.add(entry.name);
+                const kind = namesWithMember.has(entry.name) ? 'import' : 'import type';
+                lines.push(`${kind} { ${entry.name} } from '@shirudo/result';`);
+                locations.push(`${entry.sourcePath}:${entry.line}`);
+            }
+
+            if (entry.member) {
+                lines.push(`type Check_${entry.name}_${entry.member} = typeof ${entry.name}.${entry.member};`);
+                locations.push(`${entry.sourcePath}:${entry.line}`);
+            }
+        }
+
+        const snippetPath = join(tempDir, 'snippets', `${doc.replaceAll('/', '__')}.names.ts`);
+        await mkdir(dirname(snippetPath), { recursive: true });
+        await writeFile(snippetPath, [...lines, ''].join('\n'));
+
+        const snippetRelativePath = relative(tempDir, snippetPath);
+        locations.forEach((source, index) => {
+            sourceByLocation.set(`${snippetRelativePath}:${index + 1}`, source);
+        });
+        snippetPaths.push(snippetRelativePath);
     }
 
     await writeFile(join(tempDir, 'tsconfig.json'), JSON.stringify({
@@ -99,7 +188,11 @@ try {
         include: snippetPaths,
     }, null, 2));
 
-    await run('node', [join(repoRoot, 'node_modules/typescript/bin/tsc'), '-p', 'tsconfig.json']);
+    try {
+        await run('node', [join(repoRoot, 'node_modules/typescript/bin/tsc'), '-p', 'tsconfig.json']);
+    } catch (error) {
+        throw new Error(rewriteSnippetLocations(error.message, sourceByLocation));
+    }
 } finally {
     await rm(tempDir, { recursive: true, force: true });
 }
