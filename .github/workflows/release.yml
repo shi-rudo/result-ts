@@ -1,0 +1,57 @@
+name: Release
+
+on:
+  release:
+    types:
+      - published
+  workflow_dispatch:
+
+permissions:
+  contents: read
+
+jobs:
+  publish:
+    name: Publish
+    runs-on: ubuntu-latest
+    timeout-minutes: 10
+    permissions:
+      contents: read
+      id-token: write
+
+    steps:
+      - name: Checkout
+        uses: actions/checkout@v7
+
+      - name: Enable Corepack
+        run: corepack enable
+
+      - name: Setup Node.js
+        uses: actions/setup-node@v6
+        with:
+          # npm trusted publishing needs npm 11.5.1 or later, which Node 24 bundles.
+          node-version: 24
+          registry-url: https://registry.npmjs.org
+          package-manager-cache: false
+
+      - name: Install dependencies
+        run: pnpm install --frozen-lockfile
+
+      - name: Verify the tag matches the package version
+        if: github.event_name == 'release'
+        env:
+          TAG: ${{ github.event.release.tag_name }}
+        run: |
+          expected="v$(node -p "require('./package.json').version")"
+          if [ "$TAG" != "$expected" ]; then
+            echo "Release tag $TAG does not match $expected from package.json." >&2
+            exit 1
+          fi
+
+      # prepublishOnly runs pnpm check, so both publish steps pass the full quality gate first.
+      - name: Publish to npm
+        if: github.event_name == 'release'
+        run: npm publish
+
+      - name: Publish to npm (dry run)
+        if: github.event_name == 'workflow_dispatch'
+        run: npm publish --dry-run
