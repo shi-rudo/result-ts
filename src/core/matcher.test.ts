@@ -19,8 +19,8 @@ type TaggedError =
     | { readonly type: 'network'; readonly retryAfter: number }
     | { readonly type: 'validation'; readonly field: string };
 
-describe('Result.match()', () => {
-    it('supports matchError() as explicit Err-only matcher name', () => {
+describe('Result.matchError()', () => {
+    it('dispatches the Err to the handler of its class', () => {
         const result: Result<number, IOError | ValidationError> = Result.err(new IOError('io'));
 
         if (!result.isErr()) throw new Error('expected Err');
@@ -44,7 +44,7 @@ describe('Result.match()', () => {
         if (!result.isErr()) throw new Error('expected Err');
 
         const message = result
-            .match()
+            .matchError()
             .when(IOError, () => 'Please check if the config file exists and is readable')
             .when(ParseError, () => 'Please check if the config file contains valid JSON')
             .when(ValidationError, error => `Invalid config: ${error.message}`)
@@ -59,7 +59,7 @@ describe('Result.match()', () => {
         if (!result.isErr()) throw new Error('expected Err');
 
         const message = result
-            .match()
+            .matchError()
             .when(IOError, () => 'io')
             .when(ParseError, () => 'parse')
             .when(ValidationError, e => `invalid: ${e.message}`)
@@ -77,7 +77,7 @@ describe('Result.match()', () => {
         const handler = vi.fn((error: ValidationError) => `invalid:${error.message}`);
         const otherwise = vi.fn((error: Error) => `fallback:${error.message}`);
 
-        const message = result.match().whenGuard(guard, handler).otherwise(otherwise);
+        const message = result.matchError().whenGuard(guard, handler).otherwise(otherwise);
 
         expect(guard).toHaveBeenCalledWith(result.error);
         expect(handler).toHaveBeenCalled();
@@ -182,7 +182,7 @@ describe('Result.match()', () => {
         const second = vi.fn(() => 'second');
 
         const message = result
-            .match()
+            .matchError()
             .when(ValidationError, first)
             .when(ValidationError, second)
             .otherwise(() => 'fallback');
@@ -202,7 +202,7 @@ describe('Result.match()', () => {
         const tagged = vi.fn(() => 'tagged');
 
         const message = result
-            .match()
+            .matchError()
             .when(ValidationError, () => 'first')
             .whenGuard(guard, guarded)
             .whenTag('type', 'network', tagged)
@@ -219,7 +219,7 @@ describe('Result.match()', () => {
 
         if (!result.isErr()) throw new Error('expected Err');
 
-        const builder = result.match().when(IOError, () => 'io');
+        const builder = result.matchError().when(IOError, () => 'io');
 
         const run = () => (builder as unknown as ErrorMatchBuilder<never, string>).run();
 
@@ -229,7 +229,7 @@ describe('Result.match()', () => {
     it('throws InvalidResultStateError for malformed Result state', () => {
         const malformed = { _tag: 'Invalid', value: undefined, error: undefined } as unknown as Result<number, Error>;
 
-        expect(() => Result.err<Error, number>(new UnknownError('nope')).match.call(malformed)).toThrow(InvalidResultStateError);
+        expect(() => Result.err<Error, number>(new UnknownError('nope')).matchError.call(malformed)).toThrow(InvalidResultStateError);
     });
 });
 

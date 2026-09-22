@@ -33,13 +33,11 @@
 - `.pipeAsync(...)`: Chain asynchronous operators.
 - `.matchError()`: Start an Err-only fluent matcher after `.isErr()` narrowing.
 - `.matchErrorAsync()`: Async variant of `.matchError()`.
-- `.match()`: Compatibility alias for `.matchError()`.
 - `.matchErr()`: Transform Err cases while returning a `Result`.
 - `.matchErrAsync()`: Async variant of `.matchErr()`.
 
 The matcher methods return the builder types `ErrorMatchBuilder`, `AsyncErrorMatchBuilder`, `ErrMatchBuilder`, and `AsyncErrMatchBuilder`. The package exports them as types, so a function that returns a started builder can be annotated and compiled with `declaration: true`.
 - `.toSerialized()`: Convert to the plain discriminated shape `{ _tag: 'Ok', value } | { _tag: 'Err', error }` (`ResultType<T, E>`), which `JSON.stringify` encodes exactly as it encodes the Result itself. Rebuild with `ok`/`err`. `JSON.stringify` drops a key whose value is `undefined`, so `Ok(undefined)` arrives as `{"_tag":"Ok"}` and `ok(parsed.value)` rebuilds it. `ResultType<T, E>` marks the payload key optional exactly where `T` or `E` admits `undefined`, so a schema typed as `ResultType<void, ApiError>` describes that payload. A generic helper over `ResultType<T, E>` reads the payload as `T | undefined`, because TypeScript cannot resolve the condition while `T` is a type parameter; rebuild with a cast there, or write the helper for a concrete payload type.
-- `.serialize()`: Convert to `{ isSuccess, data?, error? }`. Deprecated: `Ok(undefined)` is indistinguishable from a missing `data` field; use `.toSerialized()`.
 - `.toUserFriendly()`: Convert an Err to user-facing serialization with string error messages.
 
 ## Utilities

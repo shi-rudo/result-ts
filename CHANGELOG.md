@@ -1,5 +1,17 @@
 # Changelog
 
+## 2.0.0 - Unreleased
+
+Version 2 removes the APIs that 1.x deprecated. `docs/migration/v2.md` shows the replacement for each one.
+
+### Removed
+
+- `fromSerialized()`, deprecated in 1.2.0. Validate the payload with your schema tool and rebuild with `parsed._tag === 'Ok' ? ok(parsed.value) : err(parsed.error)`. A malformed payload such as `{ _tag: 'Nope' }` made `fromSerialized()` throw `InvalidResultStateError`. Your schema step reports that failure now.
+- `.serialize()`, deprecated in 1.1.0. Use `.toSerialized()`. The shape changes from `{ isSuccess, data?, error? }` to `{ _tag: 'Ok', value } | { _tag: 'Err', error }`, so a receiver reads the state from `_tag`.
+- `unwrapOrDefault()`, deprecated in 1.1.0. Use `unwrapOr()`, which takes the same arguments.
+- `ERR_INVALID_STATE`, deprecated in 1.1.0. Use `ERR_INVALID_RESULT_STATE`, which holds the same string.
+- The `.match()` method of a Result, deprecated in 1.0.0 as an alias of `.matchError()`. Use `.matchError()`, which returns the same builder. The `match({ ok, err })` pipe operator stays.
+
 ## 1.2.0 - 2026-08-19
 
 ### Deprecated

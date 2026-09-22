@@ -9,7 +9,7 @@ export default defineConfig({
         nav: [
             { text: 'Guide', link: '/guide/getting-started' },
             { text: 'API', link: '/api/result' },
-            { text: 'Migration', link: '/migration/v1' },
+            { text: 'Migration', link: '/migration/v2' },
             { text: 'GitHub', link: 'https://github.com/shi-rudo/result-ts' },
         ],
         sidebar: [
@@ -33,7 +33,10 @@ export default defineConfig({
             },
             {
                 text: 'Migration',
-                items: [{ text: 'Version 1', link: '/migration/v1' }],
+                items: [
+                    { text: 'Version 2', link: '/migration/v2' },
+                    { text: 'Version 1', link: '/migration/v1' },
+                ],
             },
             {
                 text: 'Decisions',
