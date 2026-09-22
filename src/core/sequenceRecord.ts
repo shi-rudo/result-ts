@@ -18,13 +18,18 @@ export function sequenceRecord<const R extends { readonly [K in keyof R]: Result
 
     const out: Partial<Out> = {};
 
-    // `Reflect.ownKeys` keeps the symbol keys, which the signature supports, but
-    // it also visits the non-enumerable properties that `keyof R` never sees.
+    // `Reflect.ownKeys` keeps the symbol keys, which the signature supports, and
+    // it also visits the non-enumerable properties. `keyof R` sees those too, so
+    // a hidden Result stays an input. A hidden value of another type is a helper
+    // field that the caller attached, and it is skipped instead of rejected.
     for (const key of Reflect.ownKeys(record) as Array<keyof R>) {
-        if (!Object.getOwnPropertyDescriptor(record, key)?.enumerable) continue;
-
         const result = record[key];
-        if (!isResult(result)) throw new InvalidResultStateError('sequenceRecord');
+
+        if (!isResult(result)) {
+            if (!Object.getOwnPropertyDescriptor(record, key)?.enumerable) continue;
+            throw new InvalidResultStateError('sequenceRecord');
+        }
+
         if (result.isOk()) {
             out[key] = result.value as Out[typeof key];
             continue;
