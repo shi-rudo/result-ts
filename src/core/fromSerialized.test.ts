@@ -52,6 +52,16 @@ describe('fromSerialized (deprecated)', () => {
         expect(restored.unwrap()).toBe(1);
     });
 
+    it('rejects a payload whose own-key check throws', () => {
+        const hostile = new Proxy({ _tag: 'Ok', value: 1 }, {
+            getOwnPropertyDescriptor(): PropertyDescriptor {
+                throw new Error('getOwnPropertyDescriptor trap is hostile');
+            },
+        });
+
+        expect(() => fromSerialized(hostile as never)).toThrow(InvalidResultStateError);
+    });
+
     it('rejects malformed serialized data', () => {
         expect(() => fromSerialized({ _tag: 'Nope' } as never)).toThrow(InvalidResultStateError);
         expect(() => fromSerialized(null as never)).toThrow(InvalidResultStateError);

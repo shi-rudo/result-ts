@@ -25,9 +25,19 @@ import { InvalidResultStateError } from '../errors';
  */
 export function fromSerialized<T, E>(data: ResultType<T, E>): Result<T, E> {
     if (data !== null && typeof data === 'object') {
-        // The key is absent only where `T` or `E` admits `undefined`, see `ResultType`.
-        if (data._tag === 'Ok' && !Object.hasOwn(data, 'error')) return ok<T, E>(data.value as T);
-        if (data._tag === 'Err' && !Object.hasOwn(data, 'value')) return err<E, T>(data.error as E);
+        // Reading the envelope runs code of the payload: `Object.hasOwn` calls
+        // the `getOwnPropertyDescriptor` trap of a Proxy, and the discriminant
+        // can be a getter. A payload that throws there is not a serialized
+        // Result, and the coded error of this library says so.
+        try {
+            // The key is absent only where `T` or `E` admits `undefined`, see `ResultType`.
+            if (data._tag === 'Ok' && !Object.hasOwn(data, 'error')) return ok<T, E>(data.value as T);
+            if (data._tag === 'Err' && !Object.hasOwn(data, 'value')) return err<E, T>(data.error as E);
+        } catch (error) {
+            const invalid = new InvalidResultStateError('fromSerialized');
+            invalid.cause = error;
+            throw invalid;
+        }
     }
     throw new InvalidResultStateError('fromSerialized');
 }
