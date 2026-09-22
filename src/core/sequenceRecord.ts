@@ -18,7 +18,11 @@ export function sequenceRecord<const R extends { readonly [K in keyof R]: Result
 
     const out: Partial<Out> = {};
 
+    // `Reflect.ownKeys` keeps the symbol keys, which the signature supports, but
+    // it also visits the non-enumerable properties that `keyof R` never sees.
     for (const key of Reflect.ownKeys(record) as Array<keyof R>) {
+        if (!Object.getOwnPropertyDescriptor(record, key)?.enumerable) continue;
+
         const result = record[key];
         if (!isResult(result)) throw new InvalidResultStateError('sequenceRecord');
         if (result.isOk()) {
