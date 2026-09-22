@@ -1,6 +1,6 @@
 import { Pipeable } from './pipeable';
 import { AsyncErrMatchBuilder, AsyncErrorMatchBuilder, ErrMatchBuilder, ErrorMatchBuilder } from './matcher';
-import { describeValue } from '../describeValue';
+import { describeErrorMessage } from '../describeValue';
 import { RESULT_BRAND } from './brand';
 import { isResult } from './isResult';
 import { all, sequence } from './sequence';
@@ -26,6 +26,10 @@ export type AsyncOperatorFunction<T, E, R> = (input: Result<T, E>) => Promise<R>
 // `JSON.stringify` drops a key whose value is `undefined`, so a payload that
 // crossed JSON carries the key only where the type cannot be `undefined`.
 // `toSerialized()` always writes it.
+//
+// The conditional stays deferred while `T` and `E` are unresolved, so a generic
+// wrapper reads the payload as `T | undefined` and needs a cast. At a concrete
+// instantiation the payload keeps its type.
 export type ResultType<T, E> =
     | (undefined extends T
         ? { readonly _tag: 'Ok'; readonly value?: T }
@@ -221,13 +225,7 @@ abstract class ResultBase extends Pipeable {
         if (this._tag === 'Ok') return { isSuccess: true, data: this.value };
         if (this._tag !== 'Err') throw new InvalidResultStateError('Result.toUserFriendly');
 
-        const error = this.error;
-        const errorMessage =
-            error && typeof error === 'object' && 'message' in error
-                ? describeValue((error as { message: unknown }).message)
-                : describeValue(error);
-
-        return { isSuccess: false, error: errorMessage };
+        return { isSuccess: false, error: describeErrorMessage(this.error) };
     }
 }
 
