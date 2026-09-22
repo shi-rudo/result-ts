@@ -22,7 +22,16 @@ export type AsyncOperatorFunction<T, E, R> = (input: Result<T, E>) => Promise<R>
 
 // --- 2. Result Types ---
 
-export type ResultType<T, E> = { readonly _tag: 'Ok'; readonly value: T } | { readonly _tag: 'Err'; readonly error: E };
+// `JSON.stringify` drops a key whose value is `undefined`, so a payload that
+// crossed JSON carries the key only where the type cannot be `undefined`.
+// `toSerialized()` always writes it.
+export type ResultType<T, E> =
+    | (undefined extends T
+        ? { readonly _tag: 'Ok'; readonly value?: T }
+        : { readonly _tag: 'Ok'; readonly value: T })
+    | (undefined extends E
+        ? { readonly _tag: 'Err'; readonly error?: E }
+        : { readonly _tag: 'Err'; readonly error: E });
 
 export type Result<T, E> = Ok<T, E> | Err<T, E>;
 type OkValue<R> = R extends { readonly _tag: 'Ok'; readonly value: infer T } ? T : never;

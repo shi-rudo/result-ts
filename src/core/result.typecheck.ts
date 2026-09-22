@@ -1,4 +1,4 @@
-import { err, fromPromise, ok, Result, tryCatch, tryCatchAsync, tryMap, tryMapAsync } from '../index';
+import { err, fromPromise, ok, Result, type ResultType, tryCatch, tryCatchAsync, tryMap, tryMapAsync } from '../index';
 
 type Equal<A, B> =
     (<T>() => T extends A ? 1 : 2) extends
@@ -124,3 +124,20 @@ type TryMapWithMapperUnionsSourceAndMappedErrors = Expect<
 
 // @ts-expect-error tryMapAsync with an explicit mapped-error type must receive an errorMapper.
 tryMapAsync<number, string, number, Error>(async value => value + 1);
+
+// `JSON.stringify` drops a key whose value is `undefined`, so the serialized
+// shape must describe the payload that arrives without it.
+const voidPayload: ResultType<void, string> = { _tag: 'Ok' };
+voidPayload satisfies ResultType<void, string>;
+
+const optionalValuePayload: ResultType<number | undefined, string> = { _tag: 'Ok' };
+optionalValuePayload satisfies ResultType<number | undefined, string>;
+
+const undefinedErrorPayload: ResultType<number, undefined> = { _tag: 'Err' };
+undefinedErrorPayload satisfies ResultType<number, undefined>;
+
+// @ts-expect-error A value that cannot be undefined must carry the value key.
+const missingValue: ResultType<number, string> = { _tag: 'Ok' };
+
+// @ts-expect-error An error that cannot be undefined must carry the error key.
+const missingError: ResultType<number, string> = { _tag: 'Err' };
