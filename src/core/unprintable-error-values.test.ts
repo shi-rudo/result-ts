@@ -29,6 +29,18 @@ const throwingToStringTag = (): object => ({
     },
 });
 
+const throwingMessageGetter = (): object => ({
+    get message(): string {
+        throw new Error('message getter is hostile');
+    },
+});
+
+const throwingHasTrap = (): object => new Proxy({}, {
+    has(): boolean {
+        throw new Error('has trap is hostile');
+    },
+});
+
 const caughtFrom = (run: () => unknown): unknown => {
     try {
         run();
@@ -93,6 +105,14 @@ describe('errors for values that cannot be converted to a string', () => {
 
     it('describes an unprintable error value in toUserFriendly', () => {
         expect(err(nullPrototype()).toUserFriendly()).toEqual({ isSuccess: false, error: '[object Object]' });
+    });
+
+    it('describes an error whose message getter throws in toUserFriendly', () => {
+        expect(err(throwingMessageGetter()).toUserFriendly()).toEqual({ isSuccess: false, error: '[object Object]' });
+    });
+
+    it('describes an error whose has trap throws in toUserFriendly', () => {
+        expect(err(throwingHasTrap()).toUserFriendly()).toEqual({ isSuccess: false, error: '[object Object]' });
     });
 
     it('describes an unprintable message property in toUserFriendly', () => {

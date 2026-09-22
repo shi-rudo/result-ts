@@ -16,6 +16,19 @@ describe('sequenceRecord', () => {
         }
     });
 
+    it('keeps a non-enumerable own property that holds a Result', () => {
+        const record = Object.defineProperty(
+            { a: ok(1) } as { a: Result<number, never>; b: Result<number, never> },
+            'b',
+            { value: ok(2), enumerable: false }
+        );
+
+        const result = sequenceRecord(record);
+
+        expect(result.isOk()).toBe(true);
+        expect(result.unwrap()).toEqual({ a: 1, b: 2 });
+    });
+
     it('ignores non-enumerable own properties', () => {
         const record = Object.defineProperty({ a: ok(1) }, 'hidden', { value: 'not a Result', enumerable: false });
 
