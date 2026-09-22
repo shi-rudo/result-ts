@@ -79,7 +79,7 @@
     "check": "pnpm typecheck && node scripts/generate-pipeable.mjs --check && pnpm test:types && pnpm test run && pnpm build && pnpm docs:check && pnpm docs:build && pnpm test:edge && pnpm test:exports",
     "check:clean": "git diff --exit-code && git diff --cached --exit-code",
     "docs:dev": "vitepress dev docs",
-    "docs:check": "node scripts/check-docs-examples.mjs",
+    "docs:check": "node scripts/check-docs.mjs",
     "docs:build": "vitepress build docs",
     "docs:preview": "vitepress preview docs",
     "prebuild": "pnpm lint && pnpm test:types && pnpm test run",
