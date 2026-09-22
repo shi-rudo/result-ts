@@ -321,7 +321,7 @@ const cached = Result.err<CacheMissError, number>(new CacheMissError())
 
 ## Serialization
 
-`toSerialized()` returns the plain discriminated shape `ResultType<T, E>`, the same thing `JSON.stringify(result)` produces, and it keeps `Ok(undefined)` unambiguous. Rebuild with `ok`/`err` after validating foreign payloads. The older `serialize()` is deprecated because its format cannot round-trip.
+`toSerialized()` returns the plain discriminated shape `ResultType<T, E>`, which `JSON.stringify` encodes exactly as it encodes the Result itself, and it keeps `Ok(undefined)` unambiguous through the `_tag`. `JSON.stringify` drops the `undefined` `value` key, and `ok(parsed.value)` rebuilds the value. Rebuild with `ok`/`err` after validating foreign payloads. The older `serialize()` is deprecated because its format cannot round-trip.
 
 ```typescript
 import { ok, err } from '@shirudo/result';

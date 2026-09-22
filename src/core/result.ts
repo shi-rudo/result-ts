@@ -23,7 +23,16 @@ export type AsyncOperatorFunction<T, E, R> = (input: Result<T, E>) => Promise<R>
 
 // --- 2. Result Types ---
 
-export type ResultType<T, E> = { readonly _tag: 'Ok'; readonly value: T } | { readonly _tag: 'Err'; readonly error: E };
+// `JSON.stringify` drops a key whose value is `undefined`, so a payload that
+// crossed JSON carries the key only where the type cannot be `undefined`.
+// `toSerialized()` always writes it.
+export type ResultType<T, E> =
+    | (undefined extends T
+        ? { readonly _tag: 'Ok'; readonly value?: T }
+        : { readonly _tag: 'Ok'; readonly value: T })
+    | (undefined extends E
+        ? { readonly _tag: 'Err'; readonly error?: E }
+        : { readonly _tag: 'Err'; readonly error: E });
 
 export type Result<T, E> = Ok<T, E> | Err<T, E>;
 type OkValue<R> = R extends { readonly _tag: 'Ok'; readonly value: infer T } ? T : never;
@@ -167,10 +176,13 @@ abstract class ResultBase extends Pipeable {
      * `{ _tag: 'Ok', value }` / `{ _tag: 'Err', error }` (`ResultType<T, E>`),
      * with no prototype, methods, or brand attached.
      *
-     * Unlike {@link serialize}, `Ok(undefined)` stays unambiguous because the
-     * `value` key is always present. The shape is exactly what
-     * `JSON.stringify(result)` produces for a Result instance, so it is safe
-     * for JSON, `structuredClone`, and `postMessage`.
+     * Unlike {@link serialize}, `Ok(undefined)` stays unambiguous, because the
+     * `_tag` discriminant carries the state. The returned `Ok` object holds
+     * the `value` key, and `JSON.stringify` encodes it exactly as it encodes
+     * the Result instance, so the shape is safe for JSON, `structuredClone`,
+     * and `postMessage`. JSON is the lossy step: `JSON.stringify` drops a key
+     * whose value is `undefined`, so `Ok(undefined)` crosses the wire as
+     * `{"_tag":"Ok"}`, and `ok(parsed.value)` rebuilds it.
      *
      * To rebuild a Result on the other side, validate the payload with your
      * schema tool and then call `ok`/`err` on the discriminant:
