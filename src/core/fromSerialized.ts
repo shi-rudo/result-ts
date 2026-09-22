@@ -17,8 +17,9 @@ import { InvalidResultStateError } from '../errors';
  *
  * `fromSerialized` only checks the envelope, the `_tag` discriminant plus the
  * absence of the key of the other state, never the payload itself, while its
- * type parameters claim `T` and `E` for whatever `JSON.parse` returned. It also throws for malformed input at exactly the boundary where
- * a Result should be returned. Validate foreign data with your schema tool and
+ * type parameters claim `T` and `E` for whatever `JSON.parse` returned. It
+ * also throws for malformed input at exactly the boundary where a Result
+ * should be returned. Validate foreign data with your schema tool and
  * then call `ok`/`err`; the shape is exported as `ResultType<T, E>`. This
  * function will be removed in 2.0.
  */
