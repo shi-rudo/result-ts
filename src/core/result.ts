@@ -26,6 +26,10 @@ export type AsyncOperatorFunction<T, E, R> = (input: Result<T, E>) => Promise<R>
 // `JSON.stringify` drops a key whose value is `undefined`, so a payload that
 // crossed JSON carries the key only where the type cannot be `undefined`.
 // `toSerialized()` always writes it.
+//
+// The conditional stays deferred while `T` and `E` are unresolved, so a generic
+// wrapper reads the payload as `T | undefined` and needs a cast. At a concrete
+// instantiation the payload keeps its type.
 export type ResultType<T, E> =
     | (undefined extends T
         ? { readonly _tag: 'Ok'; readonly value?: T }
