@@ -1,6 +1,6 @@
 import { describe, expect, it } from 'vitest';
 
-import { err, ok, type Result } from './result';
+import { err, ok, type Result, type ResultType } from './result';
 import { fromSerialized } from './fromSerialized';
 import { InvalidResultStateError } from '../errors';
 
@@ -19,6 +19,24 @@ describe('fromSerialized (deprecated)', () => {
         const roundTripped = fromSerialized(ok(undefined).toSerialized());
         expect(roundTripped.isOk()).toBe(true);
         expect(roundTripped.unwrap()).toBeUndefined();
+    });
+
+    it('rebuilds Ok(undefined) from JSON that dropped the undefined value key', () => {
+        const parsed: ResultType<void, string> = JSON.parse(JSON.stringify(ok()));
+
+        const restored = fromSerialized(parsed);
+
+        expect(restored.isOk()).toBe(true);
+        expect(restored.unwrap()).toBeUndefined();
+    });
+
+    it('rebuilds Err(undefined) from JSON that dropped the undefined error key', () => {
+        const parsed: ResultType<number, undefined> = JSON.parse(JSON.stringify(err<undefined, number>(undefined)));
+
+        const restored = fromSerialized(parsed);
+
+        expect(restored.isErr()).toBe(true);
+        expect(restored.unwrapErr()).toBeUndefined();
     });
 
     it('rejects malformed serialized data', () => {
