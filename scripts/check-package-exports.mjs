@@ -64,6 +64,26 @@ try {
         }
     `]);
 
+    // Every value export of a subpath entry must also reach the root entry. The
+    // root entry re-exports ./operators and ./collections instead of listing
+    // their modules again, and this pins that it keeps doing so.
+    await run('node', ['--input-type=module', '-e', `
+        import * as root from '@shirudo/result';
+        import * as errors from '@shirudo/result/errors';
+        import * as operators from '@shirudo/result/operators';
+        import * as collections from '@shirudo/result/collections';
+
+        const missing = Object.entries({ errors, operators, collections }).flatMap(
+            ([entry, module]) => Object.keys(module)
+                .filter(name => !(name in root))
+                .map(name => \`\${entry}/\${name}\`)
+        );
+
+        if (missing.length > 0) {
+            throw new Error('subpath exports missing from the root entry: ' + missing.join(', '));
+        }
+    `]);
+
     await writeFile(join(tempDir, 'tsconfig.json'), JSON.stringify({
         compilerOptions: {
             strict: true,

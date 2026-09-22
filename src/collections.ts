@@ -1,8 +1,8 @@
-export { sequence, all } from './core/sequence';
-export { sequenceRecord } from './core/sequenceRecord';
-export { collectFirstOk } from './core/collectFirstOk';
-export { collectFirstOkAsync } from './core/collectFirstOkAsync';
-export { collectFirstOkParallelAsync } from './core/collectFirstOkParallelAsync';
-export { collectAllErrors } from './core/collectAllErrors';
-export { partition } from './core/partition';
-export { flatten } from './core/flatten';
+export * from './core/sequence';
+export * from './core/sequenceRecord';
+export * from './core/collectFirstOk';
+export * from './core/collectFirstOkAsync';
+export * from './core/collectFirstOkParallelAsync';
+export * from './core/collectAllErrors';
+export * from './core/partition';
+export * from './core/flatten';
