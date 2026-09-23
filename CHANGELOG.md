@@ -14,7 +14,7 @@ Version 2 removes the APIs that 1.x deprecated. It also makes the method name a 
 
 ### Changed
 
-- The `MatchOnOkError` constructor requires the name of the method that was called on an `Ok`. The default was `'match'`, the name of the removed method, and every caller inside the library already passed a name. Code that constructs the error without an argument no longer compiles.
+- The `MatchOnOkError` constructor requires the name of the method that was called on an `Ok`. The default was `'match'`, the name of the removed method, and every caller inside the library already passed a name. TypeScript code that constructs the error without an argument no longer compiles. JavaScript code still runs, and the message then starts with `undefined()` instead of a method name.
 
 ## 1.2.0 - 2026-09-22
 
