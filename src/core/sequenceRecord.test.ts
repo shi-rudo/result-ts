@@ -20,6 +20,10 @@ describe('sequenceRecord', () => {
         expect(() => sequenceRecord([ok(1), ok(2)] as never)).toThrow(InvalidResultStateError);
     });
 
+    it('sequences a record that holds a Result under the key length', () => {
+        expect(sequenceRecord({ length: ok(3) }).unwrap()).toEqual({ length: 3 });
+    });
+
     it('keeps a non-enumerable own property that holds a Result', () => {
         const record = Object.defineProperty(
             { a: ok(1) } as { a: Result<number, never>; b: Result<number, never> },

@@ -2,7 +2,7 @@
 
 ## 2.0.0 - Unreleased
 
-Version 2 removes the APIs that 1.x deprecated. It also makes the method name a required argument of the `MatchOnOkError` constructor, the one breaking change without a deprecation in 1.x. `docs/migration/v2.md` shows the replacement for each change.
+Version 2 removes the APIs that 1.x deprecated. Two more changes had no deprecation in 1.x: the `MatchOnOkError` constructor requires the method name, and `sequenceRecord()` rejects an array at compile time. `docs/migration/v2.md` shows the replacement for each change.
 
 ### Removed
 
@@ -15,6 +15,7 @@ Version 2 removes the APIs that 1.x deprecated. It also makes the method name a 
 ### Changed
 
 - The `MatchOnOkError` constructor requires the name of the method that was called on an `Ok`. The default was `'match'`, the name of the removed method, and every caller inside the library already passed a name. TypeScript code that constructs the error without an argument no longer compiles. JavaScript code still runs, and the message then starts with `undefined()` instead of a method name.
+- `sequenceRecord()` rejects an array or a tuple at compile time. Its constraint mapped a tuple onto a tuple. So `sequenceRecord([ok(1), ok(2)])` compiled, and then it threw `InvalidResultStateError` with the message "Unreachable: Result is neither Ok nor Err". The constraint now also demands that a `length` key hold a `Result`, and the `length` of an array never does. A record can still hold a `Result` under the key `length`. A generic caller over `Record<string, Result<T, E>>` still compiles and keeps its return type. An argument whose type is a union of an array and a record also stops compiling. That call compiled before with the error type `never`, and it threw whenever the value was an array. An untyped caller still meets the runtime check.
 
 ## 1.2.0 - 2026-09-22
 

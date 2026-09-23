@@ -11,19 +11,27 @@ type ErrValueOf<R> = R extends Result<any, infer E> ? E : never;
  * Short-circuits on the first Err.
  *
  * A non-enumerable own property is an input only when it holds a `Result`, so a
- * hidden helper field of another type is ignored. An array throws, because its
- * indices would sequence into an object; use `sequence` for a list.
+ * hidden helper field of another type is ignored. An array does not compile.
+ * An untyped caller that passes one gets an exception, because the indices of
+ * an array would sequence into an object. Use `sequence` for a list.
  */
-export function sequenceRecord<const R extends { readonly [K in keyof R]: Result<any, any> }>(
+export function sequenceRecord<
+    // The mapped half maps a tuple onto a tuple, so alone it admits an array.
+    // The `length` of an array is a number, so the second half rejects it. A
+    // record can still hold a Result under the key `length`. A conditional
+    // parameter type would also reject an array, but it stays unresolved for a
+    // generic record and rejects that too.
+    const R extends { readonly [K in keyof R]: Result<any, any> } & { readonly length?: Result<any, any> }
+>(
     record: R
 ): Result<{ [K in keyof R]: OkValueOf<R[K]> }, ErrValueOf<R[keyof R]>> {
     type Out = { [K in keyof R]: OkValueOf<R[K]> };
     type E = ErrValueOf<R[keyof R]>;
 
-    // An array reaches this point only from JavaScript, and it would sequence
-    // into an object keyed by its indices: `length` is a non-enumerable
-    // non-Result and the rule below would skip it. A list of Results belongs to
-    // `sequence()`, so the mistake fails here instead of returning a wrong shape.
+    // An array reaches this point only through JavaScript, `any` or a cast. It
+    // would sequence into an object keyed by its indices, because `length` is a
+    // non-enumerable non-Result and the rule below skips it. A list of Results
+    // belongs to `sequence()`, so the mistake fails here and returns no wrong shape.
     if (Array.isArray(record)) throw new InvalidResultStateError('sequenceRecord');
 
     const out: Partial<Out> = {};

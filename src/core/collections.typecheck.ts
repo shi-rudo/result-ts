@@ -7,6 +7,7 @@ import {
     err,
     ok,
     sequence,
+    sequenceRecord,
     type Result,
 } from '../index';
 
@@ -108,3 +109,47 @@ type CollectFirstOkParallelAsyncWithMapperUnionsErrValuesAndMappedRejections = E
         Promise<Result<number | string, Array<'number-error' | 'string-error' | { rejected: unknown }>>>
     >
 >;
+
+const sequencedRecord = sequenceRecord({ a: ok<number, 'a-error'>(1), b: ok<string, 'b-error'>('x') });
+
+type SequenceRecordMapsValuesAndUnionsErrors = Expect<
+    Equal<typeof sequencedRecord, Result<{ readonly a: number; readonly b: string }, 'a-error' | 'b-error'>>
+>;
+
+const recordSymbol = Symbol('id');
+const sequencedSymbolRecord = sequenceRecord({ [recordSymbol]: ok<number, 'id-error'>(1) });
+
+type SequenceRecordKeepsSymbolKeys = Expect<
+    Equal<typeof sequencedSymbolRecord, Result<{ readonly [recordSymbol]: number }, 'id-error'>>
+>;
+
+const sequencedLengthRecord = sequenceRecord({ length: ok<number, 'length-error'>(3) });
+
+type SequenceRecordAcceptsAResultUnderTheKeyLength = Expect<
+    Equal<typeof sequencedLengthRecord, Result<{ readonly length: number }, 'length-error'>>
+>;
+
+function sequenceGenericRecord<R extends Record<string, Result<number, string>>>(record: R) {
+    return sequenceRecord(record);
+}
+
+const sequencedGenericRecord = sequenceGenericRecord({ a: ok<number, string>(1), b: ok<number, string>(2) });
+
+type SequenceRecordKeepsTheReturnTypeOfAGenericCaller = Expect<
+    Equal<typeof sequencedGenericRecord, Result<{ a: number; b: number }, string>>
+>;
+
+declare const resultList: Result<number, string>[];
+declare const readonlyResultList: readonly Result<number, string>[];
+
+// @ts-expect-error An array belongs to sequence(), not sequenceRecord().
+sequenceRecord([ok(1), ok(2)]);
+
+// @ts-expect-error A tuple belongs to sequence(), not sequenceRecord().
+sequenceRecord([ok(1), ok('x')] as const);
+
+// @ts-expect-error An array variable belongs to sequence(), not sequenceRecord().
+sequenceRecord(resultList);
+
+// @ts-expect-error A readonly array variable belongs to sequence(), not sequenceRecord().
+sequenceRecord(readonlyResultList);
