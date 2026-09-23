@@ -131,6 +131,14 @@ abstract class ResultBase extends Pipeable {
         return (yield this) as OkValue<this>;
     }
 
+    /**
+     * Starts an Err-only matcher: a `.when(...)` chain over the error value,
+     * which returns an {@link ErrorMatchBuilder}.
+     *
+     * This is not the `match({ ok, err })` pipe operator, which handles both
+     * states. On an `Ok` this method throws `MatchOnOkError`, so narrow the
+     * Result first, for example inside `if (result.isErr()) { ... }`.
+     */
     matchError<T, E>(this: Result<T, E>): ErrorMatchBuilder<E, never> {
         if (this._tag === 'Err') return new ErrorMatchBuilder(this.error);
         if (this._tag === 'Ok') throw new MatchOnOkError('matchError');
