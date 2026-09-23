@@ -355,7 +355,7 @@ Codes: `ERR_UNWRAP_ON_ERR`, `ERR_UNWRAP_ERR_ON_OK`, `ERR_EXPECT_OK`, `ERR_EXPECT
 
 ## Removed in 2.0
 
-Code written against 1.x can still call these. Replace each call as follows:
+Version 2 removes these APIs. Replace each call in code written against 1.x as follows:
 
 - `serialize()`: use `toSerialized()`. The shape changes from `{ isSuccess, data?, error? }` to `{ _tag, value | error }`.
 - `fromSerialized(data)`: validate the payload yourself, then `data._tag === 'Ok' ? ok(data.value) : err(data.error)`.
