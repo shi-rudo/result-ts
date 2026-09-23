@@ -99,59 +99,6 @@ describe('Result.matchError()', () => {
         expect(message).toBe('field:email');
     });
 
-    it('supports exhaustive object matching for discriminated union errors', () => {
-        const result: Result<number, TaggedError> = Result.err({ type: 'network', retryAfter: 30 });
-
-        const message = matchTag(result, 'type', {
-            network: error => `retry:${error.retryAfter}`,
-            validation: error => `field:${error.field}`,
-        });
-
-        expect(message).toBe('retry:30');
-    });
-
-    it('throws when object matching is called on Ok', () => {
-        expect(() => matchTag(ok<number, TaggedError>(1), 'type', {
-            network: error => `retry:${error.retryAfter}`,
-            validation: error => `field:${error.field}`,
-        })).toThrow('matchTag() can only be called on Err results');
-    });
-
-    it('throws MatchTagMissingHandlerError when object matching has no runtime handler for the tag', () => {
-        const result: Result<number, TaggedError> = Result.err({ type: 'network', retryAfter: 30 });
-
-        let caught: unknown;
-        try {
-            matchTag(result, 'type', {
-                validation: error => `field:${error.field}`,
-            } as never);
-        } catch (error) {
-            caught = error;
-        }
-
-        expect(caught).toBeInstanceOf(MatchTagMissingHandlerError);
-        expect((caught as MatchTagMissingHandlerError).code).toBe(ERR_MATCH_TAG_MISSING_HANDLER);
-        expect((caught as MatchTagMissingHandlerError).tagValue).toBe('network');
-    });
-
-    it('does not resolve handlers from the prototype chain (e.g. tag "toString")', () => {
-        const result = Result.err({ type: 'toString' }) as unknown as Result<number, TaggedError>;
-
-        expect(() => matchTag(result, 'type', {} as never)).toThrow(MatchTagMissingHandlerError);
-    });
-
-    it('throws when object matching receives a malformed Result-like state', () => {
-        const malformed = {
-            isOk: () => false,
-            isErr: () => false,
-        } as unknown as Result<number, TaggedError>;
-
-        expect(() => matchTag(malformed, 'type', {
-            network: error => `retry:${error.retryAfter}`,
-            validation: error => `field:${error.field}`,
-        })).toThrow(InvalidResultStateError);
-    });
-
     it('falls through non-matching guards and tags to otherwise()', () => {
         const result: Result<number, IOError | TaggedError> = Result.err({ type: 'network', retryAfter: 30 });
 
@@ -224,6 +171,61 @@ describe('Result.matchError()', () => {
         const run = () => (builder as unknown as ErrorMatchBuilder<never, string>).run();
 
         expect(run).toThrow(UnknownError);
+    });
+});
+
+describe('matchTag()', () => {
+    it('supports exhaustive object matching for discriminated union errors', () => {
+        const result: Result<number, TaggedError> = Result.err({ type: 'network', retryAfter: 30 });
+
+        const message = matchTag(result, 'type', {
+            network: error => `retry:${error.retryAfter}`,
+            validation: error => `field:${error.field}`,
+        });
+
+        expect(message).toBe('retry:30');
+    });
+
+    it('throws when object matching is called on Ok', () => {
+        expect(() => matchTag(ok<number, TaggedError>(1), 'type', {
+            network: error => `retry:${error.retryAfter}`,
+            validation: error => `field:${error.field}`,
+        })).toThrow('matchTag() can only be called on Err results');
+    });
+
+    it('throws MatchTagMissingHandlerError when object matching has no runtime handler for the tag', () => {
+        const result: Result<number, TaggedError> = Result.err({ type: 'network', retryAfter: 30 });
+
+        let caught: unknown;
+        try {
+            matchTag(result, 'type', {
+                validation: error => `field:${error.field}`,
+            } as never);
+        } catch (error) {
+            caught = error;
+        }
+
+        expect(caught).toBeInstanceOf(MatchTagMissingHandlerError);
+        expect((caught as MatchTagMissingHandlerError).code).toBe(ERR_MATCH_TAG_MISSING_HANDLER);
+        expect((caught as MatchTagMissingHandlerError).tagValue).toBe('network');
+    });
+
+    it('does not resolve handlers from the prototype chain (e.g. tag "toString")', () => {
+        const result = Result.err({ type: 'toString' }) as unknown as Result<number, TaggedError>;
+
+        expect(() => matchTag(result, 'type', {} as never)).toThrow(MatchTagMissingHandlerError);
+    });
+
+    it('throws when object matching receives a malformed Result-like state', () => {
+        const malformed = {
+            isOk: () => false,
+            isErr: () => false,
+        } as unknown as Result<number, TaggedError>;
+
+        expect(() => matchTag(malformed, 'type', {
+            network: error => `retry:${error.retryAfter}`,
+            validation: error => `field:${error.field}`,
+        })).toThrow(InvalidResultStateError);
     });
 });
 
