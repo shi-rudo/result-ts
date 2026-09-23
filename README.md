@@ -233,6 +233,7 @@ The full documentation lives in `docs/` and is built with VitePress.
 - [Operators](docs/api/operators.md)
 - [Collections](docs/api/collections.md)
 - [Error Classes](docs/api/errors.md)
+- [Version 2 Migration](docs/migration/v2.md)
 - [Version 1 Migration](docs/migration/v1.md)
 - [Design Decisions](docs/decisions/lazy-async-abstraction.md) ([Defensive State Checks](docs/decisions/defensive-state-checks.md))
 

@@ -321,7 +321,7 @@ const cached = Result.err<CacheMissError, number>(new CacheMissError())
 
 ## Serialization
 
-`toSerialized()` returns the plain discriminated shape `ResultType<T, E>`, which `JSON.stringify` encodes exactly as it encodes the Result itself, and it keeps `Ok(undefined)` unambiguous through the `_tag`. `JSON.stringify` drops the `undefined` `value` key, and `ok(parsed.value)` rebuilds the value. Rebuild with `ok`/`err` after validating foreign payloads. The older `serialize()` is deprecated because its format cannot round-trip.
+`toSerialized()` returns the plain discriminated shape `ResultType<T, E>`, which `JSON.stringify` encodes exactly as it encodes the Result itself, and it keeps `Ok(undefined)` unambiguous through the `_tag`. `JSON.stringify` drops the `undefined` `value` key, and `ok(parsed.value)` rebuilds the value. Rebuild with `ok`/`err` after validating foreign payloads.
 
 ```typescript
 import { ok, err } from '@shirudo/result';
@@ -353,13 +353,17 @@ try {
 
 Codes: `ERR_UNWRAP_ON_ERR`, `ERR_UNWRAP_ERR_ON_OK`, `ERR_EXPECT_OK`, `ERR_EXPECT_ERR`, `ERR_MATCH_ON_OK`, `ERR_MATCH_TAG_MISSING_HANDLER`, `ERR_MATCH_ERR_HANDLER_NOT_RESULT`, `ERR_TASK_YIELD_NOT_RESULT`, `ERR_INVALID_RESULT_STATE`.
 
-## Deprecated
+## Removed in 2.0
 
-- `serialize()`: use `toSerialized()`.
+Version 2 removes these APIs. Replace each call in code written against 1.x as follows:
+
+- `serialize()`: use `toSerialized()`. The shape changes from `{ isSuccess, data?, error? }` to `{ _tag, value | error }`.
 - `fromSerialized(data)`: validate the payload yourself, then `data._tag === 'Ok' ? ok(data.value) : err(data.error)`.
-- `unwrapOrDefault(result, value)`: alias of `unwrapOr` with a misleading name.
+- `unwrapOrDefault(result, value)`: use `unwrapOr(result, value)`.
 - `ERR_INVALID_STATE`: use `ERR_INVALID_RESULT_STATE`.
 - Instance `match()`: use `matchError()` (Err-only builder) or the `match({ ok, err })` pipe operator.
+
+Version 2 also requires the method name in the `MatchOnOkError` constructor: `new MatchOnOkError('matchError')`. The migration guide owns this list and shows each replacement in full: https://github.com/shi-rudo/result-ts/blob/main/docs/migration/v2.md
 
 ## Subpath Exports
 

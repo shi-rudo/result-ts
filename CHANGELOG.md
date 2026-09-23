@@ -1,5 +1,21 @@
 # Changelog
 
+## 2.0.0 - Unreleased
+
+Version 2 removes the APIs that 1.x deprecated. It also makes the method name a required argument of the `MatchOnOkError` constructor, the one breaking change without a deprecation in 1.x. `docs/migration/v2.md` shows the replacement for each change.
+
+### Removed
+
+- `fromSerialized()`, deprecated in 1.2.0. Validate the payload with your schema tool and rebuild with `parsed._tag === 'Ok' ? ok(parsed.value) : err(parsed.error)`. A malformed payload such as `{ _tag: 'Nope' }` made `fromSerialized()` throw `InvalidResultStateError`. Your schema step reports that failure now.
+- `.serialize()`, deprecated in 1.1.0. Use `.toSerialized()`. The shape changes from `{ isSuccess, data?, error? }` to `{ _tag: 'Ok', value } | { _tag: 'Err', error }`, so a receiver reads the state from `_tag`.
+- `unwrapOrDefault()`, deprecated in 1.1.0. Use `unwrapOr()`, which takes the same arguments.
+- `ERR_INVALID_STATE`, deprecated in 1.1.0. Use `ERR_INVALID_RESULT_STATE`, which holds the same string.
+- The `.match()` method of a Result, deprecated in 1.0.0 as an alias of `.matchError()`. Use `.matchError()`, which returns the same builder. The `match({ ok, err })` pipe operator stays.
+
+### Changed
+
+- The `MatchOnOkError` constructor requires the name of the method that was called on an `Ok`. The default was `'match'`, the name of the removed method, and every caller inside the library already passed a name. TypeScript code that constructs the error without an argument no longer compiles. JavaScript code still runs, and the message then starts with `undefined()` instead of a method name.
+
 ## 1.2.0 - 2026-09-22
 
 ### Deprecated

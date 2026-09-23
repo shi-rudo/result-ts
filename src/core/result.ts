@@ -131,6 +131,14 @@ abstract class ResultBase extends Pipeable {
         return (yield this) as OkValue<this>;
     }
 
+    /**
+     * Starts an Err-only matcher: a `.when(...)` chain over the error value,
+     * which returns an {@link ErrorMatchBuilder}.
+     *
+     * This is not the `match({ ok, err })` pipe operator, which handles both
+     * states. On an `Ok` this method throws `MatchOnOkError`, so narrow the
+     * Result first, for example inside `if (result.isErr()) { ... }`.
+     */
     matchError<T, E>(this: Result<T, E>): ErrorMatchBuilder<E, never> {
         if (this._tag === 'Err') return new ErrorMatchBuilder(this.error);
         if (this._tag === 'Ok') throw new MatchOnOkError('matchError');
@@ -141,25 +149,6 @@ abstract class ResultBase extends Pipeable {
         if (this._tag === 'Err') return new AsyncErrorMatchBuilder(this.error);
         if (this._tag === 'Ok') throw new MatchOnOkError('matchErrorAsync');
         throw new InvalidResultStateError('Result.matchErrorAsync');
-    }
-
-    /**
-     * Matches on the **Err** value via a `.when(...)` chain.
-     *
-     * Not the same as the `match({ ok, err })` pipe operator: that operator resolves
-     * **both** branches (Ok and Err) via callbacks, whereas this method is **Err-only**
-     * and returns an {@link ErrorMatchBuilder}.
-     *
-     * Note: for type-safety reasons, `.match()` can only be called on a Result already
-     * narrowed to `Err`, e.g. inside `if (result.isErr()) { ... }`.
-     *
-     * @deprecated Use `.matchError()` for clearer Err-only semantics. For Ok+Err handling,
-     * use the `match({ ok, err })` pipe operator instead.
-     */
-    match<T, E>(this: Result<T, E>): ErrorMatchBuilder<E, never> {
-        if (this._tag === 'Err') return new ErrorMatchBuilder(this.error);
-        if (this._tag === 'Ok') throw new MatchOnOkError();
-        throw new InvalidResultStateError('Result.match');
     }
 
     /**
@@ -180,13 +169,13 @@ abstract class ResultBase extends Pipeable {
      * `{ _tag: 'Ok', value }` / `{ _tag: 'Err', error }` (`ResultType<T, E>`),
      * with no prototype, methods, or brand attached.
      *
-     * Unlike {@link serialize}, `Ok(undefined)` stays unambiguous, because the
-     * `_tag` discriminant carries the state. The returned `Ok` object holds
-     * the `value` key, and `JSON.stringify` encodes it exactly as it encodes
-     * the Result instance, so the shape is safe for JSON, `structuredClone`,
-     * and `postMessage`. JSON is the lossy step: `JSON.stringify` drops a key
-     * whose value is `undefined`, so `Ok(undefined)` crosses the wire as
-     * `{"_tag":"Ok"}`, and `ok(parsed.value)` rebuilds it.
+     * `Ok(undefined)` stays unambiguous, because the `_tag` discriminant
+     * carries the state. The returned `Ok` object holds the `value` key, and
+     * `JSON.stringify` encodes it exactly as it encodes the Result instance,
+     * so the shape is safe for JSON, `structuredClone`, and `postMessage`.
+     * JSON is the lossy step: `JSON.stringify` drops a key whose value is
+     * `undefined`, so `Ok(undefined)` crosses the wire as `{"_tag":"Ok"}`,
+     * and `ok(parsed.value)` rebuilds it.
      *
      * To rebuild a Result on the other side, validate the payload with your
      * schema tool and then call `ok`/`err` on the discriminant:
@@ -199,22 +188,6 @@ abstract class ResultBase extends Pipeable {
         if (this._tag === 'Ok') return { _tag: 'Ok', value: this.value };
         if (this._tag === 'Err') return { _tag: 'Err', error: this.error };
         throw new InvalidResultStateError('Result.toSerialized');
-    }
-
-    /**
-     * Serializes the Result into a simple object format.
-     * Preserves the original types.
-     *
-     * @deprecated Use {@link toSerialized} instead: with this format,
-     * `Ok(undefined)` is indistinguishable from a missing `data` field, and
-     * the shape does not match what `JSON.stringify(result)` produces.
-     * `toSerialized()` returns the discriminated `ResultType<T, E>`, which
-     * rebuilds unambiguously via `ok`/`err`.
-     */
-    serialize<T, E>(this: Result<T, E>): { isSuccess: boolean; data?: T; error?: E } {
-        if (this._tag === 'Ok') return { isSuccess: true, data: this.value };
-        if (this._tag === 'Err') return { isSuccess: false, error: this.error };
-        throw new InvalidResultStateError('Result.serialize');
     }
 
     /**

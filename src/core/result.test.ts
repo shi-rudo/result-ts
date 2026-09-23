@@ -304,10 +304,6 @@ describe('Result class', () => {
         });
 
         describe('matchError', () => {
-            it('keeps deprecated match() guarded on Ok state', () => {
-                expect(() => ok<number, string>(0).match()).toThrow('match() can only be called on Err results');
-            });
-
             it('throws for malformed Result state', () => {
                 const malformed = { _tag: 'Invalid' } as unknown as Result<number, string>;
                 const source = ok<number, string>(0);
@@ -324,7 +320,7 @@ describe('Result class', () => {
             const errResult = err('error');
 
             expect(okResult).not.toBe(errResult);
-            expect(okResult.serialize()).not.toEqual(errResult.serialize());
+            expect(okResult.toSerialized()).not.toEqual(errResult.toSerialized());
         });
 
         it('equal values create equal Results', () => {
@@ -332,7 +328,7 @@ describe('Result class', () => {
             const result2 = ok(42);
 
             expect(result1).not.toBe(result2); // Different instances
-            expect(result1.serialize()).toEqual(result2.serialize());
+            expect(result1.toSerialized()).toEqual(result2.toSerialized());
         });
 
         it('Type Guards work correctly', () => {
@@ -545,37 +541,6 @@ describe('Result class', () => {
             const malformed = { _tag: 'Invalid', value: undefined, error: undefined } as unknown as Result<number, string>;
 
             expect(() => ok<number, string>(0).toSerialized.call(malformed)).toThrow(InvalidResultStateError);
-        });
-    });
-
-    describe('serialize', () => {
-        it('serializes Ok Result to object format', () => {
-            const result = ok(42);
-            expect(result.serialize()).toEqual({ isSuccess: true, data: 42 });
-        });
-
-        it('serializes Err Result and preserves original error types', () => {
-            const result = err('error message');
-            expect(result.serialize()).toEqual({ isSuccess: false, error: 'error message' });
-        });
-
-        it('preserves Error objects as original objects', () => {
-            const error = new Error('error message');
-            const result = err(error);
-            const serialized = result.serialize();
-            expect(serialized.isSuccess).toBe(false);
-            expect(serialized.error).toBe(error); // Ursprüngliches Error-Objekt
-        });
-
-        it('preserves any error types', () => {
-            const result = err(404);
-            expect(result.serialize()).toEqual({ isSuccess: false, error: 404 });
-        });
-
-        it('throws for malformed Result state', () => {
-            const malformed = { _tag: 'Invalid', value: undefined, error: undefined } as unknown as Result<number, string>;
-
-            expect(() => ok<number, string>(0).serialize.call(malformed)).toThrow(InvalidResultStateError);
         });
     });
 

@@ -23,8 +23,6 @@ if (result.isErr()) {
 }
 ```
 
-`.match()` remains available as a compatibility alias for `.matchError()`.
-
 ## Distinguishing Error Classes
 
 The exhaustiveness check of `.run()` is structural. TypeScript cannot tell two classes of the same shape apart, so one `.when(...)` removes both from the remaining cases, `.run()` compiles, and the unhandled error is rethrown at runtime.

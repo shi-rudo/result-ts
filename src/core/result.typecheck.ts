@@ -1,4 +1,5 @@
 import { err, fromPromise, ok, Result, type ResultType, tryCatch, tryCatchAsync, tryMap, tryMapAsync } from '../index';
+import * as rootEntry from '../index';
 
 type Equal<A, B> =
     (<T>() => T extends A ? 1 : 2) extends
@@ -147,9 +148,9 @@ function rebuildConcrete(parsed: ResultType<void, string>): Result<void, string>
 void rebuildConcrete;
 
 // In a generic wrapper TypeScript cannot resolve the conditional, so it widens
-// the payload and the same rebuild needs a cast. `fromSerialized` carries that
-// cast for the same reason. If a future TypeScript resolves the conditional,
-// these directives turn into errors and the limit can be documented away.
+// the payload and the same rebuild needs a cast. If a future TypeScript
+// resolves the conditional, these directives turn into errors and the limit
+// can be documented away.
 function rebuildGeneric<T, E>(parsed: ResultType<T, E>): Result<T, E> {
     // @ts-expect-error The deferred conditional widens the payload to `T | undefined`.
     if (parsed._tag === 'Ok') return ok<T, E>(parsed.value);
@@ -157,3 +158,20 @@ function rebuildGeneric<T, E>(parsed: ResultType<T, E>): Result<T, E> {
     return err<E, T>(parsed.error);
 }
 void rebuildGeneric;
+
+// These names are not part of the API. Each directive fails if one of them comes back.
+
+// @ts-expect-error `.serialize()` does not exist, use `.toSerialized()`.
+okResult.serialize();
+
+// @ts-expect-error `.match()` does not exist, use `.matchError()`.
+errResult.match();
+
+// @ts-expect-error `fromSerialized()` does not exist, validate the payload and rebuild with `ok`/`err`.
+void rootEntry.fromSerialized;
+
+// @ts-expect-error `unwrapOrDefault()` does not exist, use `unwrapOr()`.
+void rootEntry.unwrapOrDefault;
+
+// @ts-expect-error `ERR_INVALID_STATE` does not exist, use `ERR_INVALID_RESULT_STATE`.
+void rootEntry.ERR_INVALID_STATE;

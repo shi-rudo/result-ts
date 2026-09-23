@@ -1,8 +1,6 @@
 import { describeValue } from './describeValue';
 
 export const ERR_INVALID_RESULT_STATE = 'ERR_INVALID_RESULT_STATE' as const;
-/** @deprecated Use {@link ERR_INVALID_RESULT_STATE} instead. */
-export const ERR_INVALID_STATE: typeof ERR_INVALID_RESULT_STATE = ERR_INVALID_RESULT_STATE;
 export const ERR_TASK_YIELD_NOT_RESULT = 'ERR_TASK_YIELD_NOT_RESULT' as const;
 export const ERR_MATCH_ON_OK = 'ERR_MATCH_ON_OK' as const;
 export const ERR_MATCH_ERR_HANDLER_NOT_RESULT = 'ERR_MATCH_ERR_HANDLER_NOT_RESULT' as const;
@@ -74,7 +72,7 @@ export class TaskYieldNotResultError extends ResultTypeError {
 }
 
 export class MatchOnOkError extends ResultTypeError {
-    constructor(methodName = 'match') {
+    constructor(methodName: string) {
         super(`${methodName}() can only be called on Err results. Use \`if (result.isErr()) { ... }\` first.`, ERR_MATCH_ON_OK);
     }
 }

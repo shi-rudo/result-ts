@@ -53,5 +53,3 @@ try {
 - `ERR_UNWRAP_ERR_ON_OK`
 - `ERR_EXPECT_OK`
 - `ERR_EXPECT_ERR`
-
-`ERR_INVALID_STATE` is exported as a backwards-compatible alias for `ERR_INVALID_RESULT_STATE`. Prefer `ERR_INVALID_RESULT_STATE` in new code.
