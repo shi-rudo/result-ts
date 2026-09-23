@@ -159,19 +159,19 @@ function rebuildGeneric<T, E>(parsed: ResultType<T, E>): Result<T, E> {
 }
 void rebuildGeneric;
 
-// Version 2 removed these names. Each directive fails if one of them comes back.
+// These names are not part of the API. Each directive fails if one of them comes back.
 
-// @ts-expect-error `.serialize()` is removed, use `.toSerialized()`.
+// @ts-expect-error `.serialize()` does not exist, use `.toSerialized()`.
 okResult.serialize();
 
-// @ts-expect-error `.match()` is removed, use `.matchError()`.
+// @ts-expect-error `.match()` does not exist, use `.matchError()`.
 errResult.match();
 
-// @ts-expect-error `fromSerialized()` is removed, validate the payload and rebuild with `ok`/`err`.
+// @ts-expect-error `fromSerialized()` does not exist, validate the payload and rebuild with `ok`/`err`.
 void rootEntry.fromSerialized;
 
-// @ts-expect-error `unwrapOrDefault()` is removed, use `unwrapOr()`.
+// @ts-expect-error `unwrapOrDefault()` does not exist, use `unwrapOr()`.
 void rootEntry.unwrapOrDefault;
 
-// @ts-expect-error `ERR_INVALID_STATE` is removed, use `ERR_INVALID_RESULT_STATE`.
+// @ts-expect-error `ERR_INVALID_STATE` does not exist, use `ERR_INVALID_RESULT_STATE`.
 void rootEntry.ERR_INVALID_STATE;
