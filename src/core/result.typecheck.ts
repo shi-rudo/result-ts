@@ -1,4 +1,5 @@
 import { err, fromPromise, ok, Result, type ResultType, tryCatch, tryCatchAsync, tryMap, tryMapAsync } from '../index';
+import * as rootEntry from '../index';
 
 type Equal<A, B> =
     (<T>() => T extends A ? 1 : 2) extends
@@ -157,3 +158,20 @@ function rebuildGeneric<T, E>(parsed: ResultType<T, E>): Result<T, E> {
     return err<E, T>(parsed.error);
 }
 void rebuildGeneric;
+
+// Version 2 removed these names. Each directive fails if one of them comes back.
+
+// @ts-expect-error `.serialize()` is removed, use `.toSerialized()`.
+okResult.serialize();
+
+// @ts-expect-error `.match()` is removed, use `.matchError()`.
+errResult.match();
+
+// @ts-expect-error `fromSerialized()` is removed, validate the payload and rebuild with `ok`/`err`.
+void rootEntry.fromSerialized;
+
+// @ts-expect-error `unwrapOrDefault()` is removed, use `unwrapOr()`.
+void rootEntry.unwrapOrDefault;
+
+// @ts-expect-error `ERR_INVALID_STATE` is removed, use `ERR_INVALID_RESULT_STATE`.
+void rootEntry.ERR_INVALID_STATE;
