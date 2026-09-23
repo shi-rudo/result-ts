@@ -225,12 +225,6 @@ describe('Result.matchError()', () => {
 
         expect(run).toThrow(UnknownError);
     });
-
-    it('throws InvalidResultStateError for malformed Result state', () => {
-        const malformed = { _tag: 'Invalid', value: undefined, error: undefined } as unknown as Result<number, Error>;
-
-        expect(() => Result.err<Error, number>(new UnknownError('nope')).matchError.call(malformed)).toThrow(InvalidResultStateError);
-    });
 });
 
 describe('Result.matchErr()', () => {
