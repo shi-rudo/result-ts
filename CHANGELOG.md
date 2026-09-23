@@ -2,7 +2,7 @@
 
 ## 2.0.0 - Unreleased
 
-Version 2 removes the APIs that 1.x deprecated. `docs/migration/v2.md` shows the replacement for each one.
+Version 2 removes the APIs that 1.x deprecated. It also makes the method name a required argument of the `MatchOnOkError` constructor, the one breaking change without a deprecation in 1.x. `docs/migration/v2.md` shows the replacement for each change.
 
 ### Removed
 
