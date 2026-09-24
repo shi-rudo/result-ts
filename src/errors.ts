@@ -3,7 +3,7 @@ import { describeValue } from './describeValue';
 export const ERR_INVALID_RESULT_STATE = 'ERR_INVALID_RESULT_STATE' as const;
 export const ERR_TASK_YIELD_NOT_RESULT = 'ERR_TASK_YIELD_NOT_RESULT' as const;
 export const ERR_MATCH_ON_OK = 'ERR_MATCH_ON_OK' as const;
-export const ERR_MATCH_ERR_HANDLER_NOT_RESULT = 'ERR_MATCH_ERR_HANDLER_NOT_RESULT' as const;
+export const ERR_MATCH_HANDLER_NOT_RESULT = 'ERR_MATCH_HANDLER_NOT_RESULT' as const;
 export const ERR_MATCH_TAG_MISSING_HANDLER = 'ERR_MATCH_TAG_MISSING_HANDLER' as const;
 export const ERR_UNWRAP_ON_ERR = 'ERR_UNWRAP_ON_ERR' as const;
 export const ERR_UNWRAP_ERR_ON_OK = 'ERR_UNWRAP_ERR_ON_OK' as const;
@@ -14,7 +14,7 @@ export type ResultErrorCode =
     | typeof ERR_INVALID_RESULT_STATE
     | typeof ERR_TASK_YIELD_NOT_RESULT
     | typeof ERR_MATCH_ON_OK
-    | typeof ERR_MATCH_ERR_HANDLER_NOT_RESULT
+    | typeof ERR_MATCH_HANDLER_NOT_RESULT
     | typeof ERR_MATCH_TAG_MISSING_HANDLER
     | typeof ERR_UNWRAP_ON_ERR
     | typeof ERR_UNWRAP_ERR_ON_OK
@@ -77,12 +77,12 @@ export class MatchOnOkError extends ResultTypeError {
     }
 }
 
-export class MatchErrHandlerNotResultError extends ResultTypeError {
+export class MatchHandlerNotResultError extends ResultTypeError {
     readonly handlerName: string;
     readonly returnedValue: unknown;
 
     constructor(handlerName: string, returnedValue: unknown) {
-        super(`matchErr().${handlerName}() handlers must return a Result. Wrap values with ok(...) or err(...).`, ERR_MATCH_ERR_HANDLER_NOT_RESULT);
+        super(`matchErrorToResult().${handlerName}() handlers must return a Result. Wrap values with ok(...) or err(...).`, ERR_MATCH_HANDLER_NOT_RESULT);
         this.handlerName = handlerName;
         this.returnedValue = returnedValue;
     }

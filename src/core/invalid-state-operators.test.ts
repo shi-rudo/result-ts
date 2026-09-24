@@ -9,9 +9,6 @@ import { collectFirstOkParallelAsync } from './collectFirstOkParallelAsync';
 import { fold } from './fold';
 import { foldAsync } from './foldAsync';
 import { mapBoth } from './mapBoth';
-import { mapOrElse } from './mapOrElse';
-import { match } from './match';
-import { matchAsync } from './matchAsync';
 import { orElse } from './orElse';
 import { partition } from './partition';
 import { recover, recoverWith } from './recover';
@@ -51,11 +48,6 @@ describe('pipe operators invalid Result state handling', () => {
         expect(() => collectAllErrors([malformed])).toThrow(InvalidResultStateError);
         expect(() => collectFirstOk([malformed])).toThrow(InvalidResultStateError);
         expect(() => mapBoth((value: number) => value + 1, (error: string) => error.length)(malformed)).toThrow(InvalidResultStateError);
-        expect(() => mapOrElse(malformed, error => error.length, value => value)).toThrow(InvalidResultStateError);
-        expect(() => match<number, string, number>({
-            ok: value => value,
-            err: error => error.length,
-        })(malformed)).toThrow(InvalidResultStateError);
         expect(() => orElse(malformed, () => ok(0))).toThrow(InvalidResultStateError);
         expect(() => partition([malformed])).toThrow(InvalidResultStateError);
         expect(() => recover<number, string, number>(0)(malformed)).toThrow(InvalidResultStateError);
@@ -82,10 +74,6 @@ describe('pipe operators invalid Result state handling', () => {
             err: async error => error.length,
         })(malformed)).rejects.toThrow(InvalidResultStateError);
 
-        await expect(matchAsync<number, string, number>({
-            ok: async value => value,
-            err: async error => error.length,
-        })(malformed)).rejects.toThrow(InvalidResultStateError);
         await expect(tapAsync<number, string>({})(ok(1))).resolves.toEqual(ok(1));
         await expect(tapAsync<number, string>({})(malformed)).rejects.toThrow(InvalidResultStateError);
         await expect(collectFirstOkParallelAsync([Promise.resolve(brandedMalformed)])).rejects.toThrow(InvalidResultStateError);

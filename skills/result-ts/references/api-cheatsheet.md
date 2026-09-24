@@ -4,8 +4,8 @@ Every snippet in this file is compile-checked in CI (`pnpm docs:check`).
 
 Two calling conventions exist, and mixing them up is the most common mistake:
 
-- **Curried operators** (from `@shirudo/result/operators`) take their configuration and return a function `Result => ...`. Use them inside `.pipe(...)` / `.pipeAsync(...)`: `map`, `mapErr`, `mapBoth`, `flatMap`, `tap`, `filter`, `fold`, `match`, `recover`, `recoverWith`, `tryCatch`, `tryMap`, and their `...Async` variants.
-- **Data-first utilities** take the `Result` as their first argument and are called directly, never inside a pipe: `unwrap`, `unwrapOr`, `unwrapOrElse`, `unwrapOrThrow`, `unwrapErr`, `expectResult`, `expectErr`, `mapOr`, `mapOrElse`, `and`, `or`, `orElse`, `swap`, `flatten`, `contains`, `containsErr`, `isOk`, `isErr`, `toNullable`, `toPromise`, and all collection helpers.
+- **Curried operators** (from `@shirudo/result/operators`) take their configuration and return a function `Result => ...`. Use them inside `.pipe(...)` / `.pipeAsync(...)`: `map`, `mapErr`, `mapBoth`, `flatMap`, `tap`, `filter`, `fold`, `recover`, `recoverWith`, `tryCatch`, `tryMap`, and their `...Async` variants.
+- **Data-first utilities** take the `Result` as their first argument and are called directly, never inside a pipe: `unwrap`, `unwrapOr`, `unwrapOrElse`, `unwrapOrThrow`, `unwrapErr`, `expectResult`, `expectErr`, `and`, `or`, `orElse`, `swap`, `flatten`, `contains`, `containsErr`, `isOk`, `isErr`, `toNullable`, `toPromise`, and all collection helpers.
 
 ## Creating Results
 
@@ -107,15 +107,15 @@ const chained = ok<number, never>(1).pipe(
 
 ## Resolving a Pipe
 
-`match` and `fold` end a pipe; both take an `{ ok, err }` handler object.
+`fold` ends a pipe; it takes an `{ ok, err }` handler object.
 
 ```typescript
 import { err } from '@shirudo/result';
-import { map, match } from '@shirudo/result/operators';
+import { fold, map } from '@shirudo/result/operators';
 
 const text = err<'nope', number>('nope').pipe(
   map(n => n + 1),
-  match({
+  fold({
     ok: n => `Success: ${n}`,
     err: e => `Error: ${e}`,
   }),
@@ -149,7 +149,7 @@ const errorValue = expectErr(failure, 'wanted the error'); // 'boom'
 ## Combinators (data-first)
 
 ```typescript
-import { ok, err, and, or, orElse, mapOr, mapOrElse, swap, flatten, type Result } from '@shirudo/result';
+import { ok, err, and, or, orElse, swap, flatten, type Result } from '@shirudo/result';
 
 const a = ok<number, string>(1);
 const b = ok<string, string>('two');
@@ -157,9 +157,6 @@ const b = ok<string, string>('two');
 console.log(and(a, b));                        // Ok('two'): second result if the first is Ok
 console.log(or(err<string, number>('x'), a));  // Ok(1): fallback if the first is Err
 console.log(orElse(err<string, number>('x'), e => ok<number, never>(e.length))); // lazy fallback
-
-console.log(mapOr(a, 0, n => n * 2));          // 2; default when Err
-console.log(mapOrElse(a, e => e.length, n => n * 2)); // compute the default from the error
 
 console.log(swap(a));                          // Ok(1) -> Err(1)
 
@@ -223,7 +220,7 @@ Functions return `Promise<Result<T, E>>` by design; there is no lazy async wrapp
 
 ```typescript
 import { ok } from '@shirudo/result';
-import { mapAsync, flatMapAsync, tryMapAsync, matchAsync } from '@shirudo/result/operators';
+import { mapAsync, flatMapAsync, tryMapAsync, foldAsync } from '@shirudo/result/operators';
 
 declare const db: { getUser(id: number): Promise<{ email: string }> };
 
@@ -231,7 +228,7 @@ const message = await ok<number, string>(1).pipeAsync(
   mapAsync(async id => db.getUser(id)),
   flatMapAsync(async user => ok<string, string>(user.email)),
   tryMapAsync(async email => email.toLowerCase()),
-  matchAsync({
+  foldAsync({
     ok: async email => `ok: ${email}`,
     err: async error => `failed: ${String(error)}`,
   }),
@@ -304,7 +301,7 @@ if (outcome.isErr()) {
 }
 ```
 
-`matchErr()` is the variant whose handlers must return a `Result` (wrap with `ok(...)` to recover, `err(...)` to map). `matchErrorAsync()`/`matchErrAsync()` accept async handlers; they run lazily on the first awaited `run()`/`otherwise()`.
+`matchErrorToResult()` is the variant whose handlers must return a `Result` (wrap with `ok(...)` to recover, `err(...)` to map). `matchErrorAsync()`/`matchErrorToResultAsync()` accept async handlers; they run lazily on the first awaited `run()`/`otherwise()`.
 
 ```typescript
 import { ok, Result } from '@shirudo/result';
@@ -314,7 +311,7 @@ class CacheMissError extends Error {
 }
 
 const cached = Result.err<CacheMissError, number>(new CacheMissError())
-  .matchErr()
+  .matchErrorToResult()
   .when(CacheMissError, () => ok(0)) // recover with a default
   .run(); // Result<number, never>
 ```
@@ -351,7 +348,7 @@ try {
 }
 ```
 
-Codes: `ERR_UNWRAP_ON_ERR`, `ERR_UNWRAP_ERR_ON_OK`, `ERR_EXPECT_OK`, `ERR_EXPECT_ERR`, `ERR_MATCH_ON_OK`, `ERR_MATCH_TAG_MISSING_HANDLER`, `ERR_MATCH_ERR_HANDLER_NOT_RESULT`, `ERR_TASK_YIELD_NOT_RESULT`, `ERR_INVALID_RESULT_STATE`.
+Codes: `ERR_UNWRAP_ON_ERR`, `ERR_UNWRAP_ERR_ON_OK`, `ERR_EXPECT_OK`, `ERR_EXPECT_ERR`, `ERR_MATCH_ON_OK`, `ERR_MATCH_TAG_MISSING_HANDLER`, `ERR_MATCH_HANDLER_NOT_RESULT`, `ERR_TASK_YIELD_NOT_RESULT`, `ERR_INVALID_RESULT_STATE`.
 
 ## Removed in 2.0
 
@@ -361,7 +358,10 @@ Version 2 removes these APIs. Replace each call in code written against 1.x as f
 - `fromSerialized(data)`: validate the payload yourself, then `data._tag === 'Ok' ? ok(data.value) : err(data.error)`.
 - `unwrapOrDefault(result, value)`: use `unwrapOr(result, value)`.
 - `ERR_INVALID_STATE`: use `ERR_INVALID_RESULT_STATE`.
-- Instance `match()`: use `matchError()` (Err-only builder) or the `match({ ok, err })` pipe operator.
+- Instance `match()`: use `matchError()` (Err-only builder), or `fold` for both states.
+- The operators `match({ ok, err })` / `matchAsync`: use `fold` / `foldAsync`.
+- `mapOr(r, d, f)` / `mapOrElse(r, onErr, onOk)`: use `r.fold(f, () => d)` / `r.fold(onOk, onErr)`.
+- `matchErr()` / `matchErrAsync()`: use `matchErrorToResult()` / `matchErrorToResultAsync()`. The error is `MatchHandlerNotResultError` (`ERR_MATCH_HANDLER_NOT_RESULT`).
 - `bimap`: use `mapBoth`.
 - `all` / `Result.all`: use `sequence` / `Result.sequence`.
 - `gen`: use `task`.

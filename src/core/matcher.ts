@@ -1,5 +1,5 @@
 import type { Result } from './result';
-import { InvalidResultStateError, MatchErrHandlerNotResultError, MatchOnOkError, MatchTagMissingHandlerError } from '../errors';
+import { InvalidResultStateError, MatchHandlerNotResultError, MatchOnOkError, MatchTagMissingHandlerError } from '../errors';
 import { isResult } from './isResult';
 
 export type Ctor<T> = abstract new (...args: any[]) => T;
@@ -205,7 +205,7 @@ type ErrOfResult<R> = R extends Result<any, infer E> ? E : never;
 
 const expectResultReturn = (value: unknown, handlerName: string): Result<any, any> => {
     if (isResult(value)) return value;
-    throw new MatchErrHandlerNotResultError(handlerName, value);
+    throw new MatchHandlerNotResultError(handlerName, value);
 };
 
 /**
@@ -214,7 +214,7 @@ const expectResultReturn = (value: unknown, handlerName: string): Result<any, an
  * Handlers must return a `Result`.
  * Wrap recovered values with `ok(...)` and mapped errors with `err(...)`.
  */
-export class ErrMatchBuilder<T, E, OutT, OutE> {
+export class ErrorToResultMatchBuilder<T, E, OutT, OutE> {
     readonly #error: unknown;
     readonly #resolved: Result<any, any> | undefined;
 
@@ -224,24 +224,24 @@ export class ErrMatchBuilder<T, E, OutT, OutE> {
         Object.freeze(this);
     }
 
-    static fromResult<T, E>(result: Result<T, E>): ErrMatchBuilder<T, E, never, never> {
-        if (result.isOk()) return new ErrMatchBuilder<T, E, never, never>(undefined, result);
-        if (result.isErr()) return new ErrMatchBuilder<T, E, never, never>(result.error);
-        throw new InvalidResultStateError('ErrMatchBuilder.fromResult');
+    static fromResult<T, E>(result: Result<T, E>): ErrorToResultMatchBuilder<T, E, never, never> {
+        if (result.isOk()) return new ErrorToResultMatchBuilder<T, E, never, never>(undefined, result);
+        if (result.isErr()) return new ErrorToResultMatchBuilder<T, E, never, never>(result.error);
+        throw new InvalidResultStateError('ErrorToResultMatchBuilder.fromResult');
     }
 
     when<A extends E, R1 extends Result<any, any>>(
         ctor: Ctor<A>,
         handler: (error: A) => R1
-    ): ErrMatchBuilder<T, Exclude<E, A>, OutT | OkOfResult<R1>, OutE | ErrOfResult<R1>> {
+    ): ErrorToResultMatchBuilder<T, Exclude<E, A>, OutT | OkOfResult<R1>, OutE | ErrOfResult<R1>> {
         if (this.#resolved) {
-            return this as unknown as ErrMatchBuilder<T, Exclude<E, A>, OutT | OkOfResult<R1>, OutE | ErrOfResult<R1>>;
+            return this as unknown as ErrorToResultMatchBuilder<T, Exclude<E, A>, OutT | OkOfResult<R1>, OutE | ErrOfResult<R1>>;
         }
 
         if (this.#error instanceof ctor) {
             const out = handler(this.#error as A);
             const resolved = expectResultReturn(out, 'when');
-            return new ErrMatchBuilder(this.#error, resolved) as unknown as ErrMatchBuilder<
+            return new ErrorToResultMatchBuilder(this.#error, resolved) as unknown as ErrorToResultMatchBuilder<
                 T,
                 Exclude<E, A>,
                 OutT | OkOfResult<R1>,
@@ -249,20 +249,20 @@ export class ErrMatchBuilder<T, E, OutT, OutE> {
             >;
         }
 
-        return this as unknown as ErrMatchBuilder<T, Exclude<E, A>, OutT | OkOfResult<R1>, OutE | ErrOfResult<R1>>;
+        return this as unknown as ErrorToResultMatchBuilder<T, Exclude<E, A>, OutT | OkOfResult<R1>, OutE | ErrOfResult<R1>>;
     }
 
     whenGuard<A extends E, R1 extends Result<any, any>>(
         guard: TypeGuard<E, A>,
         handler: (error: A) => R1
-    ): ErrMatchBuilder<T, Exclude<E, A>, OutT | OkOfResult<R1>, OutE | ErrOfResult<R1>> {
-        if (this.#resolved) return this as unknown as ErrMatchBuilder<T, Exclude<E, A>, OutT | OkOfResult<R1>, OutE | ErrOfResult<R1>>;
+    ): ErrorToResultMatchBuilder<T, Exclude<E, A>, OutT | OkOfResult<R1>, OutE | ErrOfResult<R1>> {
+        if (this.#resolved) return this as unknown as ErrorToResultMatchBuilder<T, Exclude<E, A>, OutT | OkOfResult<R1>, OutE | ErrOfResult<R1>>;
 
         const error = this.#error as E;
         if (guard(error)) {
             const out = handler(error);
             const resolved = expectResultReturn(out, 'whenGuard');
-            return new ErrMatchBuilder(this.#error, resolved) as unknown as ErrMatchBuilder<
+            return new ErrorToResultMatchBuilder(this.#error, resolved) as unknown as ErrorToResultMatchBuilder<
                 T,
                 Exclude<E, A>,
                 OutT | OkOfResult<R1>,
@@ -270,20 +270,20 @@ export class ErrMatchBuilder<T, E, OutT, OutE> {
             >;
         }
 
-        return this as unknown as ErrMatchBuilder<T, Exclude<E, A>, OutT | OkOfResult<R1>, OutE | ErrOfResult<R1>>;
+        return this as unknown as ErrorToResultMatchBuilder<T, Exclude<E, A>, OutT | OkOfResult<R1>, OutE | ErrOfResult<R1>>;
     }
 
     whenTag<K extends PropertyKey, V extends PropertyKey, A extends E = Extract<E, TaggedBy<K, V>>, R1 extends Result<any, any> = never>(
         key: K,
         tag: V,
         handler: (error: A) => R1
-    ): ErrMatchBuilder<T, Exclude<E, A>, OutT | OkOfResult<R1>, OutE | ErrOfResult<R1>> {
-        if (this.#resolved) return this as unknown as ErrMatchBuilder<T, Exclude<E, A>, OutT | OkOfResult<R1>, OutE | ErrOfResult<R1>>;
+    ): ErrorToResultMatchBuilder<T, Exclude<E, A>, OutT | OkOfResult<R1>, OutE | ErrOfResult<R1>> {
+        if (this.#resolved) return this as unknown as ErrorToResultMatchBuilder<T, Exclude<E, A>, OutT | OkOfResult<R1>, OutE | ErrOfResult<R1>>;
 
         if (matchesTag(this.#error, key, tag)) {
             const out = handler(this.#error as A);
             const resolved = expectResultReturn(out, 'whenTag');
-            return new ErrMatchBuilder(this.#error, resolved) as unknown as ErrMatchBuilder<
+            return new ErrorToResultMatchBuilder(this.#error, resolved) as unknown as ErrorToResultMatchBuilder<
                 T,
                 Exclude<E, A>,
                 OutT | OkOfResult<R1>,
@@ -291,7 +291,7 @@ export class ErrMatchBuilder<T, E, OutT, OutE> {
             >;
         }
 
-        return this as unknown as ErrMatchBuilder<T, Exclude<E, A>, OutT | OkOfResult<R1>, OutE | ErrOfResult<R1>>;
+        return this as unknown as ErrorToResultMatchBuilder<T, Exclude<E, A>, OutT | OkOfResult<R1>, OutE | ErrOfResult<R1>>;
     }
 
     otherwise<R2 extends Result<any, any>>(handler: (error: E) => R2): Result<T | OutT | OkOfResult<R2>, OutE | ErrOfResult<R2>> {
@@ -304,13 +304,13 @@ export class ErrMatchBuilder<T, E, OutT, OutE> {
         >;
     }
 
-    run(this: ErrMatchBuilder<T, never, OutT, OutE>): Result<T | OutT, OutE> {
+    run(this: ErrorToResultMatchBuilder<T, never, OutT, OutE>): Result<T | OutT, OutE> {
         if (this.#resolved) return this.#resolved as Result<T | OutT, OutE>;
         throw this.#error;
     }
 }
 
-export class AsyncErrMatchBuilder<T, E, OutT, OutE> {
+export class AsyncErrorToResultMatchBuilder<T, E, OutT, OutE> {
     readonly #error: unknown;
     readonly #resolve: (() => Awaitable<Result<any, any>>) | undefined;
     // Lazily created on first run()/otherwise() so abandoned chains never
@@ -323,21 +323,21 @@ export class AsyncErrMatchBuilder<T, E, OutT, OutE> {
         Object.freeze(this);
     }
 
-    static fromResult<T, E>(result: Result<T, E>): AsyncErrMatchBuilder<T, E, never, never> {
-        if (result.isOk()) return new AsyncErrMatchBuilder<T, E, never, never>(undefined, () => result);
-        if (result.isErr()) return new AsyncErrMatchBuilder<T, E, never, never>(result.error);
-        throw new InvalidResultStateError('AsyncErrMatchBuilder.fromResult');
+    static fromResult<T, E>(result: Result<T, E>): AsyncErrorToResultMatchBuilder<T, E, never, never> {
+        if (result.isOk()) return new AsyncErrorToResultMatchBuilder<T, E, never, never>(undefined, () => result);
+        if (result.isErr()) return new AsyncErrorToResultMatchBuilder<T, E, never, never>(result.error);
+        throw new InvalidResultStateError('AsyncErrorToResultMatchBuilder.fromResult');
     }
 
     when<A extends E, R1 extends Result<any, any>>(
         ctor: Ctor<A>,
         handler: (error: A) => Awaitable<R1>
-    ): AsyncErrMatchBuilder<T, Exclude<E, A>, OutT | OkOfResult<R1>, OutE | ErrOfResult<R1>> {
-        if (this.#resolve) return this as unknown as AsyncErrMatchBuilder<T, Exclude<E, A>, OutT | OkOfResult<R1>, OutE | ErrOfResult<R1>>;
+    ): AsyncErrorToResultMatchBuilder<T, Exclude<E, A>, OutT | OkOfResult<R1>, OutE | ErrOfResult<R1>> {
+        if (this.#resolve) return this as unknown as AsyncErrorToResultMatchBuilder<T, Exclude<E, A>, OutT | OkOfResult<R1>, OutE | ErrOfResult<R1>>;
 
         if (this.#error instanceof ctor) {
             const resolve = async (): Promise<Result<any, any>> => expectResultReturn(await handler(this.#error as A), 'when');
-            return new AsyncErrMatchBuilder(this.#error, resolve) as unknown as AsyncErrMatchBuilder<
+            return new AsyncErrorToResultMatchBuilder(this.#error, resolve) as unknown as AsyncErrorToResultMatchBuilder<
                 T,
                 Exclude<E, A>,
                 OutT | OkOfResult<R1>,
@@ -345,19 +345,19 @@ export class AsyncErrMatchBuilder<T, E, OutT, OutE> {
             >;
         }
 
-        return this as unknown as AsyncErrMatchBuilder<T, Exclude<E, A>, OutT | OkOfResult<R1>, OutE | ErrOfResult<R1>>;
+        return this as unknown as AsyncErrorToResultMatchBuilder<T, Exclude<E, A>, OutT | OkOfResult<R1>, OutE | ErrOfResult<R1>>;
     }
 
     whenGuard<A extends E, R1 extends Result<any, any>>(
         guard: TypeGuard<E, A>,
         handler: (error: A) => Awaitable<R1>
-    ): AsyncErrMatchBuilder<T, Exclude<E, A>, OutT | OkOfResult<R1>, OutE | ErrOfResult<R1>> {
-        if (this.#resolve) return this as unknown as AsyncErrMatchBuilder<T, Exclude<E, A>, OutT | OkOfResult<R1>, OutE | ErrOfResult<R1>>;
+    ): AsyncErrorToResultMatchBuilder<T, Exclude<E, A>, OutT | OkOfResult<R1>, OutE | ErrOfResult<R1>> {
+        if (this.#resolve) return this as unknown as AsyncErrorToResultMatchBuilder<T, Exclude<E, A>, OutT | OkOfResult<R1>, OutE | ErrOfResult<R1>>;
 
         const error = this.#error as E;
         if (guard(error)) {
             const resolve = async (): Promise<Result<any, any>> => expectResultReturn(await handler(error), 'whenGuard');
-            return new AsyncErrMatchBuilder(this.#error, resolve) as unknown as AsyncErrMatchBuilder<
+            return new AsyncErrorToResultMatchBuilder(this.#error, resolve) as unknown as AsyncErrorToResultMatchBuilder<
                 T,
                 Exclude<E, A>,
                 OutT | OkOfResult<R1>,
@@ -365,19 +365,19 @@ export class AsyncErrMatchBuilder<T, E, OutT, OutE> {
             >;
         }
 
-        return this as unknown as AsyncErrMatchBuilder<T, Exclude<E, A>, OutT | OkOfResult<R1>, OutE | ErrOfResult<R1>>;
+        return this as unknown as AsyncErrorToResultMatchBuilder<T, Exclude<E, A>, OutT | OkOfResult<R1>, OutE | ErrOfResult<R1>>;
     }
 
     whenTag<K extends PropertyKey, V extends PropertyKey, A extends E = Extract<E, TaggedBy<K, V>>, R1 extends Result<any, any> = never>(
         key: K,
         tag: V,
         handler: (error: A) => Awaitable<R1>
-    ): AsyncErrMatchBuilder<T, Exclude<E, A>, OutT | OkOfResult<R1>, OutE | ErrOfResult<R1>> {
-        if (this.#resolve) return this as unknown as AsyncErrMatchBuilder<T, Exclude<E, A>, OutT | OkOfResult<R1>, OutE | ErrOfResult<R1>>;
+    ): AsyncErrorToResultMatchBuilder<T, Exclude<E, A>, OutT | OkOfResult<R1>, OutE | ErrOfResult<R1>> {
+        if (this.#resolve) return this as unknown as AsyncErrorToResultMatchBuilder<T, Exclude<E, A>, OutT | OkOfResult<R1>, OutE | ErrOfResult<R1>>;
 
         if (matchesTag(this.#error, key, tag)) {
             const resolve = async (): Promise<Result<any, any>> => expectResultReturn(await handler(this.#error as A), 'whenTag');
-            return new AsyncErrMatchBuilder(this.#error, resolve) as unknown as AsyncErrMatchBuilder<
+            return new AsyncErrorToResultMatchBuilder(this.#error, resolve) as unknown as AsyncErrorToResultMatchBuilder<
                 T,
                 Exclude<E, A>,
                 OutT | OkOfResult<R1>,
@@ -385,7 +385,7 @@ export class AsyncErrMatchBuilder<T, E, OutT, OutE> {
             >;
         }
 
-        return this as unknown as AsyncErrMatchBuilder<T, Exclude<E, A>, OutT | OkOfResult<R1>, OutE | ErrOfResult<R1>>;
+        return this as unknown as AsyncErrorToResultMatchBuilder<T, Exclude<E, A>, OutT | OkOfResult<R1>, OutE | ErrOfResult<R1>>;
     }
 
     async otherwise<R2 extends Result<any, any>>(
@@ -397,7 +397,7 @@ export class AsyncErrMatchBuilder<T, E, OutT, OutE> {
         return expectResultReturn(out, 'otherwise') as Result<T | OutT | OkOfResult<R2>, OutE | ErrOfResult<R2>>;
     }
 
-    async run(this: AsyncErrMatchBuilder<T, never, OutT, OutE>): Promise<Result<T | OutT, OutE>> {
+    async run(this: AsyncErrorToResultMatchBuilder<T, never, OutT, OutE>): Promise<Result<T | OutT, OutE>> {
         if (this.#resolve) return await this.#invoke() as Result<T | OutT, OutE>;
         throw this.#error;
     }

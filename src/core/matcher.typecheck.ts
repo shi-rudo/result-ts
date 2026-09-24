@@ -2,10 +2,10 @@ import {
     err,
     matchTag,
     ok,
-    type AsyncErrMatchBuilder,
     type AsyncErrorMatchBuilder,
-    type ErrMatchBuilder,
+    type AsyncErrorToResultMatchBuilder,
     type ErrorMatchBuilder,
+    type ErrorToResultMatchBuilder,
     type Result,
 } from '../index';
 
@@ -44,7 +44,7 @@ type MatchErrorChainsAllErrorConstructors = Expect<
 >;
 
 const recovered = result
-    .matchErr()
+    .matchErrorToResult()
     .when(NetworkError, () => ok(1))
     .when(ValidationError, () => ok(2))
     .run();
@@ -53,14 +53,14 @@ type MatchErrRequiresResultHandlers = Expect<
     Equal<typeof recovered, Result<number, never>>
 >;
 
-// @ts-expect-error matchErr handlers must return Result explicitly.
-result.matchErr().when(NetworkError, () => 1);
+// @ts-expect-error matchErrorToResult handlers must return Result explicitly.
+result.matchErrorToResult().when(NetworkError, () => 1);
 
-// @ts-expect-error matchErr guarded handlers must return Result explicitly.
-result.matchErr().whenGuard((error): error is NetworkError => error instanceof NetworkError, () => 1);
+// @ts-expect-error matchErrorToResult guarded handlers must return Result explicitly.
+result.matchErrorToResult().whenGuard((error): error is NetworkError => error instanceof NetworkError, () => 1);
 
-// @ts-expect-error matchErr otherwise handlers must return Result explicitly.
-result.matchErr().otherwise(() => 1);
+// @ts-expect-error matchErrorToResult otherwise handlers must return Result explicitly.
+result.matchErrorToResult().otherwise(() => 1);
 
 const tagged: Result<number, TaggedError> = err({ type: 'network', retryAfter: 30 });
 
@@ -104,7 +104,7 @@ matchTag(tagged, 'type', {
 });
 
 const taggedRecovery = tagged
-    .matchErr()
+    .matchErrorToResult()
     .whenTag('type', 'network', error => ok(error.retryAfter))
     .whenTag('type', 'validation', error => err(error))
     .run();
@@ -113,8 +113,8 @@ type MatchErrWhenTagPreservesResultTypes = Expect<
     Equal<typeof taggedRecovery, Result<number, { readonly type: 'validation'; readonly field: string }>>
 >;
 
-// @ts-expect-error matchErr whenTag handlers must return Result explicitly.
-tagged.matchErr().whenTag('type', 'network', error => error.retryAfter);
+// @ts-expect-error matchErrorToResult whenTag handlers must return Result explicitly.
+tagged.matchErrorToResult().whenTag('type', 'network', error => error.retryAfter);
 
 const asyncTaggedMessage = tagged
     .matchErrorAsync()
@@ -127,7 +127,7 @@ type MatchErrorAsyncNarrowsDiscriminatedUnions = Expect<
 >;
 
 const asyncTaggedRecovery = tagged
-    .matchErrAsync()
+    .matchErrorToResultAsync()
     .whenTag('type', 'network', async error => ok(error.retryAfter))
     .whenTag('type', 'validation', async error => err(error))
     .run();
@@ -136,13 +136,13 @@ type MatchErrAsyncWhenTagPreservesResultTypes = Expect<
     Equal<typeof asyncTaggedRecovery, Promise<Result<number, { readonly type: 'validation'; readonly field: string }>>>
 >;
 
-// @ts-expect-error matchErrAsync handlers must return Result explicitly.
-tagged.matchErrAsync().whenTag('type', 'network', async error => error.retryAfter);
+// @ts-expect-error matchErrorToResultAsync handlers must return Result explicitly.
+tagged.matchErrorToResultAsync().whenTag('type', 'network', async error => error.retryAfter);
 
 const errorBuilder = result.matchError();
 const asyncErrorBuilder = result.matchErrorAsync();
-const errBuilder = result.matchErr();
-const asyncErrBuilder = result.matchErrAsync();
+const errBuilder = result.matchErrorToResult();
+const asyncErrBuilder = result.matchErrorToResultAsync();
 
 type MatchErrorReturnsTheExportedBuilder = Expect<
     Equal<typeof errorBuilder, ErrorMatchBuilder<NetworkError | ValidationError, never>>
@@ -153,11 +153,11 @@ type MatchErrorAsyncReturnsTheExportedBuilder = Expect<
 >;
 
 type MatchErrReturnsTheExportedBuilder = Expect<
-    Equal<typeof errBuilder, ErrMatchBuilder<number, NetworkError | ValidationError, never, never>>
+    Equal<typeof errBuilder, ErrorToResultMatchBuilder<number, NetworkError | ValidationError, never, never>>
 >;
 
 type MatchErrAsyncReturnsTheExportedBuilder = Expect<
-    Equal<typeof asyncErrBuilder, AsyncErrMatchBuilder<number, NetworkError | ValidationError, never, never>>
+    Equal<typeof asyncErrBuilder, AsyncErrorToResultMatchBuilder<number, NetworkError | ValidationError, never, never>>
 >;
 
 // @ts-expect-error run() requires every distinguishable error class to be handled.

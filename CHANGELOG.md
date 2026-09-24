@@ -10,11 +10,13 @@ Version 2 removes the APIs that 1.x deprecated. `docs/migration/v2.md` lists eve
 - `.serialize()`, deprecated in 1.1.0. Use `.toSerialized()`. The shape changes from `{ isSuccess, data?, error? }` to `{ _tag: 'Ok', value } | { _tag: 'Err', error }`, so a receiver reads the state from `_tag`.
 - `unwrapOrDefault()`, deprecated in 1.1.0. Use `unwrapOr()`, which takes the same arguments.
 - `ERR_INVALID_STATE`, deprecated in 1.1.0. Use `ERR_INVALID_RESULT_STATE`, which holds the same string.
+- The operators `match`, `matchAsync`, `mapOr` and `mapOrElse`. `match` and `matchAsync` were identical to `fold` and `foldAsync`, and `mapOr` and `mapOrElse` computed the same value with positional arguments. Use `fold` and `foldAsync`.
 - The aliases `bimap`, `all`, `Result.all` and `gen`. Use `mapBoth`, `sequence`, `Result.sequence` and `task`.
-- The `.match()` method of a Result, deprecated in 1.0.0 as an alias of `.matchError()`. Use `.matchError()`, which returns the same builder. The `match({ ok, err })` pipe operator stays.
+- The `.match()` method of a Result, deprecated in 1.0.0 as an alias of `.matchError()`. Use `.matchError()`, which returns the same builder, or `fold` for both states.
 
 ### Changed
 
+- `matchErr()` and `matchErrAsync()` are now `matchErrorToResult()` and `matchErrorToResultAsync()`. Next to `matchError()` the old name differed only by an abbreviation, although one matcher returns a value and the other a Result. The builder types are `ErrorToResultMatchBuilder` and `AsyncErrorToResultMatchBuilder`, and the error for a handler that returns no Result is `MatchHandlerNotResultError` with the code `ERR_MATCH_HANDLER_NOT_RESULT`.
 - `ResultType<T, E>` is now `SerializedResult<T, E>`. The type is the serialized shape that `toSerialized()` returns, not the type of a Result.
 - Node.js 22 or later is required. `engines` says `>=22`, and the CommonJS build targets Node.js 22. Node.js 20 has reached its end of life, and the build tool tsdown 0.23 no longer runs on it.
 - The `MatchOnOkError` constructor requires the name of the method that was called on an `Ok`. The default was `'match'`, the name of the removed method, and every caller inside the library already passed a name. TypeScript code that constructs the error without an argument no longer compiles. JavaScript code still runs, and the message then starts with `undefined()` instead of a method name.

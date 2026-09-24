@@ -45,11 +45,11 @@ function readFile(path: string): Result<string, FileError> {
 
 ## 4. Compose on the Happy Path, Resolve Once at the End
 
-Instead of checking after every step, chain steps with `flatMap`/`map` in a single `.pipe(...)` call and resolve with `match` at the end. Failures short-circuit past the remaining steps automatically.
+Instead of checking after every step, chain steps with `flatMap`/`map` in a single `.pipe(...)` call and resolve with `fold` at the end. Failures short-circuit past the remaining steps automatically.
 
 ```typescript
 import { ok, type Result } from '@shirudo/result';
-import { flatMap, map, match } from '@shirudo/result/operators';
+import { flatMap, fold, map } from '@shirudo/result/operators';
 
 declare function parse(input: string): Result<number, { code: 'parse' }>;
 declare function validate(n: number): Result<number, { code: 'out-of-range' }>;
@@ -59,7 +59,7 @@ function process(input: string): string {
     flatMap(parse),
     flatMap(validate),
     map(n => n * 2),
-    match({
+    fold({
       ok: n => `Result: ${n}`,
       err: error => `Failed: ${error.code}`,
     }),
@@ -69,7 +69,7 @@ function process(input: string): string {
 
 ## 5. Know the Two Calling Conventions
 
-Operators from `@shirudo/result/operators` are curried and belong inside `.pipe(...)`. Utilities like `unwrapOr`, `mapOr`, `and`, `or` are data-first: they take the `Result` as their first argument and must be called directly. Putting a data-first utility inside a pipe does not compile.
+Operators from `@shirudo/result/operators` are curried and belong inside `.pipe(...)`. Utilities like `unwrapOr`, `and`, `or` are data-first: they take the `Result` as their first argument and must be called directly. Putting a data-first utility inside a pipe does not compile.
 
 ```typescript
 import { ok, unwrapOr } from '@shirudo/result';

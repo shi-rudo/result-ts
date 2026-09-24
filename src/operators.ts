@@ -8,7 +8,6 @@ export * from './core/fold';
 export * from './core/tryCatch';
 export * from './core/tryMap';
 export * from './core/recover';
-export * from './core/match';
 
 export * from './core/mapAsync';
 export * from './core/mapErrAsync';
@@ -18,12 +17,9 @@ export * from './core/filterAsync';
 export * from './core/foldAsync';
 export * from './core/tryCatchAsync';
 export * from './core/tryMapAsync';
-export * from './core/matchAsync';
 
 export * from './core/and';
 export * from './core/or';
 export * from './core/orElse';
-export * from './core/mapOr';
-export * from './core/mapOrElse';
 export * from './core/zip';
 export * from './core/swap';

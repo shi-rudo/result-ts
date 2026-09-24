@@ -36,8 +36,8 @@ export * from './core/containsErr';
 export * from './core/isResult';
 export { matchTag } from './core/matcher';
 export type {
-    AsyncErrMatchBuilder,
     AsyncErrorMatchBuilder,
-    ErrMatchBuilder,
+    AsyncErrorToResultMatchBuilder,
     ErrorMatchBuilder,
+    ErrorToResultMatchBuilder,
 } from './core/matcher';
