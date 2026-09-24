@@ -13,9 +13,9 @@ Each concept has one name here, and the library keeps no aliases. Find the name 
 | Fall back to a value | `recover` / `recoverElse` | none | none | none |
 | Handle both branches | `fold` | `match` | `match` / `fold` | `match`, `map_or_else` |
 | Default value | `unwrapOr` / `unwrapOrElse` | `unwrapOr` | `getOrElse` | `unwrap_or` / `unwrap_or_else` |
-| Side effect | `tap` | `andTee` / `orTee` | none | `inspect` / `inspect_err` |
+| Side effect | `tap` | `andTee` / `orTee` | `tap` / `chainFirst` | `inspect` / `inspect_err` |
 | List, first error | `sequence` | `Result.combine` | `sequenceArray` | `collect::<Result<Vec<_>, _>>()` |
-| List, all errors | `collectAllErrors` | `Result.combineWithAllErrors` | none | none |
+| List, all errors | `collectAllErrors` | `Result.combineWithAllErrors` | `getApplicativeValidation` | none |
 | Catch a throw | `tryFn` / `Result.try`, `fromThrowable` | `fromThrowable` | `tryCatch` | none |
 | Wrap a promise | `fromPromise` | `fromPromise` / `ResultAsync` | `TaskEither.tryCatch` | none |
 | Do-notation | `task` with `yield*` | `safeTry` | `Do` / `bind` | the `?` operator |

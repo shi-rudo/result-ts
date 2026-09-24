@@ -148,7 +148,7 @@ const withDefault = err('error').pipe(
 );
 logResult('Recovered value:', withDefault); // 0
 
-// recoverElse: provides an alternative Result
+// recoverElse: computes the Ok value from the error
 const withFallback = err('primary failed').pipe(
     recoverElse((_error: string) => 42)
 );
