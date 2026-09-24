@@ -58,7 +58,7 @@
   "homepage": "https://github.com/shi-rudo/result-ts#readme",
   "sideEffects": false,
   "engines": {
-    "node": ">=20"
+    "node": ">=22"
   },
   "publishConfig": {
     "access": "public"
