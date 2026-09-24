@@ -17,6 +17,7 @@ Version 2 removes the APIs that 1.x deprecated. `docs/migration/v2.md` lists eve
 - The `MatchOnOkError` constructor requires the name of the method that was called on an `Ok`. The default was `'match'`, the name of the removed method, and every caller inside the library already passed a name. TypeScript code that constructs the error without an argument no longer compiles. JavaScript code still runs, and the message then starts with `undefined()` instead of a method name.
 - `sequenceRecord()` rejects an array or a tuple at compile time. Such a call compiled before and always threw `InvalidResultStateError`. Use `sequence()` for a list. An argument typed as a union of an array and a record also stops compiling. A record with the key `length` and a generic caller over `Record<string, Result<T, E>>` still compile.
 - `InvalidResultStateError` no longer starts its message with "Unreachable:". An optional second constructor argument replaces the default message. `sequenceRecord()`, `collectFirstOkAsync()` and `collectFirstOkParallelAsync()` use it to name the value that is no `Result`. The code `ERR_INVALID_RESULT_STATE` is unchanged.
+- A GitHub release of a version below the current `latest` publishes under the dist-tag `latest-<major>`, for example `latest-1`. `npm install @shirudo/result` keeps resolving to the newest major.
 
 ## 1.2.0 - 2026-09-22
 
