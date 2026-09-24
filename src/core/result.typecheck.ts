@@ -233,8 +233,5 @@ void rootEntry.ERR_MATCH_ERR_HANDLER_NOT_RESULT;
 // @ts-expect-error `recoverWith` does not exist, use `recoverElse`.
 void rootEntry.recoverWith;
 
-// @ts-expect-error `okIfLazy` does not exist, use `okIfElse`.
-void rootEntry.okIfLazy;
-
 // @ts-expect-error `expectResult` does not exist, use `expectOk`.
 void rootEntry.expectResult;

@@ -11,13 +11,13 @@ Two calling conventions exist, and mixing them up is the most common mistake:
 ## Creating Results
 
 ```typescript
-import { ok, err, okIf, okIfElse, fromNullable } from '@shirudo/result';
+import { ok, err, okIf, okIfLazy, fromNullable } from '@shirudo/result';
 
 const success = ok(42); // Result<number, never>
 const failure = err({ code: 'not-found' as const, id: '7' });
 
 const checked = okIf(2 + 2 === 4, 'value', 'error');
-const lazyChecked = okIfElse(2 + 2 === 4, () => 'value', () => 'error');
+const lazyChecked = okIfLazy(2 + 2 === 4, () => 'value', () => 'error');
 
 const maybe: string | undefined = undefined;
 const fromMaybe = fromNullable(maybe, 'was nullish'); // Result<string, string>
@@ -364,7 +364,6 @@ Version 2 removes these APIs. Replace each call in code written against 1.x as f
 - `matchErr()` / `matchErrAsync()`: use `matchErrorToResult()` / `matchErrorToResultAsync()`. The error is `MatchHandlerNotResultError` (`ERR_MATCH_HANDLER_NOT_RESULT`).
 - `bimap`: use `mapBoth`.
 - `recoverWith`: use `recoverElse`.
-- `okIfLazy`: use `okIfElse`.
 - `expectResult`: use `expectOk`.
 - `all` / `Result.all`: use `sequence` / `Result.sequence`.
 - `gen`: use `task`.

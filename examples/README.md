@@ -99,7 +99,7 @@ Static factory methods and conversions:
 
 Comprehensive examples covering all major features:
 
-1. **BASICS**: create Result, `okIf`, `okIfElse`
+1. **BASICS**: create Result, `okIf`, `okIfLazy`
 2. **TRANSFORMATIONS**: `map`, `mapErr`, `flatMap`
 3. **VALIDATION**: `filter`, `tryMap`
 4. **ERROR HANDLING**: `recover`, `recoverElse`, `tryCatch`

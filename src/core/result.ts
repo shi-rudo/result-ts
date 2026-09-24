@@ -244,7 +244,7 @@ export function okIf<T, E>(condition: boolean, okValue: T, errValue: E): Result<
     return condition ? ok<T, E>(okValue) : err<E, T>(errValue);
 }
 
-export function okIfElse<T, E>(condition: boolean, okFn: () => T, errFn: () => E): Result<T, E> {
+export function okIfLazy<T, E>(condition: boolean, okFn: () => T, errFn: () => E): Result<T, E> {
     return condition ? ok<T, E>(okFn()) : err<E, T>(errFn());
 }
 

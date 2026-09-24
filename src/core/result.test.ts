@@ -1,6 +1,6 @@
 import { describe, expect, it } from 'vitest';
 
-import { Result, ok, err, okIf, okIfElse, type SerializedResult } from './result';
+import { Result, ok, err, okIf, okIfLazy, type SerializedResult } from './result';
 import { collectFirstOk } from './collectFirstOk';
 import {
     ERR_EXPECT_ERR,
@@ -94,16 +94,16 @@ describe('Result class', () => {
                 expect(okIf(true, 1, 'boom')).toEqual(ok(1));
                 expect(okIf(false, 1, 'boom')).toEqual(err('boom'));
 
-                expect(okIfElse(true, () => 2, () => 'lazy boom')).toEqual(ok(2));
-                expect(okIfElse(false, () => 2, () => 'lazy boom')).toEqual(err('lazy boom'));
+                expect(okIfLazy(true, () => 2, () => 'lazy boom')).toEqual(ok(2));
+                expect(okIfLazy(false, () => 2, () => 'lazy boom')).toEqual(err('lazy boom'));
             });
 
             it('does not evaluate the unused lazy conditional branch', () => {
-                expect(okIfElse(true, () => 1, () => {
+                expect(okIfLazy(true, () => 1, () => {
                     throw new Error('unexpected err branch');
                 })).toEqual(ok(1));
 
-                expect(okIfElse(false, () => {
+                expect(okIfLazy(false, () => {
                     throw new Error('unexpected ok branch');
                 }, () => 'boom')).toEqual(err('boom'));
             });

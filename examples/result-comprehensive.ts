@@ -18,7 +18,7 @@ import {
     mapErr,
     ok,
     okIf,
-    okIfElse,
+    okIfLazy,
     recover,
     recoverElse,
     sequence,
@@ -62,7 +62,7 @@ console.log('Age 15:', validateAge(15).isErr()); // true
 
 // Lazy evaluation for expensive computations
 const expensiveValidation = (value: number): Result<string, string> => {
-    return okIfElse(
+    return okIfLazy(
         value > 0,
         () => {
             console.log('  Computing expensive success value...');
