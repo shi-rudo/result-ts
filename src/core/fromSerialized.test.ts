@@ -67,6 +67,7 @@ describe('fromSerialized', () => {
         }
 
         expect(caught).toBeInstanceOf(InvalidResultStateError);
+        expect((caught as InvalidResultStateError).message).toContain('reading the payload threw');
         expect((caught as InvalidResultStateError).cause).toBe(trap);
     });
 
@@ -75,6 +76,13 @@ describe('fromSerialized', () => {
         expect(() => fromSerialized({ _tag: 'Nope' } as never)).toThrow("expected { _tag: 'Ok', value } or { _tag: 'Err', error }");
         expect(() => fromSerialized(null as never)).toThrow(InvalidResultStateError);
         expect(() => fromSerialized('Ok' as never)).toThrow(InvalidResultStateError);
+    });
+
+    it('names what it received next to the expected shape', () => {
+        expect(() => fromSerialized({ _tag: 'ok', value: 1 } as never)).toThrow('received _tag ok');
+        expect(() => fromSerialized(null as never)).toThrow('received null');
+        expect(() => fromSerialized({ _tag: 'Ok', error: 'boom' } as never)).toThrow('received an Ok that also holds the key error');
+        expect(() => fromSerialized({ _tag: 'Err', value: 1 } as never)).toThrow('received an Err that also holds the key value');
     });
 
     it('produces real Result instances', () => {

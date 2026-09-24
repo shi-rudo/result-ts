@@ -160,6 +160,11 @@ function rebuildGeneric<T, E>(parsed: SerializedResult<T, E>): Result<T, E> {
 void rebuildGeneric;
 
 // fromSerialized carries the cast that the generic rebuild needs.
+function rebuildGenericWithFromSerialized<T, E>(parsed: SerializedResult<T, E>): Result<T, E> {
+    return fromSerialized(parsed);
+}
+void rebuildGenericWithFromSerialized;
+
 const rebuiltVoid = fromSerialized({ _tag: 'Ok' } as SerializedResult<void, string>);
 
 type FromSerializedKeepsTheTypesOfTheShape = Expect<
