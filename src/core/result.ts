@@ -1,5 +1,5 @@
 import { Pipeable } from './pipeable';
-import { AsyncErrMatchBuilder, AsyncErrorMatchBuilder, ErrMatchBuilder, ErrorMatchBuilder } from './matcher';
+import { AsyncErrorMatchBuilder, AsyncErrorToResultMatchBuilder, ErrorMatchBuilder, ErrorToResultMatchBuilder } from './matcher';
 import { describeErrorMessage } from '../describeValue';
 import { RESULT_BRAND } from './brand';
 import { isResult } from './isResult';
@@ -156,12 +156,12 @@ abstract class ResultBase extends Pipeable {
      * - Handlers must return a `Result`
      * - use `ok(...)` for recovery and `err(...)` for mapped errors
      */
-    matchErr<T, E>(this: Result<T, E>): ErrMatchBuilder<T, E, never, never> {
-        return ErrMatchBuilder.fromResult(this);
+    matchErrorToResult<T, E>(this: Result<T, E>): ErrorToResultMatchBuilder<T, E, never, never> {
+        return ErrorToResultMatchBuilder.fromResult(this);
     }
 
-    matchErrAsync<T, E>(this: Result<T, E>): AsyncErrMatchBuilder<T, E, never, never> {
-        return AsyncErrMatchBuilder.fromResult(this);
+    matchErrorToResultAsync<T, E>(this: Result<T, E>): AsyncErrorToResultMatchBuilder<T, E, never, never> {
+        return AsyncErrorToResultMatchBuilder.fromResult(this);
     }
 
     /**

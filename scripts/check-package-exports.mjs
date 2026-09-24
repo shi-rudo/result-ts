@@ -132,9 +132,9 @@ try {
     await writeFile(join(tempDir, 'library-consumer.ts'), `
         import {
             err,
-            type AsyncErrMatchBuilder,
+            type AsyncErrorToResultMatchBuilder,
             type AsyncErrorMatchBuilder,
-            type ErrMatchBuilder,
+            type ErrorToResultMatchBuilder,
             type ErrorMatchBuilder,
         } from '@shirudo/result';
 
@@ -145,16 +145,16 @@ try {
             return err(error).matchErrorAsync();
         }
         export function startMatchErr(error: Error) {
-            return err<Error, number>(error).matchErr();
+            return err<Error, number>(error).matchErrorToResult();
         }
         export function startMatchErrAsync(error: Error) {
-            return err<Error, number>(error).matchErrAsync();
+            return err<Error, number>(error).matchErrorToResultAsync();
         }
 
         export const annotatedMatchError: ErrorMatchBuilder<Error, never> = startMatchError(new Error('x'));
         export const annotatedMatchErrorAsync: AsyncErrorMatchBuilder<Error, never> = startMatchErrorAsync(new Error('x'));
-        export const annotatedMatchErr: ErrMatchBuilder<number, Error, never, never> = startMatchErr(new Error('x'));
-        export const annotatedMatchErrAsync: AsyncErrMatchBuilder<number, Error, never, never> = startMatchErrAsync(new Error('x'));
+        export const annotatedMatchErr: ErrorToResultMatchBuilder<number, Error, never, never> = startMatchErr(new Error('x'));
+        export const annotatedMatchErrAsync: AsyncErrorToResultMatchBuilder<number, Error, never, never> = startMatchErrAsync(new Error('x'));
     `);
 
     await run('node', [join(repoRoot, 'node_modules/typescript/bin/tsc'), '-p', 'tsconfig.declaration.json']);

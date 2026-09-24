@@ -301,7 +301,7 @@ if (outcome.isErr()) {
 }
 ```
 
-`matchErr()` is the variant whose handlers must return a `Result` (wrap with `ok(...)` to recover, `err(...)` to map). `matchErrorAsync()`/`matchErrAsync()` accept async handlers; they run lazily on the first awaited `run()`/`otherwise()`.
+`matchErrorToResult()` is the variant whose handlers must return a `Result` (wrap with `ok(...)` to recover, `err(...)` to map). `matchErrorAsync()`/`matchErrorToResultAsync()` accept async handlers; they run lazily on the first awaited `run()`/`otherwise()`.
 
 ```typescript
 import { ok, Result } from '@shirudo/result';
@@ -311,7 +311,7 @@ class CacheMissError extends Error {
 }
 
 const cached = Result.err<CacheMissError, number>(new CacheMissError())
-  .matchErr()
+  .matchErrorToResult()
   .when(CacheMissError, () => ok(0)) // recover with a default
   .run(); // Result<number, never>
 ```
@@ -348,7 +348,7 @@ try {
 }
 ```
 
-Codes: `ERR_UNWRAP_ON_ERR`, `ERR_UNWRAP_ERR_ON_OK`, `ERR_EXPECT_OK`, `ERR_EXPECT_ERR`, `ERR_MATCH_ON_OK`, `ERR_MATCH_TAG_MISSING_HANDLER`, `ERR_MATCH_ERR_HANDLER_NOT_RESULT`, `ERR_TASK_YIELD_NOT_RESULT`, `ERR_INVALID_RESULT_STATE`.
+Codes: `ERR_UNWRAP_ON_ERR`, `ERR_UNWRAP_ERR_ON_OK`, `ERR_EXPECT_OK`, `ERR_EXPECT_ERR`, `ERR_MATCH_ON_OK`, `ERR_MATCH_TAG_MISSING_HANDLER`, `ERR_MATCH_HANDLER_NOT_RESULT`, `ERR_TASK_YIELD_NOT_RESULT`, `ERR_INVALID_RESULT_STATE`.
 
 ## Removed in 2.0
 
@@ -361,6 +361,7 @@ Version 2 removes these APIs. Replace each call in code written against 1.x as f
 - Instance `match()`: use `matchError()` (Err-only builder), or `fold` for both states.
 - The operators `match({ ok, err })` / `matchAsync`: use `fold` / `foldAsync`.
 - `mapOr(r, d, f)` / `mapOrElse(r, onErr, onOk)`: use `r.fold(f, () => d)` / `r.fold(onOk, onErr)`.
+- `matchErr()` / `matchErrAsync()`: use `matchErrorToResult()` / `matchErrorToResultAsync()`. The error is `MatchHandlerNotResultError` (`ERR_MATCH_HANDLER_NOT_RESULT`).
 - `bimap`: use `mapBoth`.
 - `all` / `Result.all`: use `sequence` / `Result.sequence`.
 - `gen`: use `task`.

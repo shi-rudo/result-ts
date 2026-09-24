@@ -202,3 +202,21 @@ void rootEntry.mapOr;
 
 // @ts-expect-error `mapOrElse` does not exist, use `fold`.
 void rootEntry.mapOrElse;
+
+// @ts-expect-error `.matchErr()` does not exist, use `.matchErrorToResult()`.
+errResult.matchErr();
+
+// @ts-expect-error `.matchErrAsync()` does not exist, use `.matchErrorToResultAsync()`.
+errResult.matchErrAsync();
+
+// @ts-expect-error `ErrMatchBuilder` does not exist, use `ErrorToResultMatchBuilder`.
+void (null as unknown as rootEntry.ErrMatchBuilder<number, string, never, never>);
+
+// @ts-expect-error `AsyncErrMatchBuilder` does not exist, use `AsyncErrorToResultMatchBuilder`.
+void (null as unknown as rootEntry.AsyncErrMatchBuilder<number, string, never, never>);
+
+// @ts-expect-error `MatchErrHandlerNotResultError` does not exist, use `MatchHandlerNotResultError`.
+void rootEntry.MatchErrHandlerNotResultError;
+
+// @ts-expect-error `ERR_MATCH_ERR_HANDLER_NOT_RESULT` does not exist, use `ERR_MATCH_HANDLER_NOT_RESULT`.
+void rootEntry.ERR_MATCH_ERR_HANDLER_NOT_RESULT;

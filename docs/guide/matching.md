@@ -109,7 +109,7 @@ const message = matchTag(result, 'code', {
 
 ## Transforming Err Values
 
-Use `.matchErr()` when handlers should return a new `Result`. Handlers must explicitly return `ok(...)` or `err(...)`.
+Use `.matchErrorToResult()` when handlers should return a new `Result`. Handlers must explicitly return `ok(...)` or `err(...)`.
 
 ```ts
 import { Result, err, ok } from '@shirudo/result';
@@ -122,10 +122,10 @@ class ValidationError extends Error {
 }
 
 const recovered = Result.err<NetworkError | ValidationError, string>(new NetworkError('timeout'))
-    .matchErr()
+    .matchErrorToResult()
     .when(NetworkError, () => ok('cached fallback'))
     .when(ValidationError, error => err(error))
     .run();
 ```
 
-The async variants are `.matchErrorAsync()` and `.matchErrAsync()`.
+The async variants are `.matchErrorAsync()` and `.matchErrorToResultAsync()`.

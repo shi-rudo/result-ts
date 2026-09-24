@@ -77,8 +77,8 @@ const assertPublicApiWorks = async () => {
     });
     assert(generated.isOk() && generated.value === 2, 'task() must work');
 
-    const normalized = err('fallback').matchErr().otherwise(() => ok('recovered'));
-    assert(normalized.isOk() && normalized.value === 'recovered', 'matchErr() recovery must work');
+    const normalized = err('fallback').matchErrorToResult().otherwise(() => ok('recovered'));
+    assert(normalized.isOk() && normalized.value === 'recovered', 'matchErrorToResult() recovery must work');
 };
 
 for (const file of await readModuleFiles()) {

@@ -2,13 +2,13 @@ import { describe, expect, it, vi } from 'vitest';
 
 import {
     matchTag,
-    type AsyncErrMatchBuilder,
     type AsyncErrorMatchBuilder,
+    type AsyncErrorToResultMatchBuilder,
     type ErrorMatchBuilder,
-    type ErrMatchBuilder,
+    type ErrorToResultMatchBuilder,
 } from './matcher';
 import { Result, err, ok } from './result';
-import { ERR_MATCH_ERR_HANDLER_NOT_RESULT, ERR_MATCH_TAG_MISSING_HANDLER, InvalidResultStateError, MatchErrHandlerNotResultError, MatchTagMissingHandlerError } from '../errors';
+import { ERR_MATCH_HANDLER_NOT_RESULT, ERR_MATCH_TAG_MISSING_HANDLER, InvalidResultStateError, MatchHandlerNotResultError, MatchTagMissingHandlerError } from '../errors';
 
 class IOError extends Error { }
 class ParseError extends Error { }
@@ -229,12 +229,12 @@ describe('matchTag()', () => {
     });
 });
 
-describe('Result.matchErr()', () => {
+describe('Result.matchErrorToResult()', () => {
     it('returns explicit Result instances from handlers', () => {
         const result: Result<number, IOError | ParseError | ValidationError> = Result.err(new ParseError('parse'));
 
         const out = result
-            .matchErr()
+            .matchErrorToResult()
             .when(IOError, () => ok(1))
             .when(ParseError, () => ok(2))
             .when(ValidationError, e => err(new ValidationError(`Invalid config: ${e.message}`)))
@@ -253,7 +253,7 @@ describe('Result.matchErr()', () => {
         const result: Result<number, IOError | ParseError> = ok<number, IOError | ParseError>(1);
         const otherwise = vi.fn(() => new UnknownError('nope'));
 
-        const out = result.matchErr().when(IOError, () => ok(2)).otherwise(otherwise);
+        const out = result.matchErrorToResult().when(IOError, () => ok(2)).otherwise(otherwise);
 
         expect(otherwise).toHaveBeenCalledTimes(0);
         expect(out.isOk()).toBe(true);
@@ -267,7 +267,7 @@ describe('Result.matchErr()', () => {
         const otherwise = vi.fn(() => ok(0));
 
         const out = () => result
-            .matchErr()
+            .matchErrorToResult()
             .when(ParseError, () => new ValidationError('bad') as never)
             .otherwise(otherwise);
 
@@ -278,9 +278,9 @@ describe('Result.matchErr()', () => {
             caughtError = error;
         }
 
-        expect(caughtError).toBeInstanceOf(MatchErrHandlerNotResultError);
-        expect((caughtError as MatchErrHandlerNotResultError).code).toBe(ERR_MATCH_ERR_HANDLER_NOT_RESULT);
-        expect((caughtError as MatchErrHandlerNotResultError).handlerName).toBe('when');
+        expect(caughtError).toBeInstanceOf(MatchHandlerNotResultError);
+        expect((caughtError as MatchHandlerNotResultError).code).toBe(ERR_MATCH_HANDLER_NOT_RESULT);
+        expect((caughtError as MatchHandlerNotResultError).handlerName).toBe('when');
         expect(otherwise).not.toHaveBeenCalled();
     });
 
@@ -289,7 +289,7 @@ describe('Result.matchErr()', () => {
         const expected = ok(2);
 
         const out = result
-            .matchErr()
+            .matchErrorToResult()
             .when(ParseError, () => expected)
             .otherwise(() => ok(0));
 
@@ -301,7 +301,7 @@ describe('Result.matchErr()', () => {
         const guard = vi.fn((error: Error): error is ValidationError => error instanceof ValidationError);
 
         const out = () => result
-            .matchErr()
+            .matchErrorToResult()
             .whenGuard(guard, () => new UnknownError('mapped') as never)
             .otherwise(() => ok(0));
 
@@ -312,9 +312,9 @@ describe('Result.matchErr()', () => {
             caughtError = error;
         }
 
-        expect(caughtError).toBeInstanceOf(MatchErrHandlerNotResultError);
-        expect((caughtError as MatchErrHandlerNotResultError).code).toBe(ERR_MATCH_ERR_HANDLER_NOT_RESULT);
-        expect((caughtError as MatchErrHandlerNotResultError).handlerName).toBe('whenGuard');
+        expect(caughtError).toBeInstanceOf(MatchHandlerNotResultError);
+        expect((caughtError as MatchHandlerNotResultError).code).toBe(ERR_MATCH_HANDLER_NOT_RESULT);
+        expect((caughtError as MatchHandlerNotResultError).handlerName).toBe('whenGuard');
         expect(guard).toHaveBeenCalled();
     });
 
@@ -322,7 +322,7 @@ describe('Result.matchErr()', () => {
         const result: Result<number, TaggedError> = Result.err({ type: 'network', retryAfter: 30 });
 
         const out = result
-            .matchErr()
+            .matchErrorToResult()
             .whenTag('type', 'network', error => ok(error.retryAfter))
             .whenTag('type', 'validation', error => err(error))
             .run();
@@ -339,7 +339,7 @@ describe('Result.matchErr()', () => {
         const handler = vi.fn(() => ok(2));
 
         const out = result
-            .matchErr()
+            .matchErrorToResult()
             .whenGuard(guard, handler)
             .otherwise(() => ok(0));
 
@@ -355,7 +355,7 @@ describe('Result.matchErr()', () => {
         const result: Result<number, ParseError> = Result.err(new ParseError('parse'));
 
         const out = () => result
-            .matchErr()
+            .matchErrorToResult()
             .when(IOError, () => ok(1))
             .otherwise(() => new UnknownError('nope') as never);
 
@@ -366,23 +366,23 @@ describe('Result.matchErr()', () => {
             caughtError = error;
         }
 
-        expect(caughtError).toBeInstanceOf(MatchErrHandlerNotResultError);
-        expect((caughtError as MatchErrHandlerNotResultError).code).toBe(ERR_MATCH_ERR_HANDLER_NOT_RESULT);
-        expect((caughtError as MatchErrHandlerNotResultError).handlerName).toBe('otherwise');
+        expect(caughtError).toBeInstanceOf(MatchHandlerNotResultError);
+        expect((caughtError as MatchHandlerNotResultError).code).toBe(ERR_MATCH_HANDLER_NOT_RESULT);
+        expect((caughtError as MatchHandlerNotResultError).handlerName).toBe('otherwise');
     });
 
     it('throws for structurally similar handler output', () => {
         const imposter = { isOk: () => true, isErr: () => false, value: 123 };
         const result: Result<number, ValidationError> = Result.err(new ValidationError('bad'));
 
-        const out = () => result.matchErr().otherwise(() => imposter as never);
+        const out = () => result.matchErrorToResult().otherwise(() => imposter as never);
 
-        expect(out).toThrow(MatchErrHandlerNotResultError);
+        expect(out).toThrow(MatchHandlerNotResultError);
     });
 
     it('run() returns Ok if Source Ok and E = never', () => {
         const result = ok<number, never>(1);
-        const out = result.matchErr().run();
+        const out = result.matchErrorToResult().run();
 
         expect(out).toBe(result);
     });
@@ -391,10 +391,10 @@ describe('Result.matchErr()', () => {
         const result: Result<number, ValidationError> = Result.err(new ValidationError('bad'));
 
         const builder = result
-            .matchErr()
+            .matchErrorToResult()
             .when(IOError, () => ok(1));
 
-        const run = () => (builder as unknown as ErrMatchBuilder<number, never, never, never>).run();
+        const run = () => (builder as unknown as ErrorToResultMatchBuilder<number, never, never, never>).run();
 
         expect(run).toThrow(ValidationError);
     });
@@ -406,7 +406,7 @@ describe('Result.matchErr()', () => {
         const tagged = vi.fn(() => ok(2));
 
         const out = result
-            .matchErr()
+            .matchErrorToResult()
             .whenGuard(guard, guarded)
             .whenTag('type', 'validation', tagged)
             .otherwise(error => ok('type' in error ? error.retryAfter : 0));
@@ -423,7 +423,7 @@ describe('Result.matchErr()', () => {
             isErr: () => false,
         } as unknown as Result<number, Error>;
 
-        expect(() => ok<number, Error>(0).matchErr.call(malformed)).toThrow(InvalidResultStateError);
+        expect(() => ok<number, Error>(0).matchErrorToResult.call(malformed)).toThrow(InvalidResultStateError);
     });
 });
 
@@ -534,12 +534,12 @@ describe('Result.matchErrorAsync()', () => {
     });
 });
 
-describe('Result.matchErrAsync()', () => {
+describe('Result.matchErrorToResultAsync()', () => {
     it('supports async Result-returning handlers', async () => {
         const result: Result<number, IOError | ValidationError> = Result.err(new IOError('io'));
 
         const out = await result
-            .matchErrAsync()
+            .matchErrorToResultAsync()
             .when(IOError, async () => ok(42))
             .when(ValidationError, async error => err(error))
             .run();
@@ -555,7 +555,7 @@ describe('Result.matchErrAsync()', () => {
         const otherwise = vi.fn(async () => ok(2));
 
         const out = await result
-            .matchErrAsync()
+            .matchErrorToResultAsync()
             .when(IOError, async () => ok(3))
             .otherwise(otherwise);
 
@@ -570,7 +570,7 @@ describe('Result.matchErrAsync()', () => {
         const tagged = vi.fn(async (error: Extract<TaggedError, { type: 'validation' }>) => ok(error.field.length));
 
         const out = await result
-            .matchErrAsync()
+            .matchErrorToResultAsync()
             .whenGuard(guard, guarded)
             .whenTag('type', 'network', async error => ok(error.retryAfter))
             .whenTag('type', 'validation', tagged)
@@ -589,7 +589,7 @@ describe('Result.matchErrAsync()', () => {
         const tagged = vi.fn(async () => ok(3));
 
         const out = await result
-            .matchErrAsync()
+            .matchErrorToResultAsync()
             .whenGuard(guard, guarded)
             .whenTag('type', 'network', tagged)
             .run();
@@ -604,9 +604,9 @@ describe('Result.matchErrAsync()', () => {
         const result: Result<number, IOError> = Result.err(new IOError('io'));
 
         await expect(
-            result.matchErrAsync().when(IOError, async () => 123 as never).run()
+            result.matchErrorToResultAsync().when(IOError, async () => 123 as never).run()
         ).rejects.toMatchObject({
-            code: ERR_MATCH_ERR_HANDLER_NOT_RESULT,
+            code: ERR_MATCH_HANDLER_NOT_RESULT,
             handlerName: 'when',
             returnedValue: 123,
         });
@@ -617,14 +617,14 @@ describe('Result.matchErrAsync()', () => {
 
         await expect(
             result
-                .matchErrAsync()
+                .matchErrorToResultAsync()
                 .whenGuard(
                     (error): error is ValidationError => error instanceof ValidationError,
                     async () => 'not result' as never
                 )
                 .run()
         ).rejects.toMatchObject({
-            code: ERR_MATCH_ERR_HANDLER_NOT_RESULT,
+            code: ERR_MATCH_HANDLER_NOT_RESULT,
             handlerName: 'whenGuard',
             returnedValue: 'not result',
         });
@@ -635,11 +635,11 @@ describe('Result.matchErrAsync()', () => {
 
         await expect(
             result
-                .matchErrAsync()
+                .matchErrorToResultAsync()
                 .whenTag('type', 'network', async () => 'not result' as never)
                 .run()
         ).rejects.toMatchObject({
-            code: ERR_MATCH_ERR_HANDLER_NOT_RESULT,
+            code: ERR_MATCH_HANDLER_NOT_RESULT,
             handlerName: 'whenTag',
             returnedValue: 'not result',
         });
@@ -649,9 +649,9 @@ describe('Result.matchErrAsync()', () => {
         const result: Result<number, UnknownError> = Result.err(new UnknownError('nope'));
 
         await expect(
-            result.matchErrAsync().otherwise(async () => 123 as never)
+            result.matchErrorToResultAsync().otherwise(async () => 123 as never)
         ).rejects.toMatchObject({
-            code: ERR_MATCH_ERR_HANDLER_NOT_RESULT,
+            code: ERR_MATCH_HANDLER_NOT_RESULT,
             handlerName: 'otherwise',
             returnedValue: 123,
         });
@@ -660,9 +660,9 @@ describe('Result.matchErrAsync()', () => {
     it('run() throws asynchronously if no resolution is present', async () => {
         const result: Result<number, UnknownError> = Result.err(new UnknownError('nope'));
 
-        const builder = result.matchErrAsync().when(IOError, async () => ok(1));
+        const builder = result.matchErrorToResultAsync().when(IOError, async () => ok(1));
 
-        await expect((builder as unknown as AsyncErrMatchBuilder<number, never, never, never>).run()).rejects.toThrow(UnknownError);
+        await expect((builder as unknown as AsyncErrorToResultMatchBuilder<number, never, never, never>).run()).rejects.toThrow(UnknownError);
     });
 
     it('throws for malformed Result state during construction', () => {
@@ -671,7 +671,7 @@ describe('Result.matchErrAsync()', () => {
             isErr: () => false,
         } as unknown as Result<number, Error>;
 
-        expect(() => ok<number, Error>(0).matchErrAsync.call(malformed)).toThrow(InvalidResultStateError);
+        expect(() => ok<number, Error>(0).matchErrorToResultAsync.call(malformed)).toThrow(InvalidResultStateError);
     });
 });
 
@@ -723,23 +723,23 @@ describe('Async matcher laziness (regression: unhandled rejection on abandoned c
         expect(handler).toHaveBeenCalledTimes(1);
     });
 
-    it('matchErrAsync: does not invoke the handler before the chain is consumed', async () => {
+    it('matchErrorToResultAsync: does not invoke the handler before the chain is consumed', async () => {
         const result: Result<number, IOError> = Result.err(new IOError('io'));
 
         const handler = vi.fn(async () => ok(1));
-        result.matchErrAsync().when(IOError, handler);
+        result.matchErrorToResultAsync().when(IOError, handler);
 
         await drainMicrotasks();
         expect(handler).not.toHaveBeenCalled();
     });
 
-    it('matchErrAsync: a rejecting handler on an abandoned chain causes no unhandled rejection', async () => {
+    it('matchErrorToResultAsync: a rejecting handler on an abandoned chain causes no unhandled rejection', async () => {
         const result: Result<number, IOError> = Result.err(new IOError('io'));
 
         const unhandled = vi.fn();
         process.once('unhandledRejection', unhandled);
 
-        result.matchErrAsync().when(IOError, async () => {
+        result.matchErrorToResultAsync().when(IOError, async () => {
             throw new Error('handler rejected');
         });
 
@@ -749,24 +749,24 @@ describe('Async matcher laziness (regression: unhandled rejection on abandoned c
         expect(unhandled).not.toHaveBeenCalled();
     });
 
-    it('matchErrAsync: invokes the handler once even when run() is awaited twice', async () => {
+    it('matchErrorToResultAsync: invokes the handler once even when run() is awaited twice', async () => {
         const result: Result<number, IOError> = Result.err(new IOError('io'));
 
         const handler = vi.fn(async () => ok(1));
         const builder = result
-            .matchErrAsync()
-            .when(IOError, handler) as unknown as AsyncErrMatchBuilder<number, never, number, never>;
+            .matchErrorToResultAsync()
+            .when(IOError, handler) as unknown as AsyncErrorToResultMatchBuilder<number, never, number, never>;
 
         expect((await builder.run()).unwrapOr(0)).toBe(1);
         expect((await builder.run()).unwrapOr(0)).toBe(1);
         expect(handler).toHaveBeenCalledTimes(1);
     });
 
-    it('matchErrAsync: Ok results still pass through untouched', async () => {
+    it('matchErrorToResultAsync: Ok results still pass through untouched', async () => {
         const result: Result<number, IOError> = ok(42);
 
         const out = await result
-            .matchErrAsync()
+            .matchErrorToResultAsync()
             .when(IOError, async () => ok(0))
             .run();
 
