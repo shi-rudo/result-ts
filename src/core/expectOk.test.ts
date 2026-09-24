@@ -1,18 +1,18 @@
 import { describe, expect, it } from 'vitest';
 
 import { Result, ok } from './result';
-import { expectResult } from './expectResult';
+import { expectOk } from './expectOk';
 import { ERR_EXPECT_OK, ExpectOkError, InvalidResultStateError } from '../errors';
 
-describe('expectResult', () => {
+describe('expectOk', () => {
     it('returns value for Ok', () => {
-        expect(expectResult(ok(42), 'custom message')).toBe(42);
+        expect(expectOk(ok(42), 'custom message')).toBe(42);
     });
 
     it('throws custom Error for Err', () => {
         let caughtError: unknown;
         try {
-            expectResult(Result.err('error'), 'custom message');
+            expectOk(Result.err('error'), 'custom message');
         } catch (error) {
             caughtError = error;
         }
@@ -26,7 +26,7 @@ describe('expectResult', () => {
         const original = new Error('db down');
         let caughtError: unknown;
         try {
-            expectResult(Result.err(original), 'custom message');
+            expectOk(Result.err(original), 'custom message');
         } catch (error) {
             caughtError = error;
         }
@@ -41,6 +41,6 @@ describe('expectResult', () => {
             isErr: () => false,
         } as unknown as Result<number, string>;
 
-        expect(() => expectResult(malformed, 'custom message')).toThrow(InvalidResultStateError);
+        expect(() => expectOk(malformed, 'custom message')).toThrow(InvalidResultStateError);
     });
 });

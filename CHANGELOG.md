@@ -16,6 +16,7 @@ Version 2 removes the APIs that 1.x deprecated. `docs/migration/v2.md` lists eve
 
 ### Changed
 
+- `expectResult()` is now `expectOk()`. It matches `ExpectOkError`, `ERR_EXPECT_OK` and its counterpart `expectErr()`. The instance method `.expect()` keeps its name.
 - `recoverWith()` is now `recoverElse()`, and `okIfLazy()` is now `okIfElse()`. A variant that computes its value with a function now always ends in `Else`: `unwrapOrElse`, `orElse`, `recoverElse`, `okIfElse`.
 - `and`, `or` and `orElse` also work as pipe operators, for example `result.pipe(or(fallback))`. Both forms type each side on its own: `and` returns `Result<U, E | F>`, and `or` and `orElse` return `Result<T | U, F>`.
 - `flatten` moved from `@shirudo/result/collections` to `@shirudo/result/operators`. The root entry exports it as before.

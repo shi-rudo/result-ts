@@ -18,7 +18,7 @@ export * from './core/unwrapOr';
 export * from './core/unwrapOrElse';
 export * from './core/unwrapOrThrow';
 export * from './core/unwrapErr';
-export * from './core/expectResult';
+export * from './core/expectOk';
 export * from './core/expectErr';
 
 // Conversions

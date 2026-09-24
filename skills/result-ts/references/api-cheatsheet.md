@@ -5,7 +5,7 @@ Every snippet in this file is compile-checked in CI (`pnpm docs:check`).
 Two calling conventions exist, and mixing them up is the most common mistake:
 
 - **Curried operators** (from `@shirudo/result/operators`) take their configuration and return a function `Result => ...`. Use them inside `.pipe(...)` / `.pipeAsync(...)`: `map`, `mapErr`, `mapBoth`, `flatMap`, `tap`, `filter`, `fold`, `recover`, `recoverElse`, `tryCatch`, `tryMap`, and their `...Async` variants.
-- **Data-first utilities** take the `Result` as their first argument and are called directly, never inside a pipe: `unwrap`, `unwrapOr`, `unwrapOrElse`, `unwrapOrThrow`, `unwrapErr`, `expectResult`, `expectErr`, `contains`, `containsErr`, `isOk`, `isErr`, `toNullable`, `toPromise`, and all collection helpers.
+- **Data-first utilities** take the `Result` as their first argument and are called directly, never inside a pipe: `unwrap`, `unwrapOr`, `unwrapOrElse`, `unwrapOrThrow`, `unwrapErr`, `expectOk`, `expectErr`, `contains`, `containsErr`, `isOk`, `isErr`, `toNullable`, `toPromise`, and all collection helpers.
 - **Combinators** work both ways: `and`, `or`, `orElse`, `zip` and `combine` take the `Result` first, or return a function for `.pipe(...)` when you leave it out. `swap` and `flatten` go into a pipe without a call.
 
 ## Creating Results
@@ -126,7 +126,7 @@ const text = err<'nope', number>('nope').pipe(
 ## Unwrapping (data-first, call at the edges)
 
 ```typescript
-import { ok, err, unwrap, unwrapErr, unwrapOr, unwrapOrElse, unwrapOrThrow, expectResult, expectErr } from '@shirudo/result';
+import { ok, err, unwrap, unwrapErr, unwrapOr, unwrapOrElse, unwrapOrThrow, expectOk, expectErr } from '@shirudo/result';
 
 const success = ok<number, string>(5);
 const failure = err<string, number>('boom');
@@ -135,7 +135,7 @@ console.log(unwrap(success));                 // 5; throws UnwrapOnErrError on E
 console.log(unwrapErr(failure));              // 'boom'; throws UnwrapErrOnOkError on Ok
 console.log(unwrapOr(failure, 0));            // 0
 console.log(unwrapOrElse(failure, e => e.length)); // 4
-console.log(expectResult(success, 'must have config')); // 5; ExpectOkError carries the Err payload as `cause`
+console.log(expectOk(success, 'must have config')); // 5; ExpectOkError carries the Err payload as `cause`
 
 let rethrown: unknown;
 try {
@@ -366,6 +366,7 @@ Version 2 removes these APIs. Replace each call in code written against 1.x as f
 - `bimap`: use `mapBoth`.
 - `recoverWith`: use `recoverElse`.
 - `okIfLazy`: use `okIfElse`.
+- `expectResult`: use `expectOk`.
 - `all` / `Result.all`: use `sequence` / `Result.sequence`.
 - `gen`: use `task`.
 - `ResultType<T, E>`: use `SerializedResult<T, E>`.
