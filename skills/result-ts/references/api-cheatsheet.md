@@ -4,8 +4,8 @@ Every snippet in this file is compile-checked in CI (`pnpm docs:check`).
 
 Two calling conventions exist, and mixing them up is the most common mistake:
 
-- **Curried operators** (from `@shirudo/result/operators`) take their configuration and return a function `Result => ...`. Use them inside `.pipe(...)` / `.pipeAsync(...)`: `map`, `mapErr`, `mapBoth`, `flatMap`, `tap`, `filter`, `fold`, `match`, `recover`, `recoverWith`, `tryCatch`, `tryMap`, and their `...Async` variants.
-- **Data-first utilities** take the `Result` as their first argument and are called directly, never inside a pipe: `unwrap`, `unwrapOr`, `unwrapOrElse`, `unwrapOrThrow`, `unwrapErr`, `expectResult`, `expectErr`, `mapOr`, `mapOrElse`, `and`, `or`, `orElse`, `swap`, `flatten`, `contains`, `containsErr`, `isOk`, `isErr`, `toNullable`, `toPromise`, and all collection helpers.
+- **Curried operators** (from `@shirudo/result/operators`) take their configuration and return a function `Result => ...`. Use them inside `.pipe(...)` / `.pipeAsync(...)`: `map`, `mapErr`, `mapBoth`, `flatMap`, `tap`, `filter`, `fold`, `recover`, `recoverWith`, `tryCatch`, `tryMap`, and their `...Async` variants.
+- **Data-first utilities** take the `Result` as their first argument and are called directly, never inside a pipe: `unwrap`, `unwrapOr`, `unwrapOrElse`, `unwrapOrThrow`, `unwrapErr`, `expectResult`, `expectErr`, `and`, `or`, `orElse`, `swap`, `flatten`, `contains`, `containsErr`, `isOk`, `isErr`, `toNullable`, `toPromise`, and all collection helpers.
 
 ## Creating Results
 
