@@ -47,11 +47,26 @@ jobs:
             exit 1
           fi
 
+      # A release from a tag that predates this step runs the older copy of this
+      # file, which publishes as latest. A maintenance branch needs this step first.
+      - name: Choose the npm dist-tag
+        id: dist-tag
+        run: |
+          version="$(node -p "require('./package.json').version")"
+          latest="$(npm view @shirudo/result dist-tags.latest)"
+          tag="$(node scripts/choose-dist-tag.mjs "$version" "$latest")"
+          echo "Publishing $version with the dist-tag $tag (latest is $latest)."
+          echo "tag=$tag" >> "$GITHUB_OUTPUT"
+
       # prepublishOnly runs pnpm check, so both publish steps pass the full quality gate first.
       - name: Publish to npm
         if: github.event_name == 'release'
-        run: npm publish
+        env:
+          DIST_TAG: ${{ steps.dist-tag.outputs.tag }}
+        run: npm publish --tag "$DIST_TAG"
 
       - name: Publish to npm (dry run)
         if: github.event_name == 'workflow_dispatch'
-        run: npm publish --dry-run
+        env:
+          DIST_TAG: ${{ steps.dist-tag.outputs.tag }}
+        run: npm publish --dry-run --tag "$DIST_TAG"

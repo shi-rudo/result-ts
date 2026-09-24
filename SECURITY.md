@@ -14,7 +14,7 @@ Report a vulnerability privately through GitHub. Open the **Security** tab of th
 
 The workflow `.github/workflows/release.yml` publishes the package to npm through npm trusted publishing. npm trusts that workflow file in `shi-rudo/result-ts` and nothing else in the repository. The workflow runs when someone publishes a GitHub release, so everyone who can publish a release can publish to npm.
 
-Before the upload, the workflow checks that the release tag equals `v` plus the version in `package.json`. The `prepublishOnly` script then runs the full `pnpm check`. npm attaches a provenance attestation that links the package version to the workflow run and the commit.
+Before the upload, the workflow checks that the release tag equals `v` plus the version in `package.json`. The `prepublishOnly` script then runs the full `pnpm check`. A version below the current `latest` gets the dist-tag `latest-<major>`, so a patch of an older major line leaves `latest` alone. npm attaches a provenance attestation that links the package version to the workflow run and the commit.
 
 A maintainer with npm publish rights can also publish from a local machine. The npm package setting "Require two-factor authentication and disallow tokens" closes that path and leaves trusted publishing as the only one.
 
