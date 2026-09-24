@@ -319,13 +319,13 @@ const cached = Result.err<CacheMissError, number>(new CacheMissError())
 
 ## Serialization
 
-`toSerialized()` returns the plain discriminated shape `SerializedResult<T, E>`, which `JSON.stringify` encodes exactly as it encodes the Result itself, and it keeps `Ok(undefined)` unambiguous through the `_tag`. `JSON.stringify` drops the `undefined` `value` key, and `ok(parsed.value)` rebuilds the value. Rebuild with `ok`/`err` after validating foreign payloads.
+`toSerialized()` returns the plain discriminated shape `SerializedResult<T, E>`, which `JSON.stringify` encodes exactly as it encodes the Result itself, and it keeps `Ok(undefined)` unambiguous through the `_tag`. `JSON.stringify` drops the `undefined` `value` key, and `fromSerialized()` rebuilds the value. Validate foreign payloads before you rebuild them.
 
 ```typescript
-import { ok, err } from '@shirudo/result';
+import { fromSerialized, ok } from '@shirudo/result';
 
 const wire = ok(42).toSerialized();       // { _tag: 'Ok', value: 42 }
-const restored = wire._tag === 'Ok' ? ok(wire.value) : err(wire.error);
+const restored = fromSerialized(wire);
 console.log(restored.unwrapOr(0));        // 42
 
 const friendly = ok(42).toUserFriendly(); // { isSuccess: true, data: 42 }
@@ -356,7 +356,6 @@ Codes: `ERR_UNWRAP_ON_ERR`, `ERR_UNWRAP_ERR_ON_OK`, `ERR_EXPECT_OK`, `ERR_EXPECT
 Version 2 removes these APIs. Replace each call in code written against 1.x as follows:
 
 - `serialize()`: use `toSerialized()`. The shape changes from `{ isSuccess, data?, error? }` to `{ _tag, value | error }`.
-- `fromSerialized(data)`: validate the payload yourself, then `data._tag === 'Ok' ? ok(data.value) : err(data.error)`.
 - `unwrapOrDefault(result, value)`: use `unwrapOr(result, value)`.
 - `ERR_INVALID_STATE`: use `ERR_INVALID_RESULT_STATE`.
 - Instance `match()`: use `matchError()` (Err-only builder), or `fold` for both states.

@@ -1,4 +1,4 @@
-import { err, fromPromise, ok, Result, type SerializedResult, tryCatch, tryCatchAsync, tryMap, tryMapAsync } from '../index';
+import { err, fromPromise, fromSerialized, ok, Result, type SerializedResult, tryCatch, tryCatchAsync, tryMap, tryMapAsync } from '../index';
 import * as rootEntry from '../index';
 
 type Equal<A, B> =
@@ -159,6 +159,13 @@ function rebuildGeneric<T, E>(parsed: SerializedResult<T, E>): Result<T, E> {
 }
 void rebuildGeneric;
 
+// fromSerialized carries the cast that the generic rebuild needs.
+const rebuiltVoid = fromSerialized({ _tag: 'Ok' } as SerializedResult<void, string>);
+
+type FromSerializedKeepsTheTypesOfTheShape = Expect<
+    Equal<typeof rebuiltVoid, Result<void, string>>
+>;
+
 // These names are not part of the API. Each directive fails if one of them comes back.
 
 // @ts-expect-error `.serialize()` does not exist, use `.toSerialized()`.
@@ -166,9 +173,6 @@ okResult.serialize();
 
 // @ts-expect-error `.match()` does not exist, use `.matchError()`.
 errResult.match();
-
-// @ts-expect-error `fromSerialized()` does not exist, validate the payload and rebuild with `ok`/`err`.
-void rootEntry.fromSerialized;
 
 // @ts-expect-error `unwrapOrDefault()` does not exist, use `unwrapOr()`.
 void rootEntry.unwrapOrDefault;

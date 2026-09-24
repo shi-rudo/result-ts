@@ -6,7 +6,6 @@ Version 2 removes the APIs that 1.x deprecated. `docs/migration/v2.md` lists eve
 
 ### Removed
 
-- `fromSerialized()`, deprecated in 1.2.0. Validate the payload with your schema tool and rebuild with `parsed._tag === 'Ok' ? ok(parsed.value) : err(parsed.error)`. A malformed payload such as `{ _tag: 'Nope' }` made `fromSerialized()` throw `InvalidResultStateError`. Your schema step reports that failure now.
 - `.serialize()`, deprecated in 1.1.0. Use `.toSerialized()`. The shape changes from `{ isSuccess, data?, error? }` to `{ _tag: 'Ok', value } | { _tag: 'Err', error }`, so a receiver reads the state from `_tag`.
 - `unwrapOrDefault()`, deprecated in 1.1.0. Use `unwrapOr()`, which takes the same arguments.
 - `ERR_INVALID_STATE`, deprecated in 1.1.0. Use `ERR_INVALID_RESULT_STATE`, which holds the same string.
@@ -16,6 +15,7 @@ Version 2 removes the APIs that 1.x deprecated. `docs/migration/v2.md` lists eve
 
 ### Changed
 
+- `fromSerialized()` stays; the deprecation from 1.2.0 is withdrawn. The recommended replacement, a hand-written check of `_tag`, turns a broken payload such as `{ _tag: 'Nope' }` into `err(undefined)`, while `fromSerialized()` rejects it. It takes a `SerializedResult<T, E>`, and its error names the expected shape.
 - `expectResult()` is now `expectOk()`. It matches `ExpectOkError`, `ERR_EXPECT_OK` and its counterpart `expectErr()`. The instance method `.expect()` keeps its name.
 - `recoverWith()` is now `recoverElse()`, and `okIfLazy()` is now `okIfElse()`. A variant that computes its value with a function now always ends in `Else`: `unwrapOrElse`, `orElse`, `recoverElse`, `okIfElse`.
 - `and`, `or` and `orElse` also work as pipe operators, for example `result.pipe(or(fallback))`. Both forms type each side on its own: `and` returns `Result<U, E | F>`, and `or` and `orElse` return `Result<T | U, F>`.
