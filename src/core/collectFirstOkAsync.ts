@@ -3,6 +3,7 @@ import { ok, err } from './result';
 import type { Awaitable } from './pipeable';
 import { isResult } from './isResult';
 import { InvalidResultStateError } from '../errors';
+import { describeValue } from '../describeValue';
 
 type CollectFirstOkAsyncInput =
     | Promise<Result<any, any>>
@@ -43,7 +44,7 @@ export async function collectFirstOkAsync<const Inputs extends readonly CollectF
 
     const errors: ErrValue[] = [];
 
-    for (const input of inputs) {
+    for (const [index, input] of inputs.entries()) {
         const pendingResult = typeof input === 'function' ? input() : input;
         let result: unknown;
         try {
@@ -53,14 +54,15 @@ export async function collectFirstOkAsync<const Inputs extends readonly CollectF
             continue;
         }
 
-        if (isResult(result)) {
-            if (result.isOk()) {
-                return ok<OkValue, ErrValue[]>(result.value as OkValue);
-            }
-            if (result.isErr()) {
-                errors.push(result.error as ErrValue);
-                continue;
-            }
+        if (!isResult(result)) {
+            throw new InvalidResultStateError('collectFirstOkAsync', `input ${index} fulfilled with ${describeValue(result)}, not a Result`);
+        }
+        if (result.isOk()) {
+            return ok<OkValue, ErrValue[]>(result.value as OkValue);
+        }
+        if (result.isErr()) {
+            errors.push(result.error as ErrValue);
+            continue;
         }
         throw new InvalidResultStateError('collectFirstOkAsync');
     }

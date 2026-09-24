@@ -54,11 +54,11 @@ export class ResultTypeError extends TypeError {
     }
 }
 
-const INVALID_RESULT_STATE_MESSAGE = 'Unreachable: Result is neither Ok nor Err';
+const INVALID_RESULT_STATE_MESSAGE = 'Result is neither Ok nor Err';
 
 export class InvalidResultStateError extends ResultError {
-    constructor(context?: string) {
-        super(INVALID_RESULT_STATE_MESSAGE, ERR_INVALID_RESULT_STATE, context);
+    constructor(context?: string, message: string = INVALID_RESULT_STATE_MESSAGE) {
+        super(message, ERR_INVALID_RESULT_STATE, context);
     }
 }
 

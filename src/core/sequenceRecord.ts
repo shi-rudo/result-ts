@@ -1,6 +1,7 @@
 import type { Result } from './result';
 import { ok } from './result';
 import { InvalidResultStateError } from '../errors';
+import { describeValue } from '../describeValue';
 import { isResult } from './isResult';
 
 type OkValueOf<R> = R extends Result<infer T, any> ? T : never;
@@ -34,7 +35,7 @@ export function sequenceRecord<
     // sequence into an object keyed by its indices, because `length` is a
     // non-enumerable non-Result and the rule below skips it. A list of Results
     // belongs to `sequence()`, so the mistake fails here and returns no wrong shape.
-    if (Array.isArray(record)) throw new InvalidResultStateError('sequenceRecord');
+    if (Array.isArray(record)) throw new InvalidResultStateError('sequenceRecord', 'received an array; use sequence() for a list');
 
     const out: Partial<Out> = {};
 
@@ -47,7 +48,7 @@ export function sequenceRecord<
 
         if (!isResult(result)) {
             if (!Object.getOwnPropertyDescriptor(record, key)?.enumerable) continue;
-            throw new InvalidResultStateError('sequenceRecord');
+            throw new InvalidResultStateError('sequenceRecord', `property ${String(key)} holds ${describeValue(result)}, not a Result`);
         }
 
         if (result.isOk()) {

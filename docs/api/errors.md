@@ -32,7 +32,7 @@ try {
 
 | Class | Extends | Code | When it is thrown | Extra fields |
 | :---- | :------ | :--- | :---------------- | :----------- |
-| `InvalidResultStateError` | `ResultError` | `ERR_INVALID_RESULT_STATE` | A value is structurally invalid and is neither a valid `Ok` nor a valid `Err`. | `context?: string` |
+| `InvalidResultStateError` | `ResultError` | `ERR_INVALID_RESULT_STATE` | A value breaks at runtime what the types promise: a Result-like value is neither a valid `Ok` nor a valid `Err`, a value that is no `Result` stands where one is expected, or an input has the wrong kind, such as an array in `sequenceRecord()`. | `context?: string` |
 | `TaskYieldNotResultError` | `ResultTypeError` | `ERR_TASK_YIELD_NOT_RESULT` | `task()` receives a yielded value that is not a `Result`; usually caused by `yield` instead of `yield*`. | `yieldedValue: unknown` |
 | `MatchOnOkError` | `ResultTypeError` | `ERR_MATCH_ON_OK` | Err-only fluent matchers such as `.matchError()` are called on an `Ok`. | none |
 | `MatchErrHandlerNotResultError` | `ResultTypeError` | `ERR_MATCH_ERR_HANDLER_NOT_RESULT` | A `.matchErr()` / `.matchErrAsync()` handler returns a naked value instead of `ok(...)` or `err(...)`. | `handlerName: string`, `returnedValue: unknown` |
@@ -41,6 +41,8 @@ try {
 | `UnwrapErrOnOkError` | `ResultTypeError` | `ERR_UNWRAP_ERR_ON_OK` | `.unwrapErr()` is called on an `Ok`. | `okValue: unknown` |
 | `ExpectOkError` | `ResultError` | `ERR_EXPECT_OK` | `.expect(message)` is called on an `Err`. | `expectedMessage: string` |
 | `ExpectErrError` | `ResultError` | `ERR_EXPECT_ERR` | `.expectErr(message)` is called on an `Ok`. | `expectedMessage: string` |
+
+The default message of `InvalidResultStateError` is "Result is neither Ok nor Err". A throw site that knows more replaces it through the second constructor argument, `new InvalidResultStateError(context?, message?)`. `sequenceRecord()` names an array and the property that holds no `Result`, and `collectFirstOkAsync()` and `collectFirstOkParallelAsync()` name the input that fulfilled with no `Result`. The code stays `ERR_INVALID_RESULT_STATE` in every case.
 
 ## Error Code Constants
 

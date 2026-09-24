@@ -4,6 +4,7 @@ import { InvalidResultStateError } from '../errors';
 import { RESULT_BRAND } from './brand';
 import { collectAllErrors } from './collectAllErrors';
 import { collectFirstOk } from './collectFirstOk';
+import { collectFirstOkAsync } from './collectFirstOkAsync';
 import { collectFirstOkParallelAsync } from './collectFirstOkParallelAsync';
 import { fold } from './fold';
 import { foldAsync } from './foldAsync';
@@ -88,5 +89,7 @@ describe('pipe operators invalid Result state handling', () => {
         await expect(tapAsync<number, string>({})(ok(1))).resolves.toEqual(ok(1));
         await expect(tapAsync<number, string>({})(malformed)).rejects.toThrow(InvalidResultStateError);
         await expect(collectFirstOkParallelAsync([Promise.resolve(brandedMalformed)])).rejects.toThrow(InvalidResultStateError);
+        await expect(collectFirstOkParallelAsync([Promise.resolve(brandedMalformed)])).rejects.toThrow('Result is neither Ok nor Err');
+        await expect(collectFirstOkAsync([Promise.resolve(brandedMalformed)])).rejects.toThrow('Result is neither Ok nor Err');
     });
 });
