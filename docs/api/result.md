@@ -19,8 +19,8 @@
 
 ## Instance Methods
 
-- `.isOk()`: Type guard for success.
-- `.isErr()`: Type guard for failure.
+- `.isOk()`: Type guard for `Ok`.
+- `.isErr()`: Type guard for `Err`.
 - `.unwrap()`: Return the `Ok` value or throw `UnwrapOnErrError`.
 - `.unwrapErr()`: Return the `Err` value or throw `UnwrapErrOnOkError`.
 - `.unwrapOr(defaultValue)`: Return the `Ok` value or a default.

@@ -5,7 +5,8 @@ Every snippet in this file is compile-checked in CI (`pnpm docs:check`).
 Two calling conventions exist, and mixing them up is the most common mistake:
 
 - **Curried operators** (from `@shirudo/result/operators`) take their configuration and return a function `Result => ...`. Use them inside `.pipe(...)` / `.pipeAsync(...)`: `map`, `mapErr`, `mapBoth`, `flatMap`, `tap`, `filter`, `fold`, `recover`, `recoverWith`, `tryCatch`, `tryMap`, and their `...Async` variants.
-- **Data-first utilities** take the `Result` as their first argument and are called directly, never inside a pipe: `unwrap`, `unwrapOr`, `unwrapOrElse`, `unwrapOrThrow`, `unwrapErr`, `expectResult`, `expectErr`, `and`, `or`, `orElse`, `swap`, `flatten`, `contains`, `containsErr`, `isOk`, `isErr`, `toNullable`, `toPromise`, and all collection helpers.
+- **Data-first utilities** take the `Result` as their first argument and are called directly, never inside a pipe: `unwrap`, `unwrapOr`, `unwrapOrElse`, `unwrapOrThrow`, `unwrapErr`, `expectResult`, `expectErr`, `contains`, `containsErr`, `isOk`, `isErr`, `toNullable`, `toPromise`, and all collection helpers.
+- **Combinators** work both ways: `and`, `or`, `orElse`, `zip` and `combine` take the `Result` first, or return a function for `.pipe(...)` when you leave it out. `swap` and `flatten` go into a pipe without a call.
 
 ## Creating Results
 
@@ -146,7 +147,7 @@ try {
 const errorValue = expectErr(failure, 'wanted the error'); // 'boom'
 ```
 
-## Combinators (data-first)
+## Combinators
 
 ```typescript
 import { ok, err, and, or, orElse, swap, flatten, type Result } from '@shirudo/result';
@@ -367,7 +368,7 @@ Version 2 removes these APIs. Replace each call in code written against 1.x as f
 - `gen`: use `task`.
 - `ResultType<T, E>`: use `SerializedResult<T, E>`.
 
-Version 2 requires Node.js 22 or later. It also requires the method name in the `MatchOnOkError` constructor: `new MatchOnOkError('matchError')`. `sequenceRecord()` rejects an array or a tuple at compile time; use `sequence()` for a list. It leaves out a key that holds `undefined`, like a missing key. The migration guide owns this list and shows each replacement in full: https://github.com/shi-rudo/result-ts/blob/main/docs/migration/v2.md
+Version 2 requires Node.js 22 or later. `flatten` moved from `@shirudo/result/collections` to `@shirudo/result/operators`. It also requires the method name in the `MatchOnOkError` constructor: `new MatchOnOkError('matchError')`. `sequenceRecord()` rejects an array or a tuple at compile time; use `sequence()` for a list. It leaves out a key that holds `undefined`, like a missing key. The migration guide owns this list and shows each replacement in full: https://github.com/shi-rudo/result-ts/blob/main/docs/migration/v2.md
 
 ## Subpath Exports
 

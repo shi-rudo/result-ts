@@ -35,18 +35,22 @@ import { map, flatMapAsync } from '@shirudo/result/operators';
 
 ## Combinators
 
+A combinator takes the Result as its first argument. Leave the Result out, and it returns a function for `.pipe()`. `swap` and `flatten` take only the Result, so they go into `.pipe()` without a call.
+
 | Combinator | Description |
 | :--------- | :---------- |
-| `and(left, right)` | Return `right` only if `left` is `Ok`. |
-| `or(left, right)` | Return `left` if it is `Ok`; otherwise return `right`. |
-| `orElse(result, fn)` | Return the original `Ok`; otherwise call `fn(error)`. |
+| `and(right)` / `and(left, right)` | Return `right` only if `left` is `Ok`. |
+| `or(right)` / `or(left, right)` | Return `left` if it is `Ok`; otherwise return `right`. |
+| `orElse(fn)` / `orElse(result, fn)` | Return the original `Ok`; otherwise call `fn(error)`. |
 | `swap(result)` | Swap `Ok<T>` and `Err<E>` into `Result<E, T>`. |
-| `zip(left, right)` | Combine two `Ok` values into a tuple, short-circuiting on the first `Err`. |
-| `combine(left, right)` | Combine two Results and collect one or both errors in an array. |
+| `flatten(result)` | Flatten `Result<Result<T, E>, E>` to `Result<T, E>`. |
+| `zip(right)` / `zip(left, right)` | Combine two `Ok` values into a tuple, short-circuiting on the first `Err`. |
+| `combine(right)` / `combine(left, right)` | Combine two Results and collect one or both errors in an array. |
 
 ```ts
-import { combine, err, ok, zip } from '@shirudo/result';
+import { combine, err, ok, or, zip } from '@shirudo/result';
 
 zip(ok(1), ok('a')); // Ok([1, 'a'])
 combine(err('left'), err('right')); // Err(['left', 'right'])
+err<string, number>('missing').pipe(or(ok(0))); // Ok(0)
 ```

@@ -69,7 +69,7 @@ function process(input: string): string {
 
 ## 5. Know the Two Calling Conventions
 
-Operators from `@shirudo/result/operators` are curried and belong inside `.pipe(...)`. Utilities like `unwrapOr`, `and`, `or` are data-first: they take the `Result` as their first argument and must be called directly. Putting a data-first utility inside a pipe does not compile.
+Operators from `@shirudo/result/operators` are curried and belong inside `.pipe(...)`. Utilities like `unwrapOr` and `sequence` are data-first: they take the `Result` as their first argument and must be called directly. Putting a data-first utility inside a pipe does not compile.
 
 ```typescript
 import { ok, unwrapOr } from '@shirudo/result';
