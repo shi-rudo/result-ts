@@ -16,7 +16,7 @@ const config: UserConfig = defineConfig({
             platform: 'neutral',
         },
         cjs: {
-            target: ['node20'],
+            target: ['node22'],
         },
     },
     // Generate JS sourcemaps for easier debugging in consumers.
