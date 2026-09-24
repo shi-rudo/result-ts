@@ -78,10 +78,27 @@ describe('sequenceRecord', () => {
         }
     });
 
-    it('throws for missing or malformed Result values instead of returning partial Ok', () => {
-        const record = { a: ok(1), b: undefined } as unknown as Record<string, Result<number, string>>;
+    it('throws for a value that is no Result instead of returning partial Ok', () => {
+        const record = { a: ok(1), b: null } as unknown as Record<string, Result<number, string>>;
 
         expect(() => sequenceRecord(record)).toThrow(InvalidResultStateError);
-        expect(() => sequenceRecord(record)).toThrow('property b holds undefined, not a Result');
+        expect(() => sequenceRecord(record)).toThrow('property b holds null, not a Result');
+    });
+
+    it('leaves out a key that holds undefined, like a missing key', () => {
+        const record: { a: Result<number, never>; b?: Result<number, never> } = { a: ok(1), b: undefined };
+
+        const result = sequenceRecord(record);
+
+        expect(result.unwrap()).toEqual({ a: 1 });
+        expect('b' in result.unwrap()).toBe(false);
+    });
+
+    it('sequences a conditionally spread key', () => {
+        const withB = sequenceRecord({ a: ok(1), ...(true as boolean ? { b: ok(2) } : {}) });
+        const withoutB = sequenceRecord({ a: ok(1), ...(false as boolean ? { b: ok(2) } : {}) });
+
+        expect(withB.unwrap()).toEqual({ a: 1, b: 2 });
+        expect(withoutB.unwrap()).toEqual({ a: 1 });
     });
 });

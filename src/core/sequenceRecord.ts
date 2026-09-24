@@ -15,7 +15,8 @@ type ErrValueOf<R> = R extends Result<any, infer E> ? E : never;
  * hidden helper field of another type is ignored. An array does not compile,
  * unless a type such as `Record<number, Result<T, E>>` widens it first. An array
  * that arrives anyway throws, because its indices would sequence into an object.
- * Use `sequence` for a list.
+ * Use `sequence` for a list. A key that holds `undefined` is left out, like a
+ * missing key.
  */
 export function sequenceRecord<
     // The mapped half maps a tuple onto a tuple, so alone it admits an array.
@@ -48,6 +49,10 @@ export function sequenceRecord<
 
         if (!isResult(result)) {
             if (!Object.getOwnPropertyDescriptor(record, key)?.enumerable) continue;
+            // The constraint admits `undefined` only under an optional key, so it
+            // counts as a missing key. A required key holds it only when an
+            // untyped caller put it there.
+            if (result === undefined) continue;
             throw new InvalidResultStateError('sequenceRecord', `property ${String(key)} holds ${describeValue(result)}, not a Result`);
         }
 
