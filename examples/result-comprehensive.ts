@@ -18,9 +18,9 @@ import {
     mapErr,
     ok,
     okIf,
-    okIfLazy,
+    okIfElse,
     recover,
-    recoverWith,
+    recoverElse,
     sequence,
     tap,
     task,
@@ -62,7 +62,7 @@ console.log('Age 15:', validateAge(15).isErr()); // true
 
 // Lazy evaluation for expensive computations
 const expensiveValidation = (value: number): Result<string, string> => {
-    return okIfLazy(
+    return okIfElse(
         value > 0,
         () => {
             console.log('  Computing expensive success value...');
@@ -137,7 +137,7 @@ console.log('Parse "42":', parseNumber('42').isOk());
 console.log('Parse "invalid":', parseNumber('invalid').isErr());
 
 // =============================================================================
-// 4. ERROR HANDLING: recover, recoverWith, tryCatch
+// 4. ERROR HANDLING: recover, recoverElse, tryCatch
 // =============================================================================
 
 console.log('\n=== 4. ERROR HANDLING ===\n');
@@ -148,9 +148,9 @@ const withDefault = err('error').pipe(
 );
 logResult('Recovered value:', withDefault); // 0
 
-// recoverWith: provides an alternative Result
+// recoverElse: provides an alternative Result
 const withFallback = err('primary failed').pipe(
-    recoverWith((_error: string) => 42)
+    recoverElse((_error: string) => 42)
 );
 logResult('Fallback value:', withFallback); // 42
 

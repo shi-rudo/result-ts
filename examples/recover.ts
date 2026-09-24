@@ -1,11 +1,11 @@
 /**
- * Examples for recover and recoverWith
+ * Examples for recover and recoverElse
  * 
  * recover: turns errors into a default value
- * recoverWith: like recover, but the default value is derived from the error
+ * recoverElse: like recover, but the default value is derived from the error
  */
 
-import { err, map, ok, recover, recoverWith, type Result } from '../src/index';
+import { err, map, ok, recover, recoverElse, type Result } from '../src/index';
 
 // ============================================================================
 // Example 1: Simple fallback with recover
@@ -26,7 +26,7 @@ const age2 = getUserAge('valid-id').pipe(recover(18));
 console.log('Age without fallback:', age2.unwrapOr(0)); // 25
 
 // ============================================================================
-// Example 2: Error-based fallback with recoverWith
+// Example 2: Error-based fallback with recoverElse
 // ============================================================================
 
 type ApiError = { code: number; message: string };
@@ -43,7 +43,7 @@ function fetchUserData(id: string): Result<{ name: string; score: number }, ApiE
 
 // Different fallback values depending on the error code
 const userData = fetchUserData('timeout').pipe(
-    recoverWith((error) => {
+    recoverElse((error) => {
         if (error.code === 408) {
             return { name: 'Guest', score: 0 }; // Timeout → Guest User
         }
@@ -57,7 +57,7 @@ const userData = fetchUserData('timeout').pipe(
 console.log('User Data:', userData.unwrapOr({ name: 'Fallback', score: 0 }));
 
 // ============================================================================
-// Example 3: Error logging with recoverWith
+// Example 3: Error logging with recoverElse
 // ============================================================================
 
 function parseConfig(json: string): Result<{ port: number }, string> {
@@ -74,7 +74,7 @@ function parseConfig(json: string): Result<{ port: number }, string> {
 
 // Log the error and use a default config
 const config = parseConfig('invalid json').pipe(
-    recoverWith((error) => {
+    recoverElse((error) => {
         console.error('Config error:', error);
         return { port: 3000 }; // Default port
     })

@@ -4,20 +4,20 @@ Every snippet in this file is compile-checked in CI (`pnpm docs:check`).
 
 Two calling conventions exist, and mixing them up is the most common mistake:
 
-- **Curried operators** (from `@shirudo/result/operators`) take their configuration and return a function `Result => ...`. Use them inside `.pipe(...)` / `.pipeAsync(...)`: `map`, `mapErr`, `mapBoth`, `flatMap`, `tap`, `filter`, `fold`, `recover`, `recoverWith`, `tryCatch`, `tryMap`, and their `...Async` variants.
+- **Curried operators** (from `@shirudo/result/operators`) take their configuration and return a function `Result => ...`. Use them inside `.pipe(...)` / `.pipeAsync(...)`: `map`, `mapErr`, `mapBoth`, `flatMap`, `tap`, `filter`, `fold`, `recover`, `recoverElse`, `tryCatch`, `tryMap`, and their `...Async` variants.
 - **Data-first utilities** take the `Result` as their first argument and are called directly, never inside a pipe: `unwrap`, `unwrapOr`, `unwrapOrElse`, `unwrapOrThrow`, `unwrapErr`, `expectResult`, `expectErr`, `contains`, `containsErr`, `isOk`, `isErr`, `toNullable`, `toPromise`, and all collection helpers.
 - **Combinators** work both ways: `and`, `or`, `orElse`, `zip` and `combine` take the `Result` first, or return a function for `.pipe(...)` when you leave it out. `swap` and `flatten` go into a pipe without a call.
 
 ## Creating Results
 
 ```typescript
-import { ok, err, okIf, okIfLazy, fromNullable } from '@shirudo/result';
+import { ok, err, okIf, okIfElse, fromNullable } from '@shirudo/result';
 
 const success = ok(42); // Result<number, never>
 const failure = err({ code: 'not-found' as const, id: '7' });
 
 const checked = okIf(2 + 2 === 4, 'value', 'error');
-const lazyChecked = okIfLazy(2 + 2 === 4, () => 'value', () => 'error');
+const lazyChecked = okIfElse(2 + 2 === 4, () => 'value', () => 'error');
 
 const maybe: string | undefined = undefined;
 const fromMaybe = fromNullable(maybe, 'was nullish'); // Result<string, string>
@@ -74,7 +74,7 @@ console.log(containsErr(err('boom'), 'boom')); // true
 
 ```typescript
 import { ok, err, type Result } from '@shirudo/result';
-import { map, mapErr, mapBoth, flatMap, filter, tap, recover, recoverWith, tryMap, tryCatch } from '@shirudo/result/operators';
+import { map, mapErr, mapBoth, flatMap, filter, tap, recover, recoverElse, tryMap, tryCatch } from '@shirudo/result/operators';
 
 declare function findQuota(user: string): Result<number, { code: 'no-quota'; user: string }>;
 
@@ -98,7 +98,7 @@ const recovered = err<'boom', number>('boom').pipe(
   recover(0),                                        // Err -> Ok(0), error type becomes never
 );
 const recoveredWith = err<'boom', number>('boom').pipe(
-  recoverWith(error => error.length),                // compute the fallback from the error
+  recoverElse(error => error.length),                // compute the fallback from the error
 );
 
 const chained = ok<number, never>(1).pipe(
@@ -364,6 +364,8 @@ Version 2 removes these APIs. Replace each call in code written against 1.x as f
 - `mapOr(r, d, f)` / `mapOrElse(r, onErr, onOk)`: use `r.fold(f, () => d)` / `r.fold(onOk, onErr)`.
 - `matchErr()` / `matchErrAsync()`: use `matchErrorToResult()` / `matchErrorToResultAsync()`. The error is `MatchHandlerNotResultError` (`ERR_MATCH_HANDLER_NOT_RESULT`).
 - `bimap`: use `mapBoth`.
+- `recoverWith`: use `recoverElse`.
+- `okIfLazy`: use `okIfElse`.
 - `all` / `Result.all`: use `sequence` / `Result.sequence`.
 - `gen`: use `task`.
 - `ResultType<T, E>`: use `SerializedResult<T, E>`.

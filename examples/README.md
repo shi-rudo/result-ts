@@ -67,7 +67,7 @@ The `fold()` method for handling both cases:
 Error recovery with fallback values:
 
 - **recover**: simple fallback value on errors
-- **recoverWith**: error-based fallback logic
+- **recoverElse**: error-based fallback logic
 - Error logging with recovery
 - Chaining with other operators
 - Different types for fallback values
@@ -99,10 +99,10 @@ Static factory methods and conversions:
 
 Comprehensive examples covering all major features:
 
-1. **BASICS**: create Result, `okIf`, `okIfLazy`
+1. **BASICS**: create Result, `okIf`, `okIfElse`
 2. **TRANSFORMATIONS**: `map`, `mapErr`, `flatMap`
 3. **VALIDATION**: `filter`, `tryMap`
-4. **ERROR HANDLING**: `recover`, `recoverWith`, `tryCatch`
+4. **ERROR HANDLING**: `recover`, `recoverElse`, `tryCatch`
 5. **SIDE EFFECTS**: `tap`
 6. **ASYNC OPERATIONS**: `fromPromise`, `mapAsync`, `flatMapAsync`, `tryCatchAsync`
 7. **COLLECTIONS**: `sequence`, `zip`, `collectFirstOk`

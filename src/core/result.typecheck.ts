@@ -220,3 +220,9 @@ void rootEntry.MatchErrHandlerNotResultError;
 
 // @ts-expect-error `ERR_MATCH_ERR_HANDLER_NOT_RESULT` does not exist, use `ERR_MATCH_HANDLER_NOT_RESULT`.
 void rootEntry.ERR_MATCH_ERR_HANDLER_NOT_RESULT;
+
+// @ts-expect-error `recoverWith` does not exist, use `recoverElse`.
+void rootEntry.recoverWith;
+
+// @ts-expect-error `okIfLazy` does not exist, use `okIfElse`.
+void rootEntry.okIfLazy;
