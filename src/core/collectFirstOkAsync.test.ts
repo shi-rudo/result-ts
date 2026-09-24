@@ -87,6 +87,9 @@ describe('collectFirstOkAsync', () => {
         await expect(collectFirstOkAsync([notAResult, Promise.resolve(ok(1))])).rejects.toBeInstanceOf(
             InvalidResultStateError
         );
+        await expect(collectFirstOkAsync([notAResult, Promise.resolve(ok(1))])).rejects.toThrow(
+            'input 0 fulfilled with undefined, not a Result'
+        );
     });
 
     it('rethrows synchronous thunk errors as programmer errors', async () => {

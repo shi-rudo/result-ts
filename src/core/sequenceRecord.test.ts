@@ -18,6 +18,7 @@ describe('sequenceRecord', () => {
 
     it('rejects an array, which belongs to sequence()', () => {
         expect(() => sequenceRecord([ok(1), ok(2)] as never)).toThrow(InvalidResultStateError);
+        expect(() => sequenceRecord([ok(1), ok(2)] as never)).toThrow('received an array; use sequence() for a list');
     });
 
     it('sequences a record that holds a Result under the key length', () => {
@@ -81,5 +82,6 @@ describe('sequenceRecord', () => {
         const record = { a: ok(1), b: undefined } as unknown as Record<string, Result<number, string>>;
 
         expect(() => sequenceRecord(record)).toThrow(InvalidResultStateError);
+        expect(() => sequenceRecord(record)).toThrow('property b holds undefined, not a Result');
     });
 });

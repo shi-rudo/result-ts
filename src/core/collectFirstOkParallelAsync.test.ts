@@ -101,6 +101,9 @@ describe('collectFirstOkParallelAsync', () => {
         await expect(
             collectFirstOkParallelAsync([notAResult, Promise.resolve(ok(1))] as const),
         ).rejects.toBeInstanceOf(InvalidResultStateError);
+        await expect(
+            collectFirstOkParallelAsync([notAResult, Promise.resolve(ok(1))] as const),
+        ).rejects.toThrow('input 0 fulfilled with undefined, not a Result');
     });
 
     it('rejects with InvalidResultStateError when a non-Result input arrives and no Ok wins', async () => {
@@ -109,6 +112,9 @@ describe('collectFirstOkParallelAsync', () => {
         await expect(
             collectFirstOkParallelAsync([notAResult, Promise.resolve(err('error1'))] as const),
         ).rejects.toBeInstanceOf(InvalidResultStateError);
+        await expect(
+            collectFirstOkParallelAsync([notAResult, Promise.resolve(err('error1'))] as const),
+        ).rejects.toThrow('input 0 fulfilled with undefined, not a Result');
     });
 
     it('keeps an Ok that won before a non-Result input was observed, without an unhandled rejection', async () => {

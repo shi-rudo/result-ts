@@ -3,6 +3,7 @@ import type { Result } from './result';
 import { err, ok } from './result';
 import { isResult } from './isResult';
 import { InvalidResultStateError } from '../errors';
+import { describeValue } from '../describeValue';
 
 type CollectFirstOkAsyncInput = Promise<Result<any, any>> | (() => Awaitable<Result<any, any>>);
 
@@ -59,11 +60,11 @@ export async function collectFirstOkParallelAsync<const Inputs extends readonly 
     }
 
     const firstOk = new Promise<Result<OkValue, ErrValue[]>>((resolve, reject) => {
-        for (const promise of started) {
+        for (const [index, promise] of started.entries()) {
             promise.then(
                 (value) => {
                     if (!isResult(value)) {
-                        reject(new InvalidResultStateError('collectFirstOkParallelAsync'));
+                        reject(new InvalidResultStateError('collectFirstOkParallelAsync', `input ${index} fulfilled with ${describeValue(value)}, not a Result`));
                     } else if (value.isOk()) {
                         resolve(ok<OkValue, ErrValue[]>(value.value as OkValue));
                     }
@@ -77,19 +78,20 @@ export async function collectFirstOkParallelAsync<const Inputs extends readonly 
 
     const allErrors = Promise.allSettled(started).then((settled) => {
         const errors: ErrValue[] = [];
-        for (const entry of settled) {
+        for (const [index, entry] of settled.entries()) {
             if (entry.status === 'rejected') {
                 errors.push(errorMapper ? errorMapper(entry.reason) : (entry.reason as F));
                 continue;
             }
             const result = entry.value;
-            if (isResult(result)) {
-                if (result.isErr()) {
-                    errors.push(result.error as ErrValue);
-                    continue;
-                }
-                if (result.isOk()) continue;
+            if (!isResult(result)) {
+                throw new InvalidResultStateError('collectFirstOkParallelAsync', `input ${index} fulfilled with ${describeValue(result)}, not a Result`);
             }
+            if (result.isErr()) {
+                errors.push(result.error as ErrValue);
+                continue;
+            }
+            if (result.isOk()) continue;
             throw new InvalidResultStateError('collectFirstOkParallelAsync');
         }
         return err<ErrValue[], OkValue>(errors);
