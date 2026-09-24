@@ -17,8 +17,3 @@ export function mapBoth<T, E, U, F>(mapOk: (value: T) => U, mapErr: (error: E) =
         throw new InvalidResultStateError('mapBoth');
     };
 }
-
-/**
- * Alias for `mapBoth`.
- */
-export const bimap: typeof mapBoth = mapBoth;

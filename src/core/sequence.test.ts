@@ -1,7 +1,7 @@
 import { describe, expect, it } from 'vitest';
 
 import { err, ok, type Result } from './result';
-import { all, sequence } from './sequence';
+import { sequence } from './sequence';
 
 describe('sequence', () => {
     it('combines all Ok results', () => {
@@ -23,16 +23,6 @@ describe('sequence', () => {
         expect(out.isOk()).toBe(true);
         if (out.isOk()) {
             expect(out.value).toEqual([]);
-        }
-    });
-});
-
-describe('all', () => {
-    it('is an alias for sequence', () => {
-        const out = all([ok(1), ok(2)]);
-        expect(out.isOk()).toBe(true);
-        if (out.isOk()) {
-            expect(out.value).toEqual([1, 2]);
         }
     });
 });

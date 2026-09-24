@@ -1,4 +1,4 @@
-import { err, fromPromise, ok, Result, type ResultType, tryCatch, tryCatchAsync, tryMap, tryMapAsync } from '../index';
+import { err, fromPromise, ok, Result, type SerializedResult, tryCatch, tryCatchAsync, tryMap, tryMapAsync } from '../index';
 import * as rootEntry from '../index';
 
 type Equal<A, B> =
@@ -128,20 +128,20 @@ tryMapAsync<number, string, number, Error>(async value => value + 1);
 
 // `JSON.stringify` drops a key whose value is `undefined`, so the serialized
 // shape must describe the payload that arrives without it.
-const voidPayload = { _tag: 'Ok' } satisfies ResultType<void, string>;
+const voidPayload = { _tag: 'Ok' } satisfies SerializedResult<void, string>;
 
-const optionalValuePayload = { _tag: 'Ok' } satisfies ResultType<number | undefined, string>;
+const optionalValuePayload = { _tag: 'Ok' } satisfies SerializedResult<number | undefined, string>;
 
-const undefinedErrorPayload = { _tag: 'Err' } satisfies ResultType<number, undefined>;
+const undefinedErrorPayload = { _tag: 'Err' } satisfies SerializedResult<number, undefined>;
 
 // @ts-expect-error A value that cannot be undefined must carry the value key.
-const missingValue = { _tag: 'Ok' } satisfies ResultType<number, string>;
+const missingValue = { _tag: 'Ok' } satisfies SerializedResult<number, string>;
 
 // @ts-expect-error An error that cannot be undefined must carry the error key.
-const missingError = { _tag: 'Err' } satisfies ResultType<number, string>;
+const missingError = { _tag: 'Err' } satisfies SerializedResult<number, string>;
 
 // At a concrete instantiation the rebuild that the docs promote compiles.
-function rebuildConcrete(parsed: ResultType<void, string>): Result<void, string> {
+function rebuildConcrete(parsed: SerializedResult<void, string>): Result<void, string> {
     if (parsed._tag === 'Ok') return ok<void, string>(parsed.value);
     return err<string, void>(parsed.error);
 }
@@ -151,7 +151,7 @@ void rebuildConcrete;
 // the payload and the same rebuild needs a cast. If a future TypeScript
 // resolves the conditional, these directives turn into errors and the limit
 // can be documented away.
-function rebuildGeneric<T, E>(parsed: ResultType<T, E>): Result<T, E> {
+function rebuildGeneric<T, E>(parsed: SerializedResult<T, E>): Result<T, E> {
     // @ts-expect-error The deferred conditional widens the payload to `T | undefined`.
     if (parsed._tag === 'Ok') return ok<T, E>(parsed.value);
     // @ts-expect-error The deferred conditional widens the payload to `E | undefined`.
@@ -175,3 +175,18 @@ void rootEntry.unwrapOrDefault;
 
 // @ts-expect-error `ERR_INVALID_STATE` does not exist, use `ERR_INVALID_RESULT_STATE`.
 void rootEntry.ERR_INVALID_STATE;
+
+// @ts-expect-error `bimap` does not exist, use `mapBoth`.
+void rootEntry.bimap;
+
+// @ts-expect-error `all` does not exist, use `sequence`.
+void rootEntry.all;
+
+// @ts-expect-error `Result.all` does not exist, use `Result.sequence`.
+void Result.all;
+
+// @ts-expect-error `gen` does not exist, use `task`.
+void rootEntry.gen;
+
+// @ts-expect-error `ResultType` does not exist, use `SerializedResult`.
+void (null as unknown as rootEntry.ResultType<number, string>);

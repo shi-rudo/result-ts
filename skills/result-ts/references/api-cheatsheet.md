@@ -4,7 +4,7 @@ Every snippet in this file is compile-checked in CI (`pnpm docs:check`).
 
 Two calling conventions exist, and mixing them up is the most common mistake:
 
-- **Curried operators** (from `@shirudo/result/operators`) take their configuration and return a function `Result => ...`. Use them inside `.pipe(...)` / `.pipeAsync(...)`: `map`, `mapErr`, `mapBoth`/`bimap`, `flatMap`, `tap`, `filter`, `fold`, `match`, `recover`, `recoverWith`, `tryCatch`, `tryMap`, and their `...Async` variants.
+- **Curried operators** (from `@shirudo/result/operators`) take their configuration and return a function `Result => ...`. Use them inside `.pipe(...)` / `.pipeAsync(...)`: `map`, `mapErr`, `mapBoth`, `flatMap`, `tap`, `filter`, `fold`, `match`, `recover`, `recoverWith`, `tryCatch`, `tryMap`, and their `...Async` variants.
 - **Data-first utilities** take the `Result` as their first argument and are called directly, never inside a pipe: `unwrap`, `unwrapOr`, `unwrapOrElse`, `unwrapOrThrow`, `unwrapErr`, `expectResult`, `expectErr`, `mapOr`, `mapOrElse`, `and`, `or`, `orElse`, `swap`, `flatten`, `contains`, `containsErr`, `isOk`, `isErr`, `toNullable`, `toPromise`, and all collection helpers.
 
 ## Creating Results
@@ -321,7 +321,7 @@ const cached = Result.err<CacheMissError, number>(new CacheMissError())
 
 ## Serialization
 
-`toSerialized()` returns the plain discriminated shape `ResultType<T, E>`, which `JSON.stringify` encodes exactly as it encodes the Result itself, and it keeps `Ok(undefined)` unambiguous through the `_tag`. `JSON.stringify` drops the `undefined` `value` key, and `ok(parsed.value)` rebuilds the value. Rebuild with `ok`/`err` after validating foreign payloads.
+`toSerialized()` returns the plain discriminated shape `SerializedResult<T, E>`, which `JSON.stringify` encodes exactly as it encodes the Result itself, and it keeps `Ok(undefined)` unambiguous through the `_tag`. `JSON.stringify` drops the `undefined` `value` key, and `ok(parsed.value)` rebuilds the value. Rebuild with `ok`/`err` after validating foreign payloads.
 
 ```typescript
 import { ok, err } from '@shirudo/result';
@@ -362,6 +362,10 @@ Version 2 removes these APIs. Replace each call in code written against 1.x as f
 - `unwrapOrDefault(result, value)`: use `unwrapOr(result, value)`.
 - `ERR_INVALID_STATE`: use `ERR_INVALID_RESULT_STATE`.
 - Instance `match()`: use `matchError()` (Err-only builder) or the `match({ ok, err })` pipe operator.
+- `bimap`: use `mapBoth`.
+- `all` / `Result.all`: use `sequence` / `Result.sequence`.
+- `gen`: use `task`.
+- `ResultType<T, E>`: use `SerializedResult<T, E>`.
 
 Version 2 requires Node.js 22 or later. It also requires the method name in the `MatchOnOkError` constructor: `new MatchOnOkError('matchError')`. `sequenceRecord()` rejects an array or a tuple at compile time; use `sequence()` for a list. It leaves out a key that holds `undefined`, like a missing key. The migration guide owns this list and shows each replacement in full: https://github.com/shi-rudo/result-ts/blob/main/docs/migration/v2.md
 

@@ -29,12 +29,3 @@ export function sequence<const Results extends readonly Result<any, any>[]>(
 
     return ok<SequenceValues<Results>, ErrValueOf<Results[number]>>(values as SequenceValues<Results>);
 }
-
-/**
- * Alias for `sequence`.
- */
-export function all<const Results extends readonly Result<any, any>[]>(
-    results: Results
-): Result<SequenceValues<Results>, ErrValueOf<Results[number]>> {
-    return sequence(results);
-}

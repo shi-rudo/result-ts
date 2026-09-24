@@ -1,6 +1,6 @@
 import { describe, expect, it } from 'vitest';
 
-import { Result, ok, type Result as ResultType } from './result';
+import { Result, ok } from './result';
 import { expectResult } from './expectResult';
 import { ERR_EXPECT_OK, ExpectOkError, InvalidResultStateError } from '../errors';
 
@@ -39,7 +39,7 @@ describe('expectResult', () => {
         const malformed = {
             isOk: () => false,
             isErr: () => false,
-        } as unknown as ResultType<number, string>;
+        } as unknown as Result<number, string>;
 
         expect(() => expectResult(malformed, 'custom message')).toThrow(InvalidResultStateError);
     });

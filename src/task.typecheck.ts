@@ -1,4 +1,4 @@
-import { err, gen, ok, type Result } from './index';
+import { err, ok, task, type Result } from './index';
 
 type Equal<A, B> =
     (<T>() => T extends A ? 1 : 2) extends
@@ -6,7 +6,7 @@ type Equal<A, B> =
 
 type Expect<T extends true> = T;
 
-const generated = gen(function* () {
+const generated = task(function* () {
     const id = yield* ok<number, 'id-error'>(1);
     const name = yield* ok<string, 'name-error'>('alice');
     return String(id) + ':' + name;
@@ -16,7 +16,7 @@ type GenUnionsYieldedErrors = Expect<
     Equal<typeof generated, Promise<Result<string, 'id-error' | 'name-error'>>>
 >;
 
-const generatedReturningResult = gen(function* () {
+const generatedReturningResult = task(function* () {
     yield* ok<number, 'yield-error'>(1);
     return err<'return-error', string>('return-error');
 });

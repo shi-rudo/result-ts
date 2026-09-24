@@ -2,7 +2,7 @@ import { describe, expect, it } from 'vitest';
 
 import type { Result } from './index';
 import { err, ok, Result as ResultClass } from './index';
-import { task } from './gen';
+import { task } from './task';
 import {
     ERR_TASK_YIELD_NOT_RESULT,
     InvalidResultStateError,
@@ -10,7 +10,7 @@ import {
 } from './errors';
 import { RESULT_BRAND } from './core/brand';
 
-describe('task/gen (Do-Notation)', () => {
+describe('task (Do-Notation)', () => {
     describe('Basic functionality', () => {
         it('unwraps Ok via yield* and wraps return in Ok', async () => {
             const out = await task(function* () {
