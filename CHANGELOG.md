@@ -2,7 +2,7 @@
 
 ## 2.0.0 - Unreleased
 
-Version 2 removes the APIs that 1.x deprecated. It also makes the method name a required argument of the `MatchOnOkError` constructor, the one breaking change without a deprecation in 1.x. `docs/migration/v2.md` shows the replacement for each change.
+Version 2 removes the APIs that 1.x deprecated. `docs/migration/v2.md` lists every breaking change with its replacement.
 
 ### Removed
 
@@ -15,6 +15,7 @@ Version 2 removes the APIs that 1.x deprecated. It also makes the method name a 
 ### Changed
 
 - The `MatchOnOkError` constructor requires the name of the method that was called on an `Ok`. The default was `'match'`, the name of the removed method, and every caller inside the library already passed a name. TypeScript code that constructs the error without an argument no longer compiles. JavaScript code still runs, and the message then starts with `undefined()` instead of a method name.
+- `sequenceRecord()` rejects an array or a tuple at compile time. Such a call compiled before and always threw `InvalidResultStateError`. Use `sequence()` for a list. An argument typed as a union of an array and a record also stops compiling. A record with the key `length` and a generic caller over `Record<string, Result<T, E>>` still compile.
 
 ## 1.2.0 - 2026-09-22
 
