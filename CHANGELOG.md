@@ -2,7 +2,7 @@
 
 ## 2.0.0 - Unreleased
 
-Version 2 removes the APIs that 1.x deprecated. Two more changes had no deprecation in 1.x: the `MatchOnOkError` constructor requires the method name, and `sequenceRecord()` rejects an array at compile time. `docs/migration/v2.md` shows the replacement for each change.
+Version 2 removes the APIs that 1.x deprecated. `docs/migration/v2.md` lists every breaking change with its replacement.
 
 ### Removed
 
