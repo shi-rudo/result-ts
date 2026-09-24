@@ -5,4 +5,3 @@ export * from './core/collectFirstOkAsync';
 export * from './core/collectFirstOkParallelAsync';
 export * from './core/collectAllErrors';
 export * from './core/partition';
-export * from './core/flatten';

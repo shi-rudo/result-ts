@@ -5,6 +5,11 @@ import { InvalidResultStateError } from '../errors';
 import { and } from './and';
 
 describe('and', () => {
+    it('works as a pipe operator', () => {
+        expect(ok(1).pipe(and(ok(2)))).toEqual(ok(2));
+        expect(Result.err('error1').pipe(and(ok(2)))).toEqual(Result.err('error1'));
+    });
+
     it('returns second Result if Ok', () => {
         expect(and(ok(1), ok(2))).toEqual(ok(2));
         expect(and(ok(1), Result.err('error'))).toEqual(Result.err('error'));

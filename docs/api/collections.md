@@ -13,7 +13,6 @@ import { sequence, sequenceRecord } from '@shirudo/result/collections';
 - `collectFirstOkParallelAsync(inputs, errorMapper?)`: Parallel variant where the first success wins. Same input and `errorMapper` contract as `collectFirstOkAsync`.
 - `collectAllErrors(results)`: Return all values only if every Result is `Ok`; otherwise collect all errors.
 - `partition(results)`: Split Results into `[oks, errs]`.
-- `flatten(result)`: Flatten `Result<Result<T, E>, E>` to `Result<T, E>`.
 
 ```ts
 import { err, ok } from '@shirudo/result';

@@ -16,6 +16,8 @@ Version 2 removes the APIs that 1.x deprecated. `docs/migration/v2.md` lists eve
 
 ### Changed
 
+- `and`, `or` and `orElse` also work as pipe operators, for example `result.pipe(or(fallback))`. Both forms type each side on its own: `and` returns `Result<U, E | F>`, and `or` and `orElse` return `Result<T | U, F>`.
+- `flatten` moved from `@shirudo/result/collections` to `@shirudo/result/operators`. The root entry exports it as before.
 - `matchErr()` and `matchErrAsync()` are now `matchErrorToResult()` and `matchErrorToResultAsync()`. Next to `matchError()` the old name differed only by an abbreviation, although one matcher returns a value and the other a Result. The builder types are `ErrorToResultMatchBuilder` and `AsyncErrorToResultMatchBuilder`, and the error for a handler that returns no Result is `MatchHandlerNotResultError` with the code `ERR_MATCH_HANDLER_NOT_RESULT`.
 - `ResultType<T, E>` is now `SerializedResult<T, E>`. The type is the serialized shape that `toSerialized()` returns, not the type of a Result.
 - Node.js 22 or later is required. `engines` says `>=22`, and the CommonJS build targets Node.js 22. Node.js 20 has reached its end of life, and the build tool tsdown 0.23 no longer runs on it.
