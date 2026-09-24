@@ -139,6 +139,13 @@ type SequenceRecordKeepsTheReturnTypeOfAGenericCaller = Expect<
     Equal<typeof sequencedGenericRecord, Result<{ a: number; b: number }, string>>
 >;
 
+// Documented limit: an array is assignable to a record with numeric keys, so a
+// parameter of that type widens it past the constraint, and the runtime check throws.
+function sequenceNumericRecord(record: Record<number, Result<number, string>>) {
+    return sequenceRecord(record);
+}
+sequenceNumericRecord([ok(1), ok(2)]);
+
 declare const resultList: Result<number, string>[];
 declare const readonlyResultList: readonly Result<number, string>[];
 

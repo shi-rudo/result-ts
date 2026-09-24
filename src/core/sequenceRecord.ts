@@ -11,9 +11,10 @@ type ErrValueOf<R> = R extends Result<any, infer E> ? E : never;
  * Short-circuits on the first Err.
  *
  * A non-enumerable own property is an input only when it holds a `Result`, so a
- * hidden helper field of another type is ignored. An array does not compile.
- * An untyped caller that passes one gets an exception, because the indices of
- * an array would sequence into an object. Use `sequence` for a list.
+ * hidden helper field of another type is ignored. An array does not compile,
+ * unless a type such as `Record<number, Result<T, E>>` widens it first. An array
+ * that arrives anyway throws, because its indices would sequence into an object.
+ * Use `sequence` for a list.
  */
 export function sequenceRecord<
     // The mapped half maps a tuple onto a tuple, so alone it admits an array.
@@ -28,8 +29,9 @@ export function sequenceRecord<
     type Out = { [K in keyof R]: OkValueOf<R[K]> };
     type E = ErrValueOf<R[keyof R]>;
 
-    // An array reaches this point only through JavaScript, `any` or a cast. It
-    // would sequence into an object keyed by its indices, because `length` is a
+    // An array reaches this point through JavaScript, `any`, a cast, or a type
+    // that widens it, such as `Record<number, Result<T, E>>`. It would
+    // sequence into an object keyed by its indices, because `length` is a
     // non-enumerable non-Result and the rule below skips it. A list of Results
     // belongs to `sequence()`, so the mistake fails here and returns no wrong shape.
     if (Array.isArray(record)) throw new InvalidResultStateError('sequenceRecord');
