@@ -229,6 +229,7 @@ The full documentation lives in `docs/` and is built with VitePress.
 - [Pipelines](docs/guide/pipelines.md)
 - [Task Notation](docs/guide/task.md)
 - [Pattern Matching](docs/guide/matching.md)
+- [Coming from Other Libraries](docs/guide/coming-from.md)
 - [Result API](docs/api/result.md)
 - [Operators](docs/api/operators.md)
 - [Collections](docs/api/collections.md)
