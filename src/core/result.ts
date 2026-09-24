@@ -175,14 +175,10 @@ abstract class ResultBase extends Pipeable {
      * so the shape is safe for JSON, `structuredClone`, and `postMessage`.
      * JSON is the lossy step: `JSON.stringify` drops a key whose value is
      * `undefined`, so `Ok(undefined)` crosses the wire as `{"_tag":"Ok"}`,
-     * and `ok(parsed.value)` rebuilds it.
+     * and `fromSerialized()` rebuilds it.
      *
      * To rebuild a Result on the other side, validate the payload with your
-     * schema tool and then call `ok`/`err` on the discriminant:
-     *
-     * ```ts
-     * const restored = parsed._tag === 'Ok' ? ok(parsed.value) : err(parsed.error);
-     * ```
+     * schema tool, then call `fromSerialized()`.
      */
     toSerialized<T, E>(this: Result<T, E>): SerializedResult<T, E> {
         if (this._tag === 'Ok') return { _tag: 'Ok', value: this.value };

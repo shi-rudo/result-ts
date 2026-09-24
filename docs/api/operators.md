@@ -17,7 +17,7 @@ import { map, flatMapAsync } from '@shirudo/result/operators';
 | `filter(predicate, errFn)` | Turn `Ok` into `Err` if the predicate fails. |
 | `tap(observer)` | Run side effects without changing the Result. |
 | `recover(value)` | Convert `Err` to `Ok` with a default value. |
-| `recoverWith(fn)` | Convert `Err` to `Ok` using the error value. |
+| `recoverElse(fn)` | Convert `Err` to `Ok` using the error value. |
 | `tryCatch(fn)` | Run a function and catch exceptions into `Err`. |
 | `tryMap(fn)` | Like `map`, but catches exceptions. |
 | `fold({ ok, err })` | End a pipe and return a value based on state. |

@@ -77,7 +77,7 @@ There are several Result implementations for TypeScript. This one is built aroun
 - **Error types that cannot lie.** Declaring an explicit error type requires an error mapper: `fromPromise<User, ApiError>(promise)` without one is a compile error, so `E` never silently holds an unmapped `unknown`. And bugs inside the mapper itself are rethrown instead of being disguised as `Err` values.
 - **Exhaustive matching, checked at compile time.** `matchError().when(NotFoundError, ...).run()` only compiles once every error case is handled, and `matchTag` does the same for discriminated unions. Add a new error variant, and every unhandled match site turns red. For class-based matching the check is structural: give each error class a distinguishing member, for example a literal `readonly code`, because TypeScript cannot tell two classes of the same shape apart.
 - **Four interchangeable styles, one type.** Explicit `isOk()`/`isErr()` checks, `pipe`/`pipeAsync` operator chains, generator-based do-notation (`task`), and builder-based error matching all work on the same immutable, frozen `Result`. Use whichever style fits each call site.
-- **Safe at runtime boundaries.** `isResult()` validates an internal brand plus payload shape instead of accepting lookalike objects, and `toSerialized()` emits the discriminated `{ _tag, value | error }` shape, which `JSON.stringify` encodes exactly as it encodes the Result itself. `Ok(undefined)` survives the wire on its `_tag` alone, because `JSON.stringify` drops the `undefined` `value` key, and a validated payload rebuilds with plain `ok`/`err`.
+- **Safe at runtime boundaries.** `isResult()` validates an internal brand plus payload shape instead of accepting lookalike objects, and `toSerialized()` emits the discriminated `{ _tag, value | error }` shape, which `JSON.stringify` encodes exactly as it encodes the Result itself. `Ok(undefined)` survives the wire on its `_tag` alone, because `JSON.stringify` drops the `undefined` `value` key, and `fromSerialized()` rebuilds a validated payload.
 - **Zero dependencies, runs anywhere.** The package ships ESM and CJS builds with tree-shakeable subpath exports, and it runs on Node 22+ and in edge runtimes.
 - **Verified, not promised.** Every TypeScript snippet in this README and the docs is compile-checked in CI, the API is covered by 400+ runtime tests plus compile-time type tests, and the package exports are verified for ESM, CJS, and TypeScript consumers.
 
@@ -229,6 +229,7 @@ The full documentation lives in `docs/` and is built with VitePress.
 - [Pipelines](docs/guide/pipelines.md)
 - [Task Notation](docs/guide/task.md)
 - [Pattern Matching](docs/guide/matching.md)
+- [Coming from Other Libraries](docs/guide/coming-from.md)
 - [Result API](docs/api/result.md)
 - [Operators](docs/api/operators.md)
 - [Collections](docs/api/collections.md)

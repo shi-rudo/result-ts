@@ -1,9 +1,9 @@
 import { describe, expect, it } from 'vitest';
 
 import { Result, ok } from './result';
-import { recover, recoverWith } from './recover';
+import { recover, recoverElse } from './recover';
 
-describe('recover / recoverWith', () => {
+describe('recover / recoverElse', () => {
     it('recover replaces Err with Ok(defaultValue)', () => {
         const a = ok(1).pipe(recover(9));
         const _typeA: Result<number, never> = a;
@@ -22,15 +22,15 @@ describe('recover / recoverWith', () => {
         }
     });
 
-    it('recoverWith calculates the Ok value from the error', () => {
-        const a = ok(1).pipe(recoverWith(() => 9));
+    it('recoverElse calculates the Ok value from the error', () => {
+        const a = ok(1).pipe(recoverElse(() => 9));
         expect(a.isOk()).toBe(true);
         if (a.isOk()) {
             const value: number = a.value;
             expect(value).toBe(1);
         }
 
-        const b = Result.err('oops').pipe(recoverWith(e => e.length));
+        const b = Result.err('oops').pipe(recoverElse(e => e.length));
         expect(b.isOk()).toBe(true);
         if (b.isOk()) {
             const value: number = b.value;

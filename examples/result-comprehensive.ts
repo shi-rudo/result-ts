@@ -20,7 +20,7 @@ import {
     okIf,
     okIfLazy,
     recover,
-    recoverWith,
+    recoverElse,
     sequence,
     tap,
     task,
@@ -137,7 +137,7 @@ console.log('Parse "42":', parseNumber('42').isOk());
 console.log('Parse "invalid":', parseNumber('invalid').isErr());
 
 // =============================================================================
-// 4. ERROR HANDLING: recover, recoverWith, tryCatch
+// 4. ERROR HANDLING: recover, recoverElse, tryCatch
 // =============================================================================
 
 console.log('\n=== 4. ERROR HANDLING ===\n');
@@ -148,9 +148,9 @@ const withDefault = err('error').pipe(
 );
 logResult('Recovered value:', withDefault); // 0
 
-// recoverWith: provides an alternative Result
+// recoverElse: computes the Ok value from the error
 const withFallback = err('primary failed').pipe(
-    recoverWith((_error: string) => 42)
+    recoverElse((_error: string) => 42)
 );
 logResult('Fallback value:', withFallback); // 42
 

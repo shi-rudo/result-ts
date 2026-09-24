@@ -4,8 +4,8 @@ Every snippet in this file is compile-checked in CI (`pnpm docs:check`).
 
 Two calling conventions exist, and mixing them up is the most common mistake:
 
-- **Curried operators** (from `@shirudo/result/operators`) take their configuration and return a function `Result => ...`. Use them inside `.pipe(...)` / `.pipeAsync(...)`: `map`, `mapErr`, `mapBoth`, `flatMap`, `tap`, `filter`, `fold`, `recover`, `recoverWith`, `tryCatch`, `tryMap`, and their `...Async` variants.
-- **Data-first utilities** take the `Result` as their first argument and are called directly, never inside a pipe: `unwrap`, `unwrapOr`, `unwrapOrElse`, `unwrapOrThrow`, `unwrapErr`, `expectResult`, `expectErr`, `contains`, `containsErr`, `isOk`, `isErr`, `toNullable`, `toPromise`, and all collection helpers.
+- **Curried operators** (from `@shirudo/result/operators`) take their configuration and return a function `Result => ...`. Use them inside `.pipe(...)` / `.pipeAsync(...)`: `map`, `mapErr`, `mapBoth`, `flatMap`, `tap`, `filter`, `fold`, `recover`, `recoverElse`, `tryCatch`, `tryMap`, and their `...Async` variants.
+- **Data-first utilities** take the `Result` as their first argument and are called directly, never inside a pipe: `unwrap`, `unwrapOr`, `unwrapOrElse`, `unwrapOrThrow`, `unwrapErr`, `expectOk`, `expectErr`, `contains`, `containsErr`, `isOk`, `isErr`, `toNullable`, `toPromise`, and all collection helpers.
 - **Combinators** work both ways: `and`, `or`, `orElse`, `zip` and `combine` take the `Result` first, or return a function for `.pipe(...)` when you leave it out. `swap` and `flatten` go into a pipe without a call.
 
 ## Creating Results
@@ -74,7 +74,7 @@ console.log(containsErr(err('boom'), 'boom')); // true
 
 ```typescript
 import { ok, err, type Result } from '@shirudo/result';
-import { map, mapErr, mapBoth, flatMap, filter, tap, recover, recoverWith, tryMap, tryCatch } from '@shirudo/result/operators';
+import { map, mapErr, mapBoth, flatMap, filter, tap, recover, recoverElse, tryMap, tryCatch } from '@shirudo/result/operators';
 
 declare function findQuota(user: string): Result<number, { code: 'no-quota'; user: string }>;
 
@@ -98,7 +98,7 @@ const recovered = err<'boom', number>('boom').pipe(
   recover(0),                                        // Err -> Ok(0), error type becomes never
 );
 const recoveredWith = err<'boom', number>('boom').pipe(
-  recoverWith(error => error.length),                // compute the fallback from the error
+  recoverElse(error => error.length),                // compute the fallback from the error
 );
 
 const chained = ok<number, never>(1).pipe(
@@ -126,7 +126,7 @@ const text = err<'nope', number>('nope').pipe(
 ## Unwrapping (data-first, call at the edges)
 
 ```typescript
-import { ok, err, unwrap, unwrapErr, unwrapOr, unwrapOrElse, unwrapOrThrow, expectResult, expectErr } from '@shirudo/result';
+import { ok, err, unwrap, unwrapErr, unwrapOr, unwrapOrElse, unwrapOrThrow, expectOk, expectErr } from '@shirudo/result';
 
 const success = ok<number, string>(5);
 const failure = err<string, number>('boom');
@@ -135,7 +135,7 @@ console.log(unwrap(success));                 // 5; throws UnwrapOnErrError on E
 console.log(unwrapErr(failure));              // 'boom'; throws UnwrapErrOnOkError on Ok
 console.log(unwrapOr(failure, 0));            // 0
 console.log(unwrapOrElse(failure, e => e.length)); // 4
-console.log(expectResult(success, 'must have config')); // 5; ExpectOkError carries the Err payload as `cause`
+console.log(expectOk(success, 'must have config')); // 5; ExpectOkError carries the Err payload as `cause`
 
 let rethrown: unknown;
 try {
@@ -319,13 +319,13 @@ const cached = Result.err<CacheMissError, number>(new CacheMissError())
 
 ## Serialization
 
-`toSerialized()` returns the plain discriminated shape `SerializedResult<T, E>`, which `JSON.stringify` encodes exactly as it encodes the Result itself, and it keeps `Ok(undefined)` unambiguous through the `_tag`. `JSON.stringify` drops the `undefined` `value` key, and `ok(parsed.value)` rebuilds the value. Rebuild with `ok`/`err` after validating foreign payloads.
+`toSerialized()` returns the plain discriminated shape `SerializedResult<T, E>`, which `JSON.stringify` encodes exactly as it encodes the Result itself, and it keeps `Ok(undefined)` unambiguous through the `_tag`. `JSON.stringify` drops the `undefined` `value` key, and `fromSerialized()` rebuilds the value. Validate foreign payloads before you rebuild them.
 
 ```typescript
-import { ok, err } from '@shirudo/result';
+import { fromSerialized, ok } from '@shirudo/result';
 
 const wire = ok(42).toSerialized();       // { _tag: 'Ok', value: 42 }
-const restored = wire._tag === 'Ok' ? ok(wire.value) : err(wire.error);
+const restored = fromSerialized(wire);
 console.log(restored.unwrapOr(0));        // 42
 
 const friendly = ok(42).toUserFriendly(); // { isSuccess: true, data: 42 }
@@ -356,7 +356,6 @@ Codes: `ERR_UNWRAP_ON_ERR`, `ERR_UNWRAP_ERR_ON_OK`, `ERR_EXPECT_OK`, `ERR_EXPECT
 Version 2 removes these APIs. Replace each call in code written against 1.x as follows:
 
 - `serialize()`: use `toSerialized()`. The shape changes from `{ isSuccess, data?, error? }` to `{ _tag, value | error }`.
-- `fromSerialized(data)`: validate the payload yourself, then `data._tag === 'Ok' ? ok(data.value) : err(data.error)`.
 - `unwrapOrDefault(result, value)`: use `unwrapOr(result, value)`.
 - `ERR_INVALID_STATE`: use `ERR_INVALID_RESULT_STATE`.
 - Instance `match()`: use `matchError()` (Err-only builder), or `fold` for both states.
@@ -364,6 +363,8 @@ Version 2 removes these APIs. Replace each call in code written against 1.x as f
 - `mapOr(r, d, f)` / `mapOrElse(r, onErr, onOk)`: use `r.fold(f, () => d)` / `r.fold(onOk, onErr)`.
 - `matchErr()` / `matchErrAsync()`: use `matchErrorToResult()` / `matchErrorToResultAsync()`. The error is `MatchHandlerNotResultError` (`ERR_MATCH_HANDLER_NOT_RESULT`).
 - `bimap`: use `mapBoth`.
+- `recoverWith`: use `recoverElse`.
+- `expectResult`: use `expectOk`.
 - `all` / `Result.all`: use `sequence` / `Result.sequence`.
 - `gen`: use `task`.
 - `ResultType<T, E>`: use `SerializedResult<T, E>`.

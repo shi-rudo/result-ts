@@ -17,10 +17,10 @@ export function recover<T, E, F>(defaultValue: F) {
 /**
  * Like `recover`, but calculates the default value based on the error.
  */
-export function recoverWith<T, E, F>(fn: (error: E) => F) {
+export function recoverElse<T, E, F>(fn: (error: E) => F) {
     return (source: Result<T, E>): Result<T | F, never> => {
         if (source.isOk()) return source as unknown as Result<T | F, never>;
         if (source.isErr()) return ok(fn(source.error));
-        throw new InvalidResultStateError('recoverWith');
+        throw new InvalidResultStateError('recoverElse');
     };
 }

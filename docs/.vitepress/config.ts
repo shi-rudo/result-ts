@@ -20,6 +20,7 @@ export default defineConfig({
                     { text: 'Pipelines', link: '/guide/pipelines' },
                     { text: 'Task Notation', link: '/guide/task' },
                     { text: 'Pattern Matching', link: '/guide/matching' },
+                    { text: 'Coming from Other Libraries', link: '/guide/coming-from' },
                 ],
             },
             {

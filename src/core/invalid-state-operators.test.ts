@@ -11,7 +11,7 @@ import { foldAsync } from './foldAsync';
 import { mapBoth } from './mapBoth';
 import { orElse } from './orElse';
 import { partition } from './partition';
-import { recover, recoverWith } from './recover';
+import { recover, recoverElse } from './recover';
 import type { Result } from './result';
 import { err, ok } from './result';
 import { sequence } from './sequence';
@@ -51,7 +51,7 @@ describe('pipe operators invalid Result state handling', () => {
         expect(() => orElse(malformed, () => ok(0))).toThrow(InvalidResultStateError);
         expect(() => partition([malformed])).toThrow(InvalidResultStateError);
         expect(() => recover<number, string, number>(0)(malformed)).toThrow(InvalidResultStateError);
-        expect(() => recoverWith<number, string, number>(error => error.length)(malformed)).toThrow(InvalidResultStateError);
+        expect(() => recoverElse<number, string, number>(error => error.length)(malformed)).toThrow(InvalidResultStateError);
         expect(() => sequence([malformed])).toThrow(InvalidResultStateError);
         expect(() => sequenceRecord({ value: brandedMalformed })).toThrow(InvalidResultStateError);
         expect(() => swap(malformed)).toThrow(InvalidResultStateError);
