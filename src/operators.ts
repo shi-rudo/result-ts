@@ -23,3 +23,4 @@ export * from './core/or';
 export * from './core/orElse';
 export * from './core/zip';
 export * from './core/swap';
+export * from './core/flatten';
