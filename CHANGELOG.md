@@ -10,8 +10,9 @@ Version 2 removes the APIs that 1.x deprecated. `docs/migration/v2.md` lists eve
 - `.serialize()`, deprecated in 1.1.0. Use `.toSerialized()`. The shape changes from `{ isSuccess, data?, error? }` to `{ _tag: 'Ok', value } | { _tag: 'Err', error }`, so a receiver reads the state from `_tag`.
 - `unwrapOrDefault()`, deprecated in 1.1.0. Use `unwrapOr()`, which takes the same arguments.
 - `ERR_INVALID_STATE`, deprecated in 1.1.0. Use `ERR_INVALID_RESULT_STATE`, which holds the same string.
+- The operators `match`, `matchAsync`, `mapOr` and `mapOrElse`. `match` and `matchAsync` were identical to `fold` and `foldAsync`, and `mapOr` and `mapOrElse` computed the same value with positional arguments. Use `fold` and `foldAsync`.
 - The aliases `bimap`, `all`, `Result.all` and `gen`. Use `mapBoth`, `sequence`, `Result.sequence` and `task`.
-- The `.match()` method of a Result, deprecated in 1.0.0 as an alias of `.matchError()`. Use `.matchError()`, which returns the same builder. The `match({ ok, err })` pipe operator stays.
+- The `.match()` method of a Result, deprecated in 1.0.0 as an alias of `.matchError()`. Use `.matchError()`, which returns the same builder, or `fold` for both states.
 
 ### Changed
 

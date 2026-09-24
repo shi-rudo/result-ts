@@ -15,8 +15,8 @@ version: 2.0.0
    - `references/refactoring-patterns.md`: before/after patterns for converting `try/catch`, null checks, early-return chains, and nested `await` code to `Result`.
    - `references/best-practices.md`: idioms and conventions (error modeling with `code` discriminants, where to unwrap, async composition, serialization across boundaries).
 2. Respect the two calling conventions; confusing them is the most common generated-code bug:
-   - Operators from `@shirudo/result/operators` are curried and go inside `.pipe(...)`: `map`, `flatMap`, `mapErr`, `filter`, `tap`, `match`, `tryMap`, and their `...Async` variants.
-   - Utilities like `unwrapOr`, `mapOr`, `and`, `or`, `sequence` are data-first: the `Result` is the first argument, and they are called outside pipes.
+   - Operators from `@shirudo/result/operators` are curried and go inside `.pipe(...)`: `map`, `flatMap`, `mapErr`, `filter`, `tap`, `fold`, `tryMap`, and their `...Async` variants.
+   - Utilities like `unwrapOr`, `and`, `or`, `sequence` are data-first: the `Result` is the first argument, and they are called outside pipes.
 3. When declaring an explicit error type on `fromPromise`, `tryAsync`, `fromThrowable`, `tryCatch`, `tryMap`, or their variants, always pass the error mapper. The compiler rejects the explicit type without it.
 4. Model error unions with a literal `code` discriminant (`{ code: 'not-found'; id: string }`), matching the library's own `ResultError.code` convention. Give error classes a distinguishing readonly member so `matchError().when(...)` chains can narrow structurally.
 5. Return `Result` for failures the caller must handle; keep throwing for programmer errors (broken invariants, assertions). Async functions return `Promise<Result<T, E>>`; there is no `AsyncResult` wrapper type.

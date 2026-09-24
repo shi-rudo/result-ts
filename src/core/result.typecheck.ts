@@ -190,3 +190,15 @@ void rootEntry.gen;
 
 // @ts-expect-error `ResultType` does not exist, use `SerializedResult`.
 void (null as unknown as rootEntry.ResultType<number, string>);
+
+// @ts-expect-error The `match` operator does not exist, use `fold`.
+void rootEntry.match;
+
+// @ts-expect-error `matchAsync` does not exist, use `foldAsync`.
+void rootEntry.matchAsync;
+
+// @ts-expect-error `mapOr` does not exist, use `fold`.
+void rootEntry.mapOr;
+
+// @ts-expect-error `mapOrElse` does not exist, use `fold`.
+void rootEntry.mapOrElse;

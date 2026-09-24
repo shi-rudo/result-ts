@@ -26,7 +26,7 @@ yarn add @shirudo/result
 
 ```ts
 import { err, ok, type Result } from '@shirudo/result';
-import { map, match } from '@shirudo/result/operators';
+import { fold, map } from '@shirudo/result/operators';
 
 type User = { id: string; email: string; active: boolean };
 type UserError =
@@ -51,10 +51,10 @@ if (result.isOk()) {
 }
 
 // Or compose and resolve in one expression. `map` only runs on Ok,
-// and the error keeps its type all the way to `match`:
+// and the error keeps its type all the way to `fold`:
 const message = loadUser('1').pipe(
     map(user => `Welcome back, ${user.email}`),
-    match({
+    fold({
         ok: greeting => greeting,
         err: error =>
             error.code === 'not-found'

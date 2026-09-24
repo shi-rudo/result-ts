@@ -21,7 +21,6 @@ import { map, flatMapAsync } from '@shirudo/result/operators';
 | `tryCatch(fn)` | Run a function and catch exceptions into `Err`. |
 | `tryMap(fn)` | Like `map`, but catches exceptions. |
 | `fold({ ok, err })` | End a pipe and return a value based on state. |
-| `match({ ok, err })` | Pipe matcher for both states. |
 
 ## Async Operators
 
@@ -33,7 +32,6 @@ import { map, flatMapAsync } from '@shirudo/result/operators';
 - `tryCatchAsync`
 - `tryMapAsync`
 - `foldAsync`
-- `matchAsync`
 
 ## Combinators
 
@@ -42,8 +40,6 @@ import { map, flatMapAsync } from '@shirudo/result/operators';
 | `and(left, right)` | Return `right` only if `left` is `Ok`. |
 | `or(left, right)` | Return `left` if it is `Ok`; otherwise return `right`. |
 | `orElse(result, fn)` | Return the original `Ok`; otherwise call `fn(error)`. |
-| `mapOr(result, defaultValue, fn)` | Map `Ok` or return the default value. |
-| `mapOrElse(result, defaultFn, fn)` | Map `Ok` or compute the default from the error. |
 | `swap(result)` | Swap `Ok<T>` and `Err<E>` into `Result<E, T>`. |
 | `zip(left, right)` | Combine two `Ok` values into a tuple, short-circuiting on the first `Err`. |
 | `combine(left, right)` | Combine two Results and collect one or both errors in an array. |

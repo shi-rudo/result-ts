@@ -73,7 +73,7 @@ const greeting = getUser(1).pipe(map(user => `Hello, ${user.name}`));
 
 ## 3. Replacing Early-Return Checks with a Chain
 
-Chain fallible steps with `flatMap` inside one `.pipe(...)` call, then leave the pipe with `match` (or call `unwrapOr(result, fallback)` afterwards; `unwrapOr` is data-first and does not belong inside the pipe).
+Chain fallible steps with `flatMap` inside one `.pipe(...)` call, then leave the pipe with `fold` (or call `unwrapOr(result, fallback)` afterwards; `unwrapOr` is data-first and does not belong inside the pipe).
 
 ### Before
 
@@ -109,7 +109,7 @@ function processData(data: Data): string {
 
 ## 4. Centralizing Error Handling
 
-Normalize errors with `mapErr` along the way and resolve both branches once at the end with `match`.
+Normalize errors with `mapErr` along the way and resolve both branches once at the end with `fold`.
 
 ### Before
 
@@ -132,7 +132,7 @@ function doSomething(): string {
 
 ```typescript
 import { tryFn } from '@shirudo/result';
-import { map, mapErr, match } from '@shirudo/result/operators';
+import { fold, map, mapErr } from '@shirudo/result/operators';
 
 class SpecificError extends Error {}
 declare function mightFail(): string;
@@ -141,7 +141,7 @@ function doSomething(): string {
   return tryFn(mightFail).pipe(
     map(value => `Success: ${value}`),
     mapErr(e => (e instanceof SpecificError ? 'Handled specific error' : 'Generic error')),
-    match({
+    fold({
       ok: value => value,
       err: error => error,
     }),

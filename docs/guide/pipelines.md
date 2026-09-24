@@ -47,7 +47,7 @@ const result = await ok(1).pipeAsync(
 
 ## Terminal Operators
 
-Use `fold` or `match` when a pipeline should end in a non-Result value.
+Use `fold` when a pipeline should end in a non-Result value.
 
 ```ts
 import { fold, ok } from '@shirudo/result';

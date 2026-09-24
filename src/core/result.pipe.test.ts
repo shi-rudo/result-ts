@@ -1,6 +1,6 @@
 import { describe, expect, it, vi } from 'vitest';
 
-import { Result, filter, filterAsync, flatMap, flatMapAsync, map, mapAsync, mapErr, mapErrAsync, match, matchAsync, ok, err, tap, tapAsync, tryCatch, tryCatchAsync, tryMap, tryMapAsync } from '../index';
+import { Result, filter, filterAsync, flatMap, flatMapAsync, fold, foldAsync, map, mapAsync, mapErr, mapErrAsync, ok, err, tap, tapAsync, tryCatch, tryCatchAsync, tryMap, tryMapAsync } from '../index';
 
 describe('Result.pipe', () => {
     it('returns same instance without operators', () => {
@@ -22,7 +22,7 @@ describe('Result.pipe', () => {
         const out = ok<number, string>(2).pipe(
             map((n) => n + 1),
             flatMap((n) => ok<number, string>(n * 3)),
-            match({ ok: (v) => v, err: () => -1 }),
+            fold({ ok: (v) => v, err: () => -1 }),
         );
 
         expect(out).toBe(9);
@@ -35,7 +35,7 @@ describe('Result.pipe', () => {
         const out = Result.err<string, number>('boom').pipe(
             map(project),
             mapErr(projectErr),
-            match({ ok: () => 'ok', err: (e) => e }),
+            fold({ ok: () => 'ok', err: (e) => e }),
         );
 
         expect(project).not.toHaveBeenCalled();
@@ -46,7 +46,7 @@ describe('Result.pipe', () => {
     it('can switch to Err in pipe', () => {
         const out = ok<number, string>(2).pipe(
             filter((n) => n > 2, () => 'too small'),
-            match({ ok: () => 'ok', err: (e) => e }),
+            fold({ ok: () => 'ok', err: (e) => e }),
         );
 
         expect(out).toBe('too small');
@@ -62,7 +62,7 @@ describe('Result.pipe', () => {
             filter((v) => v % 2 === 0, () => 'odd'),
             tap({ ok: (v) => seen.push(`afterFilter:${v}`) }),
             flatMap((v) => ok<number, string>(v * 10)),
-            match({ ok: (v) => v, err: () => -1 }),
+            fold({ ok: (v) => v, err: () => -1 }),
         );
 
         expect(out).toBe(20);
@@ -79,7 +79,7 @@ describe('Result.pipe', () => {
             tap({ ok: okSpy, err: errSpy }),
             map(mapSpy),
             mapErr((e) => e.toUpperCase()),
-            match({ ok: (v) => `ok:${v}`, err: (e) => e }),
+            fold({ ok: (v) => `ok:${v}`, err: (e) => e }),
         );
 
         expect(okSpy).not.toHaveBeenCalled();
@@ -108,7 +108,7 @@ describe('Result.pipe', () => {
         const outOk = firstResult(2).pipe(
             flatMap(secondResult),
             flatMap(thirdResult),
-            match({ ok: (v) => v, err: (e) => e.message }),
+            fold({ ok: (v) => v, err: (e) => e.message }),
         );
 
         expect(outOk).toBe('even');
@@ -123,7 +123,7 @@ describe('Result.pipe', () => {
         const outErr = firstResult(-1).pipe(
             flatMap(secondResult),
             flatMap(thirdResult),
-            match({ ok: (v) => v, err: (e) => e.message }),
+            fold({ ok: (v) => v, err: (e) => e.message }),
         );
 
         expect(outErr).toBe('negative');
@@ -231,7 +231,7 @@ describe('Result.tryCatch', () => {
         const result = ok('{"name": "test"}').pipe(
             tryCatch(() => JSON.parse('invalid json')),
             mapErr((error: unknown) => `Parse error: ${(error as Error).message}`),
-            match({ ok: () => 'success', err: (e) => e })
+            fold({ ok: () => 'success', err: (e) => e })
         );
 
         // Node/V8 error message differs between versions.
@@ -304,7 +304,7 @@ describe('Result.tryCatchAsync', () => {
         const result = await ok('invalid json').pipeAsync(
             tryCatchAsync(async () => JSON.parse('invalid json')),
             mapErr((error: unknown) => `Async parse error: ${(error as Error).message}`),
-            match({ ok: () => 'success', err: (e) => e })
+            fold({ ok: () => 'success', err: (e) => e })
         );
 
         // Node/V8 error message differs between versions.
@@ -449,7 +449,7 @@ describe('Result.pipeAsync', () => {
             flatMapAsync(firstResult),
             flatMapAsync(secondResult),
             flatMapAsync(thirdResult),
-            match({ ok: (v) => v, err: (e) => e.message }),
+            fold({ ok: (v) => v, err: (e) => e.message }),
         );
 
         expect(outOk).toBe('even');
@@ -465,7 +465,7 @@ describe('Result.pipeAsync', () => {
             flatMapAsync(firstResult),
             flatMapAsync(secondResult),
             flatMapAsync(thirdResult),
-            matchAsync({ ok: (v) => Promise.resolve(v), err: (e) => Promise.resolve(e.message) }),
+            foldAsync({ ok: (v) => Promise.resolve(v), err: (e) => Promise.resolve(e.message) }),
         );
 
         expect(outErr).toBe('negative');
@@ -483,7 +483,7 @@ describe('Result.pipeAsync', () => {
             tapAsync({ ok: async (v) => { seen.push(`afterMap:${v}`); } }),
             filterAsync(async (v) => v % 2 === 0, async () => 'odd'),
             mapErrAsync(async (e) => `wrapped:${e}`),
-            match({ ok: (v) => v, err: (e) => e.length }),
+            fold({ ok: (v) => v, err: (e) => e.length }),
         );
 
         expect(out).toBe(2);
