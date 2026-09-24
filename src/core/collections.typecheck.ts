@@ -129,6 +129,16 @@ type SequenceRecordAcceptsAResultUnderTheKeyLength = Expect<
     Equal<typeof sequencedLengthRecord, Result<{ readonly length: number }, 'length-error'>>
 >;
 
+declare const includeOptional: boolean;
+const sequencedOptionalRecord = sequenceRecord({
+    a: ok<number, 'a-error'>(1),
+    ...(includeOptional ? { b: ok<number, 'b-error'>(2) } : {}),
+});
+
+type SequenceRecordKeepsAnOptionalKeyOptional = Expect<
+    Equal<typeof sequencedOptionalRecord, Result<{ readonly a: number; readonly b?: number | undefined }, 'a-error' | 'b-error'>>
+>;
+
 function sequenceGenericRecord<R extends Record<string, Result<number, string>>>(record: R) {
     return sequenceRecord(record);
 }
