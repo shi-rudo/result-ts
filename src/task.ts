@@ -121,5 +121,3 @@ export async function task<const Y, const R, EThrown>(
         return completion.result;
     }
 }
-
-export const gen: typeof task = task;

@@ -3,7 +3,7 @@ import { AsyncErrMatchBuilder, AsyncErrorMatchBuilder, ErrMatchBuilder, ErrorMat
 import { describeErrorMessage } from '../describeValue';
 import { RESULT_BRAND } from './brand';
 import { isResult } from './isResult';
-import { all, sequence } from './sequence';
+import { sequence } from './sequence';
 import { combine } from './zip';
 import {
     ExpectErrError,
@@ -30,7 +30,7 @@ export type AsyncOperatorFunction<T, E, R> = (input: Result<T, E>) => Promise<R>
 // The conditional stays deferred while `T` and `E` are unresolved, so a generic
 // wrapper reads the payload as `T | undefined` and needs a cast. At a concrete
 // instantiation the payload keeps its type.
-export type ResultType<T, E> =
+export type SerializedResult<T, E> =
     | (undefined extends T
         ? { readonly _tag: 'Ok'; readonly value?: T }
         : { readonly _tag: 'Ok'; readonly value: T })
@@ -166,7 +166,7 @@ abstract class ResultBase extends Pipeable {
 
     /**
      * Converts the Result into its plain discriminated shape
-     * `{ _tag: 'Ok', value }` / `{ _tag: 'Err', error }` (`ResultType<T, E>`),
+     * `{ _tag: 'Ok', value }` / `{ _tag: 'Err', error }` (`SerializedResult<T, E>`),
      * with no prototype, methods, or brand attached.
      *
      * `Ok(undefined)` stays unambiguous, because the `_tag` discriminant
@@ -184,7 +184,7 @@ abstract class ResultBase extends Pipeable {
      * const restored = parsed._tag === 'Ok' ? ok(parsed.value) : err(parsed.error);
      * ```
      */
-    toSerialized<T, E>(this: Result<T, E>): ResultType<T, E> {
+    toSerialized<T, E>(this: Result<T, E>): SerializedResult<T, E> {
         if (this._tag === 'Ok') return { _tag: 'Ok', value: this.value };
         if (this._tag === 'Err') return { _tag: 'Err', error: this.error };
         throw new InvalidResultStateError('Result.toSerialized');
@@ -318,7 +318,6 @@ export const Result: {
     try: typeof tryFn;
     tryAsync: typeof tryAsync;
     sequence: typeof sequence;
-    all: typeof all;
     combine: typeof combine;
 } = {
     ok,
@@ -330,6 +329,5 @@ export const Result: {
     try: tryFn,
     tryAsync,
     sequence,
-    all,
     combine,
 };

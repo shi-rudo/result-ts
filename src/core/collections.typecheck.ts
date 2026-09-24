@@ -1,5 +1,4 @@
 import {
-    all,
     collectAllErrors,
     collectFirstOk,
     collectFirstOkAsync,
@@ -24,15 +23,6 @@ const sequenced = sequence([
 
 type SequencePreservesTupleValuesAndErrorUnion = Expect<
     Equal<typeof sequenced, Result<[number, string], 'number-error' | 'string-error'>>
->;
-
-const allSequenced = all([
-    ok<number, 'number-error'>(1),
-    ok<string, 'string-error'>('a'),
-] as const);
-
-type AllPreservesTupleValuesAndErrorUnion = Expect<
-    Equal<typeof allSequenced, Result<[number, string], 'number-error' | 'string-error'>>
 >;
 
 const collectedAllOk = collectAllErrors([

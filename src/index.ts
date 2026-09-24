@@ -1,6 +1,6 @@
 // Core
 export * from './core/result';
-export * from './gen';
+export * from './task';
 export * from './errors';
 
 // Pipe Operators and Combinators

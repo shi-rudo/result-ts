@@ -13,7 +13,6 @@ import { map, flatMapAsync } from '@shirudo/result/operators';
 | `map(fn)` | Transform the `Ok` value. |
 | `mapErr(fn)` | Transform the `Err` value. |
 | `mapBoth(fnOk, fnErr)` | Transform both states. |
-| `bimap(fnOk, fnErr)` | Alias for `mapBoth`. |
 | `flatMap(fn)` | Chain a function that returns a `Result`. |
 | `filter(predicate, errFn)` | Turn `Ok` into `Err` if the predicate fails. |
 | `tap(observer)` | Run side effects without changing the Result. |

@@ -12,7 +12,7 @@
 - `Result.tryAsync(fn, errorMapper?)`: Execute an async function and catch rejections as `Err`.
 - `Result.fromNullable(value, fallback)`: Convert `null | undefined` to `Err`.
 - `Result.fromPromise(promise, errorMapper?)`: Convert a promise to `Promise<Result>`. Rejections become `Err`; exceptions thrown by `errorMapper` are rethrown.
-- `Result.sequence(results)` / `Result.all(results)`: Convert a tuple or array of Results into a Result of values.
+- `Result.sequence(results)`: Convert a tuple or array of Results into a Result of values.
 - `Result.combine(left, right)`: Combine two Results and collect one or both errors in an array.
 - `.toPromise()`: Convert `Ok` to a resolved promise and `Err` to a rejected promise.
 - `.toNullable()`: Convert `Ok` to the value and `Err` to `null`.
@@ -37,7 +37,7 @@
 - `.matchErrAsync()`: Async variant of `.matchErr()`.
 
 The matcher methods return the builder types `ErrorMatchBuilder`, `AsyncErrorMatchBuilder`, `ErrMatchBuilder`, and `AsyncErrMatchBuilder`. The package exports them as types, so a function that returns a started builder can be annotated and compiled with `declaration: true`.
-- `.toSerialized()`: Convert to the plain discriminated shape `{ _tag: 'Ok', value } | { _tag: 'Err', error }` (`ResultType<T, E>`), which `JSON.stringify` encodes exactly as it encodes the Result itself. Rebuild with `ok`/`err`. `JSON.stringify` drops a key whose value is `undefined`, so `Ok(undefined)` arrives as `{"_tag":"Ok"}` and `ok(parsed.value)` rebuilds it. `ResultType<T, E>` marks the payload key optional exactly where `T` or `E` admits `undefined`, so a schema typed as `ResultType<void, ApiError>` describes that payload. A generic helper over `ResultType<T, E>` reads the payload as `T | undefined`, because TypeScript cannot resolve the condition while `T` is a type parameter; rebuild with a cast there, or write the helper for a concrete payload type.
+- `.toSerialized()`: Convert to the plain discriminated shape `{ _tag: 'Ok', value } | { _tag: 'Err', error }` (`SerializedResult<T, E>`), which `JSON.stringify` encodes exactly as it encodes the Result itself. Rebuild with `ok`/`err`. `JSON.stringify` drops a key whose value is `undefined`, so `Ok(undefined)` arrives as `{"_tag":"Ok"}` and `ok(parsed.value)` rebuilds it. `SerializedResult<T, E>` marks the payload key optional exactly where `T` or `E` admits `undefined`, so a schema typed as `SerializedResult<void, ApiError>` describes that payload. A generic helper over `SerializedResult<T, E>` reads the payload as `T | undefined`, because TypeScript cannot resolve the condition while `T` is a type parameter; rebuild with a cast there, or write the helper for a concrete payload type.
 - `.toUserFriendly()`: Convert an Err to user-facing serialization with string error messages.
 
 ## Utilities

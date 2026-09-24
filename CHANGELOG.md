@@ -10,10 +10,12 @@ Version 2 removes the APIs that 1.x deprecated. `docs/migration/v2.md` lists eve
 - `.serialize()`, deprecated in 1.1.0. Use `.toSerialized()`. The shape changes from `{ isSuccess, data?, error? }` to `{ _tag: 'Ok', value } | { _tag: 'Err', error }`, so a receiver reads the state from `_tag`.
 - `unwrapOrDefault()`, deprecated in 1.1.0. Use `unwrapOr()`, which takes the same arguments.
 - `ERR_INVALID_STATE`, deprecated in 1.1.0. Use `ERR_INVALID_RESULT_STATE`, which holds the same string.
+- The aliases `bimap`, `all`, `Result.all` and `gen`. Use `mapBoth`, `sequence`, `Result.sequence` and `task`.
 - The `.match()` method of a Result, deprecated in 1.0.0 as an alias of `.matchError()`. Use `.matchError()`, which returns the same builder. The `match({ ok, err })` pipe operator stays.
 
 ### Changed
 
+- `ResultType<T, E>` is now `SerializedResult<T, E>`. The type is the serialized shape that `toSerialized()` returns, not the type of a Result.
 - Node.js 22 or later is required. `engines` says `>=22`, and the CommonJS build targets Node.js 22. Node.js 20 has reached its end of life, and the build tool tsdown 0.23 no longer runs on it.
 - The `MatchOnOkError` constructor requires the name of the method that was called on an `Ok`. The default was `'match'`, the name of the removed method, and every caller inside the library already passed a name. TypeScript code that constructs the error without an argument no longer compiles. JavaScript code still runs, and the message then starts with `undefined()` instead of a method name.
 - `sequenceRecord()` rejects an array or a tuple at compile time. Such a call compiled before and always threw `InvalidResultStateError`. Use `sequence()` for a list. An argument typed as a union of an array and a record also stops compiling. A record with the key `length` and a generic caller over `Record<string, Result<T, E>>` still compile.

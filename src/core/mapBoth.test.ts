@@ -1,7 +1,7 @@
 import { describe, expect, it } from 'vitest';
 
 import { Result, ok } from './result';
-import { bimap, mapBoth } from './mapBoth';
+import { mapBoth } from './mapBoth';
 
 describe('mapBoth / bimap', () => {
     it('transforms Ok and Err', () => {
@@ -19,14 +19,4 @@ describe('mapBoth / bimap', () => {
             expect(error).toBe('BOOM');
         }
     });
-
-    it('bimap is alias for mapBoth', () => {
-        const result = ok(2).pipe(bimap(x => x * 2, e => e));
-        expect(result.isOk()).toBe(true);
-        if (result.isOk()) {
-            const value: number = result.value;
-            expect(value).toBe(4);
-        }
-    });
 });
-

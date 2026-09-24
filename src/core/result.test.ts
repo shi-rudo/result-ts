@@ -1,6 +1,6 @@
 import { describe, expect, it } from 'vitest';
 
-import { Result, ok, err, okIf, okIfLazy, type ResultType } from './result';
+import { Result, ok, err, okIf, okIfLazy, type SerializedResult } from './result';
 import { collectFirstOk } from './collectFirstOk';
 import {
     ERR_EXPECT_ERR,
@@ -87,7 +87,6 @@ describe('Result class', () => {
 
             it('exposes collection combinators on the Result namespace', () => {
                 expect(Result.sequence([ok(1), ok('a')] as const)).toEqual(ok([1, 'a']));
-                expect(Result.all([ok(1), ok('a')] as const)).toEqual(ok([1, 'a']));
                 expect(Result.combine(err('left'), err('right'))).toEqual(err(['left', 'right']));
             });
 
@@ -532,7 +531,7 @@ describe('Result class', () => {
         });
 
         it('round-trips through JSON via ok/err on the discriminated shape', () => {
-            const parsed: ResultType<{ id: number }, string> = JSON.parse(JSON.stringify(ok({ id: 1 }).toSerialized()));
+            const parsed: SerializedResult<{ id: number }, string> = JSON.parse(JSON.stringify(ok({ id: 1 }).toSerialized()));
             const restored = parsed._tag === 'Ok' ? ok<{ id: number }, string>(parsed.value) : err<string, { id: number }>(parsed.error);
             expect(restored.unwrap()).toEqual({ id: 1 });
         });
