@@ -29,6 +29,10 @@ Version 2 removes the APIs that 1.x deprecated. `docs/migration/v2.md` lists eve
 - `InvalidResultStateError` no longer starts its message with "Unreachable:". An optional second constructor argument replaces the default message. `sequenceRecord()`, `collectFirstOkAsync()` and `collectFirstOkParallelAsync()` use it to name the value that is no `Result`. The code `ERR_INVALID_RESULT_STATE` is unchanged.
 - A GitHub release of a version below the current `latest` publishes under the dist-tag `latest-<major>`, for example `latest-1`. `npm install @shirudo/result` keeps resolving to the newest major.
 
+### Fixed
+
+- `collectFirstOkAsync()` no longer ends the Node.js process when it returns before it reaches a started promise. It returned at the first `Ok`, at a non-Result value, or at a thunk or `errorMapper` that threw, and the promise inputs after that point had no handler. A later rejection of one of them was an unhandled rejection, which ends Node.js by default. The call now discards the outcome of these promises, as `collectFirstOkParallelAsync()` already did.
+
 ## 1.2.0 - 2026-09-22
 
 ### Deprecated

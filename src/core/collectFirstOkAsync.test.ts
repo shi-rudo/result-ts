@@ -4,6 +4,22 @@ import { Result, ok, err } from './result';
 import { InvalidResultStateError } from '../errors';
 import { collectFirstOkAsync } from './collectFirstOkAsync';
 
+type Deferred<T> = {
+    promise: Promise<T>;
+    resolve: (value: T) => void;
+    reject: (reason?: unknown) => void;
+};
+
+function deferred<T>(): Deferred<T> {
+    let resolve!: (value: T) => void;
+    let reject!: (reason?: unknown) => void;
+    const promise = new Promise<T>((res, rej) => {
+        resolve = res;
+        reject = rej;
+    });
+    return { promise, resolve, reject };
+}
+
 describe('collectFirstOkAsync', () => {
     it('returns first Ok Result', async () => {
         const promises = [
@@ -135,5 +151,69 @@ describe('collectFirstOkAsync', () => {
         const promises = [Promise.reject('promise error')];
 
         await expect(collectFirstOkAsync(promises, () => { throw bug; })).rejects.toBe(bug);
+    });
+
+    it('handles the late rejection of a started input that follows the first Ok', async () => {
+        const late = deferred<Result<number, string>>();
+        const unhandled = vi.fn();
+        process.once('unhandledRejection', unhandled);
+
+        const result = await collectFirstOkAsync([Promise.resolve(ok(1)), late.promise] as const);
+        late.reject('late rejection');
+
+        await new Promise(resolve => setTimeout(resolve, 0));
+        process.removeListener('unhandledRejection', unhandled);
+        expect(result.isOk()).toBe(true);
+        expect(unhandled).not.toHaveBeenCalled();
+    });
+
+    it('handles the late rejection of a started input after an input fulfils with a non-Result', async () => {
+        const notAResult = Promise.resolve(undefined) as unknown as Promise<Result<number, string>>;
+        const late = deferred<Result<number, string>>();
+        const unhandled = vi.fn();
+        process.once('unhandledRejection', unhandled);
+
+        await expect(collectFirstOkAsync([notAResult, late.promise] as const)).rejects.toBeInstanceOf(InvalidResultStateError);
+        late.reject('late rejection');
+
+        await new Promise(resolve => setTimeout(resolve, 0));
+        process.removeListener('unhandledRejection', unhandled);
+        expect(unhandled).not.toHaveBeenCalled();
+    });
+
+    it('handles the late rejection of a started input after a thunk throws', async () => {
+        const bug = new Error('bug');
+        const late = deferred<Result<number, string>>();
+        const unhandled = vi.fn();
+        process.once('unhandledRejection', unhandled);
+
+        await expect(collectFirstOkAsync([() => { throw bug; }, late.promise] as const)).rejects.toBe(bug);
+        late.reject('late rejection');
+
+        await new Promise(resolve => setTimeout(resolve, 0));
+        process.removeListener('unhandledRejection', unhandled);
+        expect(unhandled).not.toHaveBeenCalled();
+    });
+
+    it('handles the late rejection of a started input after errorMapper throws', async () => {
+        const bug = new Error('mapper bug');
+        const late = deferred<Result<number, string>>();
+        const unhandled = vi.fn();
+        process.once('unhandledRejection', unhandled);
+
+        await expect(collectFirstOkAsync([Promise.reject('promise error'), late.promise] as const, () => { throw bug; })).rejects.toBe(bug);
+        late.reject('late rejection');
+
+        await new Promise(resolve => setTimeout(resolve, 0));
+        process.removeListener('unhandledRejection', unhandled);
+        expect(unhandled).not.toHaveBeenCalled();
+    });
+
+    it('does not start a thunk that follows the first Ok', async () => {
+        const later = vi.fn(async () => ok(2));
+
+        await collectFirstOkAsync([Promise.resolve(ok(1)), later] as const);
+
+        expect(later).not.toHaveBeenCalled();
     });
 });

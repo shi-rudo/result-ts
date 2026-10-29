@@ -21,6 +21,9 @@ type ErrValueOfInput<I> = ResolvedResult<I> extends Result<any, infer E> ? E : n
  *   with that exception.
  * - Processes inputs strictly sequentially (like `for ... of` + `await`).
  * - Returns the first `Ok` and collects all errors if no `Ok` is found.
+ * - After the call ends, a thunk that it did not reach never starts, and a
+ *   promise that it did not reach is not awaited. A later rejection of such a
+ *   promise is discarded, so it never becomes an unhandled rejection.
  * - A fulfilled value that is not a `Result` is a programmer error: the call
  *   rejects with `InvalidResultStateError`.
  * - A rejected input counts as a failed attempt. Without `errorMapper` the
@@ -43,28 +46,39 @@ export async function collectFirstOkAsync<const Inputs extends readonly CollectF
     type ErrValue = ErrValueOfInput<Inputs[number]> | F;
 
     const errors: ErrValue[] = [];
+    let consumed = 0;
 
-    for (const [index, input] of inputs.entries()) {
-        const pendingResult = typeof input === 'function' ? input() : input;
-        let result: unknown;
-        try {
-            result = await pendingResult;
-        } catch (error) {
-            errors.push(errorMapper ? errorMapper(error) : (error as F));
-            continue;
-        }
+    try {
+        for (const [index, input] of inputs.entries()) {
+            consumed = index + 1;
+            const pendingResult = typeof input === 'function' ? input() : input;
+            let result: unknown;
+            try {
+                result = await pendingResult;
+            } catch (error) {
+                errors.push(errorMapper ? errorMapper(error) : (error as F));
+                continue;
+            }
 
-        if (!isResult(result)) {
-            throw new InvalidResultStateError('collectFirstOkAsync', `input ${index} fulfilled with ${describeValue(result)}, not a Result`);
+            if (!isResult(result)) {
+                throw new InvalidResultStateError('collectFirstOkAsync', `input ${index} fulfilled with ${describeValue(result)}, not a Result`);
+            }
+            if (result.isOk()) {
+                return ok<OkValue, ErrValue[]>(result.value as OkValue);
+            }
+            if (result.isErr()) {
+                errors.push(result.error as ErrValue);
+                continue;
+            }
+            throw new InvalidResultStateError('collectFirstOkAsync');
         }
-        if (result.isOk()) {
-            return ok<OkValue, ErrValue[]>(result.value as OkValue);
+    } finally {
+        // An input promise after an early end already runs, and nobody awaits
+        // it. Discarding its outcome keeps its rejection from surfacing as an
+        // unhandled rejection. A thunk after an early end never starts.
+        for (const input of inputs.slice(consumed)) {
+            if (typeof input !== 'function') input.catch(() => {});
         }
-        if (result.isErr()) {
-            errors.push(result.error as ErrValue);
-            continue;
-        }
-        throw new InvalidResultStateError('collectFirstOkAsync');
     }
 
     return err<ErrValue[], OkValue>(errors);
