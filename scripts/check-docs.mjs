@@ -66,8 +66,8 @@ function extractEntryHead(text) {
     return head === null ? null : head[0];
 }
 
-// A span that starts with a dot documents a method of Result, not a module
-// export.
+// A span that starts with a dot documents a method of a Result instance, not a
+// module export. The method claims the import of the Result type instead.
 function extractApiEntryNames(markdown, sourcePath) {
     const names = [];
 
@@ -79,10 +79,15 @@ function extractApiEntryNames(markdown, sourcePath) {
         if (head === null) return;
 
         for (const match of head.matchAll(/`([^`\n]+)`/g)) {
-            const span = match[1];
-            if (span.startsWith('.')) continue;
+            const span = match[1].trim();
 
-            const entry = /^([A-Za-z_$][\w$]*)(?:\.([A-Za-z_$][\w$]*))?(?:\s*[(<].*)?$/.exec(span.trim());
+            const method = /^\.([A-Za-z_$][\w$]*)(?:\s*[(<].*)?$/.exec(span);
+            if (method) {
+                names.push({ sourcePath, line: index + 1, name: 'Result', method: method[1] });
+                continue;
+            }
+
+            const entry = /^([A-Za-z_$][\w$]*)(?:\.([A-Za-z_$][\w$]*))?(?:\s*[(<].*)?$/.exec(span);
             if (!entry) continue;
 
             names.push({ sourcePath, line: index + 1, name: entry[1], member: entry[2] });
@@ -166,7 +171,8 @@ try {
 
         // A documented member such as `Result.try(fn)` needs the value import, so
         // that `typeof` can prove the member exists. Every other name is checked
-        // as a type import, which also covers the type-only exports.
+        // as a type import, which also covers the type-only exports. A documented
+        // method such as `.unwrap()` must exist as a property of the Result type.
         const namesWithMember = new Set(entryNames.filter(entry => entry.member).map(entry => entry.name));
         const lines = [];
         const locations = [];
@@ -182,6 +188,11 @@ try {
 
             if (entry.member) {
                 lines.push(`type Check_${entry.name}_${entry.member} = typeof ${entry.name}.${entry.member};`);
+                locations.push(`${entry.sourcePath}:${entry.line}`);
+            }
+
+            if (entry.method) {
+                lines.push(`type Check_method_${entry.method} = Result<unknown, unknown>['${entry.method}'];`);
                 locations.push(`${entry.sourcePath}:${entry.line}`);
             }
         }
