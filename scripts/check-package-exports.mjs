@@ -113,6 +113,36 @@ try {
 
     await run('node', [join(repoRoot, 'node_modules/typescript/bin/tsc'), '-p', 'tsconfig.json']);
 
+    // Under Node16 a CommonJS file cannot import a module that TypeScript
+    // types as ESM, so each format must resolve the declarations of its own
+    // build. The extension fixes the format of each consumer.
+    await writeFile(join(tempDir, 'tsconfig.node16.json'), JSON.stringify({
+        compilerOptions: {
+            strict: true,
+            target: 'ES2022',
+            module: 'Node16',
+            moduleResolution: 'Node16',
+            skipLibCheck: false,
+            noEmit: true,
+        },
+        include: ['commonjs-consumer.cts', 'esm-consumer.mts'],
+    }, null, 2));
+
+    const formatConsumer = `
+        import { Result, type Result as ResultType } from '@shirudo/result';
+        import { InvalidResultStateError } from '@shirudo/result/errors';
+        import { map } from '@shirudo/result/operators';
+        import { sequence } from '@shirudo/result/collections';
+
+        const mapped: ResultType<number, string> = Result.ok(1).pipe(map(value => value + 1));
+        export const sequenced: ResultType<[number], string> = sequence([mapped] as const);
+        export const error = new InvalidResultStateError('consumer');
+    `;
+    await writeFile(join(tempDir, 'commonjs-consumer.cts'), formatConsumer);
+    await writeFile(join(tempDir, 'esm-consumer.mts'), formatConsumer);
+
+    await run('node', [join(repoRoot, 'node_modules/typescript/bin/tsc'), '-p', 'tsconfig.node16.json']);
+
     // A consumer that is itself a library: declaration emit must be able to
     // name every type the public API returns.
     await writeFile(join(tempDir, 'tsconfig.declaration.json'), JSON.stringify({

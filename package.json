@@ -7,27 +7,47 @@
   "packageManager": "pnpm@10.32.1",
   "main": "./dist/index.cjs",
   "module": "./dist/index.mjs",
-  "types": "./dist/index.d.mts",
+  "types": "./dist/index.d.cts",
   "exports": {
     ".": {
-      "types": "./dist/index.d.mts",
-      "import": "./dist/index.mjs",
-      "require": "./dist/index.cjs"
+      "import": {
+        "types": "./dist/index.d.mts",
+        "default": "./dist/index.mjs"
+      },
+      "require": {
+        "types": "./dist/index.d.cts",
+        "default": "./dist/index.cjs"
+      }
     },
     "./errors": {
-      "types": "./dist/errors.d.mts",
-      "import": "./dist/errors.mjs",
-      "require": "./dist/errors.cjs"
+      "import": {
+        "types": "./dist/errors.d.mts",
+        "default": "./dist/errors.mjs"
+      },
+      "require": {
+        "types": "./dist/errors.d.cts",
+        "default": "./dist/errors.cjs"
+      }
     },
     "./operators": {
-      "types": "./dist/operators.d.mts",
-      "import": "./dist/operators.mjs",
-      "require": "./dist/operators.cjs"
+      "import": {
+        "types": "./dist/operators.d.mts",
+        "default": "./dist/operators.mjs"
+      },
+      "require": {
+        "types": "./dist/operators.d.cts",
+        "default": "./dist/operators.cjs"
+      }
     },
     "./collections": {
-      "types": "./dist/collections.d.mts",
-      "import": "./dist/collections.mjs",
-      "require": "./dist/collections.cjs"
+      "import": {
+        "types": "./dist/collections.d.mts",
+        "default": "./dist/collections.mjs"
+      },
+      "require": {
+        "types": "./dist/collections.d.cts",
+        "default": "./dist/collections.cjs"
+      }
     }
   },
   "files": [
