@@ -33,8 +33,8 @@ Version 2 removes the APIs that 1.x deprecated. `docs/migration/v2.md` lists eve
 - The async operators `mapAsync`, `mapErrAsync`, `flatMapAsync`, `filterAsync`, `tapAsync`, `foldAsync`, `tryCatchAsync` and `tryMapAsync` accept callbacks that return a plain value, not only a promise. A synchronous step in a `.pipeAsync()` chain needed an `async` wrapper before, and `tapAsync({ ok: console.log })` did not compile. The async matchers already accepted both.
 - The operators `fold` and `foldAsync` return the union of both branches, like the method `.fold()`. They forced one type on both handlers, so `fold({ ok: value => value, err: error => error.message })` did not compile. A call with three explicit type arguments keeps compiling, because the type of the `err` branch defaults to the type of the `ok` branch.
 - The API reference lists the data-first functions, such as `unwrap(result)` and `expectOk(result, message)`, which the root entry exports next to the instance methods. `pnpm docs:check` now checks their names as well.
-
 - `ExpectErrError` no longer sets `cause`. It set the Ok value there, but an Ok value is no error, and a logger that follows the cause chain showed it as the origin of the failure. The value stays in `okValue`. `UnwrapErrOnOkError` sets no `cause` either.
+
 ### Fixed
 
 - `collectFirstOkAsync()` no longer ends the Node.js process when a started promise input rejects before the call awaits it. A promise input had a handler only once the loop awaited it. A rejection that arrived while the call awaited an earlier input, or after the call returned at the first `Ok`, at a non-Result value or at a throw, was an unhandled rejection, which ends Node.js by default. The call now attaches a handler to every native promise input when it starts, as `collectFirstOkParallelAsync()` already did, and the loop still collects the rejection as a failed attempt.
