@@ -73,11 +73,10 @@ export async function collectFirstOkAsync<const Inputs extends readonly CollectF
             throw new InvalidResultStateError('collectFirstOkAsync');
         }
     } finally {
-        // An input promise after an early end already runs, and nobody awaits
-        // it. Discarding its outcome keeps its rejection from surfacing as an
-        // unhandled rejection. A thunk after an early end never starts.
+        // Only a native promise reports an unhandled rejection. A handler on a
+        // thenable would call its `then`, which starts a lazy one.
         for (const input of inputs.slice(consumed)) {
-            if (typeof input !== 'function') input.catch(() => {});
+            if (input instanceof Promise) input.catch(() => {});
         }
     }
 

@@ -209,6 +209,17 @@ describe('collectFirstOkAsync', () => {
         expect(unhandled).not.toHaveBeenCalled();
     });
 
+    it('keeps its outcome when an unreached input from an untyped caller is a plain value or a thenable', async () => {
+        const thenable = { then: vi.fn((resolve: (value: unknown) => void) => resolve(ok(3))) };
+        const bug = new Error('bug');
+
+        const result = await collectFirstOkAsync([Promise.resolve(ok(1)), ok(2), thenable] as never);
+
+        expect(result.isOk()).toBe(true);
+        await expect(collectFirstOkAsync([() => { throw bug; }, ok(5)] as never)).rejects.toBe(bug);
+        expect(thenable.then).not.toHaveBeenCalled();
+    });
+
     it('does not start a thunk that follows the first Ok', async () => {
         const later = vi.fn(async () => ok(2));
 
