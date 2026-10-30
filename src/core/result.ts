@@ -2,7 +2,6 @@ import { Pipeable } from './pipeable';
 import { AsyncErrorMatchBuilder, AsyncErrorToResultMatchBuilder, ErrorMatchBuilder, ErrorToResultMatchBuilder } from './matcher';
 import { describeErrorMessage } from '../describeValue';
 import { RESULT_BRAND } from './brand';
-import { isResult } from './isResult';
 import { sequence } from './sequence';
 import { combine } from './zip';
 import {
@@ -266,9 +265,9 @@ export async function fromPromise<T, E>(promise: Promise<T>, errorMapper?: (erro
     }
 }
 
-export function tryFn<T>(fn: () => T): Result<T, unknown>;
-export function tryFn<T, E>(fn: () => T, errorMapper: (error: unknown) => E): Result<T, E>;
-export function tryFn<T, E>(fn: () => T, errorMapper?: (error: unknown) => E): Result<T, E> {
+function tryFn<T>(fn: () => T): Result<T, unknown>;
+function tryFn<T, E>(fn: () => T, errorMapper: (error: unknown) => E): Result<T, E>;
+function tryFn<T, E>(fn: () => T, errorMapper?: (error: unknown) => E): Result<T, E> {
     try {
         return ok<T, E>(fn());
     } catch (error) {
@@ -309,7 +308,6 @@ export async function tryAsync<T, E>(fn: () => Promise<T>, errorMapper?: (error:
 export const Result: {
     ok: typeof ok;
     err: typeof err;
-    is: typeof isResult;
     fromNullable: typeof fromNullable;
     fromPromise: typeof fromPromise;
     fromThrowable: typeof fromThrowable;
@@ -320,7 +318,6 @@ export const Result: {
 } = {
     ok,
     err,
-    is: isResult,
     fromNullable,
     fromPromise,
     fromThrowable,

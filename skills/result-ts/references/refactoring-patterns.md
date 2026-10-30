@@ -4,7 +4,7 @@ Patterns for converting existing TypeScript code to `Result`. Every snippet in t
 
 ## 1. Replacing `try...catch` Blocks
 
-For a one-off call, use `tryFn` (alias `Result.try`). To create a reusable safe wrapper around a throwing function, use `fromThrowable`. Pass an error mapper to get a typed error instead of `unknown`.
+For a one-off call, use `Result.try`. To create a reusable safe wrapper around a throwing function, use `fromThrowable`. Pass an error mapper to get a typed error instead of `unknown`.
 
 ### Before
 
@@ -21,7 +21,7 @@ function parseJson(json: string): unknown {
 ### After
 
 ```typescript
-import { fromThrowable, tryFn, type Result } from '@shirudo/result';
+import { fromThrowable, Result } from '@shirudo/result';
 
 type ParseError = { code: 'parse'; cause: unknown };
 
@@ -33,7 +33,7 @@ const parseJson = fromThrowable(
 const parsed: Result<any, ParseError> = parseJson('{"a":1}');
 
 // One-off call (error stays unknown without a mapper):
-const oneOff = tryFn(() => JSON.parse('{"a":1}'));
+const oneOff = Result.try(() => JSON.parse('{"a":1}'));
 ```
 
 Note: `tryCatch` also exists, but it is a curried **pipe operator** that runs only when the incoming Result is `Ok`. It is not the tool for converting a plain throwing call.
@@ -131,14 +131,14 @@ function doSomething(): string {
 ### After
 
 ```typescript
-import { tryFn } from '@shirudo/result';
+import { Result } from '@shirudo/result';
 import { fold, map, mapErr } from '@shirudo/result/operators';
 
 class SpecificError extends Error {}
 declare function mightFail(): string;
 
 function doSomething(): string {
-  return tryFn(mightFail).pipe(
+  return Result.try(mightFail).pipe(
     map(value => `Success: ${value}`),
     mapErr(e => (e instanceof SpecificError ? 'Handled specific error' : 'Generic error')),
     fold({

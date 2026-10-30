@@ -210,6 +210,12 @@ void Result.all;
 // @ts-expect-error `gen` does not exist, use `task`.
 void rootEntry.gen;
 
+// @ts-expect-error `tryFn` does not exist, use `Result.try`.
+void rootEntry.tryFn;
+
+// @ts-expect-error `Result.is` does not exist, use `isResult`.
+void Result.is;
+
 // @ts-expect-error `ResultType` does not exist, use `SerializedResult`.
 void (null as unknown as rootEntry.ResultType<number, string>);
 

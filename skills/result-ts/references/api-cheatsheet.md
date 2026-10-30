@@ -28,9 +28,14 @@ const fromMaybe = fromNullable(maybe, 'was nullish'); // Result<string, string>
 Without an error mapper the error type is `unknown`. Declaring an explicit error type **requires** the mapper; `fromPromise<T, MyError>(promise)` without one is a compile error. Bugs thrown inside the mapper itself are rethrown, not converted to `Err`.
 
 ```typescript
-import { Result, tryFn, tryAsync, fromPromise, fromThrowable } from '@shirudo/result';
+import { Result, tryAsync, fromPromise, fromThrowable } from '@shirudo/result';
 
-const parsedUnknown = tryFn(() => JSON.parse('{}')); // Result<any, unknown>
+// `try` is a reserved word, so this one lives only on the Result namespace:
+const parsedUnknown = Result.try(() => JSON.parse('{}')); // Result<any, unknown>
+const parsedTyped = Result.try(
+  () => JSON.parse('{}'),
+  cause => ({ code: 'parse' as const, cause }),
+); // Result<any, { code: 'parse'; cause: unknown }>
 
 const parseJson = fromThrowable(
   JSON.parse,
@@ -49,7 +54,7 @@ const loaded = await tryAsync(
 );
 
 // The same functions exist on the Result namespace:
-const viaNamespace = Result.try(() => 1);
+const viaNamespace = Result.fromThrowable(JSON.parse);
 ```
 
 ## Checking
@@ -367,6 +372,8 @@ Version 2 removes these APIs. Replace each call in code written against 1.x as f
 - `expectResult`: use `expectOk`.
 - `all` / `Result.all`: use `sequence` / `Result.sequence`.
 - `gen`: use `task`.
+- `tryFn`: use `Result.try`.
+- `Result.is`: use `isResult`.
 - `ResultType<T, E>`: use `SerializedResult<T, E>`.
 
 Version 2 requires Node.js 22 or later. `flatten` moved from `@shirudo/result/collections` to `@shirudo/result/operators`. It also requires the method name in the `MatchOnOkError` constructor: `new MatchOnOkError('matchError')`. `sequenceRecord()` rejects an array or a tuple at compile time; use `sequence()` for a list. It leaves out a key that holds `undefined`, like a missing key. The migration guide owns this list and shows each replacement in full: https://github.com/shi-rudo/result-ts/blob/main/docs/migration/v2.md

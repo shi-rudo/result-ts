@@ -1,1 +1,0 @@
-export { tryFn } from './result';

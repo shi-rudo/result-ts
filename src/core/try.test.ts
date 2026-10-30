@@ -1,11 +1,10 @@
 import { describe, expect, it, vi } from 'vitest';
 
 import { Result } from './result';
-import { tryFn } from './try';
 
-describe('tryFn', () => {
+describe('Result.try', () => {
     it('returns Ok when function does not throw', () => {
-        const result = tryFn(() => 42);
+        const result = Result.try(() => 42);
 
         expect(result.isOk()).toBe(true);
         if (result.isOk()) {
@@ -14,7 +13,7 @@ describe('tryFn', () => {
     });
 
     it('returns Err when function throws', () => {
-        const result = tryFn(() => {
+        const result = Result.try(() => {
             throw new Error('boom');
         });
 

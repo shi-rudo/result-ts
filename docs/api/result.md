@@ -6,7 +6,6 @@
 - `okIf(condition, okValue, errValue)`: Conditionally create `Ok` or `Err`.
 - `okIfLazy(condition, okFn, errFn)`: Lazy conditional creation.
 - `Result.ok(value)` / `Result.err(error)`: Static factory variants.
-- `Result.is(value)`: Check whether a value is a valid branded `Result`.
 - `Result.try(fn, errorMapper?)`: Execute a synchronous function and catch exceptions as `Err`. Without `errorMapper` the error is `unknown`.
 - `Result.fromThrowable(fn, errorMapper?)`: Wrap a throwing function and return a function that produces `Result`.
 - `Result.tryAsync(fn, errorMapper?)`: Execute an async function and catch rejections as `Err`.

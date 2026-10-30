@@ -16,7 +16,7 @@ Each concept has one name here, and the library keeps no aliases. Find the name 
 | Side effect | `tap` | `andTee` / `orTee` | `tap` / `chainFirst` | `inspect` / `inspect_err` |
 | List, first error | `sequence` | `Result.combine` | `sequenceArray` | `collect::<Result<Vec<_>, _>>()` |
 | List, all errors | `collectAllErrors` | `Result.combineWithAllErrors` | `getApplicativeValidation` | none |
-| Catch a throw | `tryFn` / `Result.try`, `fromThrowable` | `fromThrowable` | `tryCatch` | none |
+| Catch a throw | `Result.try`, `fromThrowable` | `fromThrowable` | `tryCatch` | none |
 | Wrap a promise | `fromPromise` | `fromPromise` / `ResultAsync` | `TaskEither.tryCatch` | none |
 | Do-notation | `task` with `yield*` | `safeTry` | `Do` / `bind` | the `?` operator |
 | Swap the states | `swap` | none | `swap` | none |
