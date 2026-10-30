@@ -143,7 +143,7 @@ try {
 
     await run('node', [join(repoRoot, 'node_modules/typescript/bin/tsc'), '-p', 'tsconfig.node16.json']);
 
-    // The declarations must not need a lib newer than the one of a consumer
+    // The declarations of both builds must not need a lib newer than the one of a consumer
     // that checks them, such as a global type from ES2022.
     await writeFile(join(tempDir, 'tsconfig.es2020.json'), JSON.stringify({
         compilerOptions: {
@@ -155,7 +155,7 @@ try {
             skipLibCheck: false,
             noEmit: true,
         },
-        include: ['esm-consumer.mts'],
+        include: ['commonjs-consumer.cts', 'esm-consumer.mts'],
     }, null, 2));
 
     await run('node', [join(repoRoot, 'node_modules/typescript/bin/tsc'), '-p', 'tsconfig.es2020.json']);
