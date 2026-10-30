@@ -30,6 +30,7 @@ Version 2 removes the APIs that 1.x deprecated. `docs/migration/v2.md` lists eve
 - A GitHub release of a version below the current `latest` publishes under the dist-tag `latest-<major>`, for example `latest-1`. `npm install @shirudo/result` keeps resolving to the newest major.
 - `Result.try()` takes an optional `errorMapper`, like `Result.tryAsync()`, `Result.fromThrowable()` and `Result.fromPromise()`. A typed error no longer needs a second step with `mapErr`. An exception that `errorMapper` throws is rethrown.
 - The async operators `mapAsync`, `mapErrAsync`, `flatMapAsync`, `filterAsync`, `tapAsync`, `foldAsync`, `tryCatchAsync` and `tryMapAsync` accept callbacks that return a plain value, not only a promise. A synchronous step in a `.pipeAsync()` chain needed an `async` wrapper before, and `tapAsync({ ok: console.log })` did not compile. The async matchers already accepted both.
+- The operators `fold` and `foldAsync` return the union of both branches, like the method `.fold()`. They forced one type on both handlers, so `fold({ ok: value => value, err: error => error.message })` did not compile. A call with three explicit type arguments keeps compiling, because the type of the `err` branch defaults to the type of the `ok` branch.
 
 ### Fixed
 
