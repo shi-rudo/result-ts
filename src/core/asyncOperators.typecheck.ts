@@ -1,11 +1,9 @@
 import {
-    err,
     filterAsync,
     flatMapAsync,
     foldAsync,
     mapAsync,
     mapErrAsync,
-    ok,
     type Result,
     tapAsync,
     tryCatchAsync,
@@ -50,5 +48,3 @@ type TryCatchAsyncAcceptsASynchronousFunction = Expect<Equal<typeof caught, Prom
 
 const triedMap = source.pipeAsync(tryMapAsync(value => value.toFixed(2), () => 'format' as const));
 type TryMapAsyncAcceptsASynchronousProjection = Expect<Equal<typeof triedMap, Promise<Result<string, 'parse' | 'format'>>>>;
-
-export { err, ok };
