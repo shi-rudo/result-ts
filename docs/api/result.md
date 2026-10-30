@@ -41,6 +41,20 @@ The matcher methods return the builder types `ErrorMatchBuilder`, `AsyncErrorMat
 - `.toSerialized()`: Convert to the plain discriminated shape `{ _tag: 'Ok', value } | { _tag: 'Err', error }` (`SerializedResult<T, E>`), which `JSON.stringify` encodes exactly as it encodes the Result itself. Rebuild with `fromSerialized()`. `JSON.stringify` drops a key whose value is `undefined`, so `Ok(undefined)` arrives as `{"_tag":"Ok"}` and `fromSerialized()` rebuilds it. `SerializedResult<T, E>` marks the payload key optional exactly where `T` or `E` admits `undefined`, so a schema typed as `SerializedResult<void, ApiError>` describes that payload. A generic helper over `SerializedResult<T, E>` reads the payload as `T | undefined`, because TypeScript cannot resolve the condition while `T` is a type parameter; `fromSerialized()` carries the cast that such a rebuild needs.
 - `.toUserFriendly()`: Convert an Err to user-facing serialization with string error messages.
 
+## Data-First Functions
+
+Each function does what the instance method of the same name does, with the Result as its first argument. A function reference can replace a lambda, for example in `results.filter(isOk)`.
+
+- `isOk(result)` / `isErr(result)`: Type guards, like `.isOk()` and `.isErr()`.
+- `unwrap(result)`: Like `.unwrap()`.
+- `unwrapErr(result)`: Like `.unwrapErr()`.
+- `unwrapOr(result, defaultValue)`: Like `.unwrapOr()`.
+- `unwrapOrElse(result, fn)`: Like `.unwrapOrElse()`.
+- `unwrapOrThrow(result)`: Like `.unwrapOrThrow()`.
+- `expectOk(result, message)`: Like `.expect()`. The name `expect` would clash with the global `expect` of test runners.
+- `expectErr(result, message)`: Like `.expectErr()`.
+- `toPromise(result)` / `toNullable(result)`: Like `.toPromise()` and `.toNullable()`.
+
 ## Utilities
 
 All APIs remain available from the package root. Focused subpath exports are also available for users who prefer narrower imports:
