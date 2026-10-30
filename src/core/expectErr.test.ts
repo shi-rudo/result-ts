@@ -30,7 +30,7 @@ describe('expectErr', () => {
             caughtError = error;
         }
         expect((caughtError as ExpectErrError).okValue).toBe(42);
-        expect((caughtError as ExpectErrError).cause).toBe(42);
+        expect(Object.hasOwn(caughtError as ExpectErrError, 'cause')).toBe(false);
         expect((caughtError as ExpectErrError).message).toContain('42');
     });
 

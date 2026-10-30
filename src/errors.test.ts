@@ -31,10 +31,8 @@ describe('errors', () => {
 
     it.each([
         ['UnwrapOnErrError', (payload: unknown) => new UnwrapOnErrError(payload)],
-        ['UnwrapErrOnOkError', (payload: unknown) => new UnwrapErrOnOkError(payload)],
         ['ExpectOkError', (payload: unknown) => new ExpectOkError('must be ok', payload)],
-        ['ExpectErrError', (payload: unknown) => new ExpectErrError('must be err', payload)],
-    ])('%s carries the payload as a native cause', (_name, create) => {
+    ])('%s carries the Err payload as a native cause', (_name, create) => {
         const payload = new Error('db down');
 
         const error = create(payload);
@@ -45,11 +43,20 @@ describe('errors', () => {
 
     it.each([
         ['UnwrapOnErrError', () => new UnwrapOnErrError(undefined)],
-        ['UnwrapErrOnOkError', () => new UnwrapErrOnOkError(undefined)],
         ['ExpectOkError', () => new ExpectOkError('must be ok', undefined)],
-        ['ExpectErrError', () => new ExpectErrError('must be err', undefined)],
-    ])('%s sets no cause for an undefined payload', (_name, create) => {
+    ])('%s sets no cause for an undefined Err payload', (_name, create) => {
         const error = create();
+
+        expect(Object.hasOwn(error, 'cause')).toBe(false);
+    });
+
+    it.each([
+        ['UnwrapErrOnOkError', (value: unknown) => new UnwrapErrOnOkError(value)],
+        ['ExpectErrError', (value: unknown) => new ExpectErrError('must be err', value)],
+    ])('%s sets no cause, because an Ok value is no error', (_name, create) => {
+        const value = { id: 1 };
+
+        const error = create(value);
 
         expect(Object.hasOwn(error, 'cause')).toBe(false);
     });

@@ -28,8 +28,9 @@ const formatResultErrorMessage = (code: ResultErrorCode, message: string, contex
     return `${code}: ${message}`;
 };
 
-// The payload of a failed unwrap or expect is the cause of the thrown error.
-// An undefined payload adds no cause, so the error does not claim one.
+// The Err payload of a failed unwrap or expect is the cause of the thrown
+// error. An undefined payload adds no cause, so the error does not claim one.
+// An Ok value is no error, so the errors thrown on an Ok carry no cause.
 const causeOf = (payload: unknown): { cause?: unknown } | undefined => (payload === undefined ? undefined : { cause: payload });
 
 export class ResultError extends Error {
@@ -114,7 +115,7 @@ export class UnwrapErrOnOkError extends ResultTypeError {
     readonly okValue: unknown;
 
     constructor(okValue: unknown) {
-        super(`Called unwrapErr() on Ok: ${describeValue(okValue)}`, ERR_UNWRAP_ERR_ON_OK, undefined, causeOf(okValue));
+        super(`Called unwrapErr() on Ok: ${describeValue(okValue)}`, ERR_UNWRAP_ERR_ON_OK);
         this.okValue = okValue;
     }
 }
@@ -135,7 +136,7 @@ export class ExpectErrError extends ResultError {
     readonly okValue: unknown;
 
     constructor(expectedMessage: string, okValue?: unknown) {
-        super(okValue === undefined ? expectedMessage : `${expectedMessage}: ${describeValue(okValue)}`, ERR_EXPECT_ERR, undefined, causeOf(okValue));
+        super(okValue === undefined ? expectedMessage : `${expectedMessage}: ${describeValue(okValue)}`, ERR_EXPECT_ERR);
         this.expectedMessage = expectedMessage;
         this.okValue = okValue;
     }

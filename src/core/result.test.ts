@@ -224,7 +224,7 @@ describe('Result class', () => {
                 expect((expectErrError as ExpectErrError).code).toBe(ERR_EXPECT_ERR);
                 expect((expectErrError as ExpectErrError).expectedMessage).toBe('must be err');
                 expect((expectErrError as ExpectErrError).okValue).toBe(42);
-                expect((expectErrError as ExpectErrError).cause).toBe(42);
+                expect(Object.hasOwn(expectErrError as ExpectErrError, 'cause')).toBe(false);
             });
 
             it('expect throws for malformed Result state', () => {

@@ -376,7 +376,7 @@ Version 2 removes these APIs. Replace each call in code written against 1.x as f
 - `Result.is`: use `isResult`.
 - `ResultType<T, E>`: use `SerializedResult<T, E>`.
 
-Version 2 requires Node.js 22 or later. `flatten` moved from `@shirudo/result/collections` to `@shirudo/result/operators`. It also requires the method name in the `MatchOnOkError` constructor: `new MatchOnOkError('matchError')`. `sequenceRecord()` rejects an array or a tuple at compile time; use `sequence()` for a list. It leaves out a key that holds `undefined`, like a missing key. The migration guide owns this list and shows each replacement in full: https://github.com/shi-rudo/result-ts/blob/main/docs/migration/v2.md
+Version 2 requires Node.js 22 or later. `flatten` moved from `@shirudo/result/collections` to `@shirudo/result/operators`. It also requires the method name in the `MatchOnOkError` constructor: `new MatchOnOkError('matchError')`. `sequenceRecord()` rejects an array or a tuple at compile time; use `sequence()` for a list. It leaves out a key that holds `undefined`, like a missing key. `ExpectErrError` no longer sets `cause`; read `okValue`. The `cause` of `ExpectOkError` is no longer enumerable. The migration guide owns this list and shows each replacement in full: https://github.com/shi-rudo/result-ts/blob/main/docs/migration/v2.md
 
 ## Subpath Exports
 
