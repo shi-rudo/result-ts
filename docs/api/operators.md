@@ -24,6 +24,8 @@ import { map, flatMapAsync } from '@shirudo/result/operators';
 
 ## Async Operators
 
+Each async operator awaits its callbacks, so a callback can return a value or a promise of it. A synchronous step in a `.pipeAsync()` chain needs no `async` wrapper.
+
 - `mapAsync`
 - `mapErrAsync`
 - `flatMapAsync`

@@ -68,4 +68,13 @@ describe('tryMapAsync', () => {
 
         await expect(tryMapAsync(async (value: number) => value + 1)(malformed)).rejects.toBeInstanceOf(InvalidResultStateError);
     });
+
+    it('catches the exception of a synchronous projection as Err', async () => {
+        const result = await ok<string, 'source'>('{').pipeAsync(tryMapAsync(text => JSON.parse(text) as unknown, () => 'json' as const));
+
+        expect(result.isErr()).toBe(true);
+        if (result.isErr()) {
+            expect(result.error).toBe('json');
+        }
+    });
 });

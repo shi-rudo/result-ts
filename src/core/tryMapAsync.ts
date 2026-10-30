@@ -1,3 +1,4 @@
+import type { Awaitable } from './pipeable';
 import type { Result } from './result';
 import { ok, err } from './result';
 import { InvalidResultStateError } from '../errors';
@@ -5,13 +6,13 @@ import { InvalidResultStateError } from '../errors';
 /**
  * Async version of tryMap.
  */
-export function tryMapAsync<T, E, U>(project: (value: T) => Promise<U>): (source: Result<T, E>) => Promise<Result<U, unknown>>;
+export function tryMapAsync<T, E, U>(project: (value: T) => Awaitable<U>): (source: Result<T, E>) => Promise<Result<U, unknown>>;
 export function tryMapAsync<T, E, U, F>(
-    project: (value: T) => Promise<U>,
+    project: (value: T) => Awaitable<U>,
     errorMapper: (error: unknown) => F
 ): (source: Result<T, E>) => Promise<Result<U, E | F>>;
 export function tryMapAsync<T, E, U, F>(
-    project: (value: T) => Promise<U>,
+    project: (value: T) => Awaitable<U>,
     errorMapper?: (error: unknown) => F
 ): (source: Result<T, E>) => Promise<Result<U, E | F>> {
     return async (source: Result<T, E>): Promise<Result<U, E | F>> => {

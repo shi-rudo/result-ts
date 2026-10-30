@@ -29,6 +29,7 @@ Version 2 removes the APIs that 1.x deprecated. `docs/migration/v2.md` lists eve
 - `InvalidResultStateError` no longer starts its message with "Unreachable:". An optional second constructor argument replaces the default message. `sequenceRecord()`, `collectFirstOkAsync()` and `collectFirstOkParallelAsync()` use it to name the value that is no `Result`. The code `ERR_INVALID_RESULT_STATE` is unchanged.
 - A GitHub release of a version below the current `latest` publishes under the dist-tag `latest-<major>`, for example `latest-1`. `npm install @shirudo/result` keeps resolving to the newest major.
 - `Result.try()` takes an optional `errorMapper`, like `Result.tryAsync()`, `Result.fromThrowable()` and `Result.fromPromise()`. A typed error no longer needs a second step with `mapErr`. An exception that `errorMapper` throws is rethrown.
+- The async operators `mapAsync`, `mapErrAsync`, `flatMapAsync`, `filterAsync`, `tapAsync`, `foldAsync`, `tryCatchAsync` and `tryMapAsync` accept callbacks that return a plain value, not only a promise. A synchronous step in a `.pipeAsync()` chain needed an `async` wrapper before, and `tapAsync({ ok: console.log })` did not compile. The async matchers already accepted both.
 
 ### Fixed
 

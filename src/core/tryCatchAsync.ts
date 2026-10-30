@@ -1,16 +1,17 @@
+import type { Awaitable } from './pipeable';
 import type { Result } from './result';
 import { ok, err } from './result';
 
 /**
  * Async version of tryCatch.
  */
-export function tryCatchAsync<T>(fn: () => Promise<T>): <SE>(source: Result<unknown, SE>) => Promise<Result<T, unknown>>;
+export function tryCatchAsync<T>(fn: () => Awaitable<T>): <SE>(source: Result<unknown, SE>) => Promise<Result<T, unknown>>;
 export function tryCatchAsync<T, E>(
-    fn: () => Promise<T>,
+    fn: () => Awaitable<T>,
     errorMapper: (error: unknown) => E
 ): <SE>(source: Result<unknown, SE>) => Promise<Result<T, SE | E>>;
 export function tryCatchAsync<T, E>(
-    fn: () => Promise<T>,
+    fn: () => Awaitable<T>,
     errorMapper?: (error: unknown) => E
 ): <SE>(source: Result<unknown, SE>) => Promise<Result<T, SE | E>> {
     return async <SE>(source: Result<unknown, SE>): Promise<Result<T, SE | E>> => {
