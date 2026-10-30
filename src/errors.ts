@@ -30,13 +30,13 @@ const formatResultErrorMessage = (code: ResultErrorCode, message: string, contex
 
 // The payload of a failed unwrap or expect is the cause of the thrown error.
 // An undefined payload adds no cause, so the error does not claim one.
-const causeOf = (payload: unknown): ErrorOptions | undefined => (payload === undefined ? undefined : { cause: payload });
+const causeOf = (payload: unknown): { cause?: unknown } | undefined => (payload === undefined ? undefined : { cause: payload });
 
 export class ResultError extends Error {
     readonly code: ResultErrorCode;
     readonly context?: string;
 
-    constructor(message: string, code: ResultErrorCode, context?: string, options?: ErrorOptions) {
+    constructor(message: string, code: ResultErrorCode, context?: string, options?: { cause?: unknown }) {
         super(formatResultErrorMessage(code, message, context), options);
         this.code = code;
         this.context = context;
@@ -49,7 +49,7 @@ export class ResultTypeError extends TypeError {
     readonly code: ResultErrorCode;
     readonly context?: string;
 
-    constructor(message: string, code: ResultErrorCode, context?: string, options?: ErrorOptions) {
+    constructor(message: string, code: ResultErrorCode, context?: string, options?: { cause?: unknown }) {
         super(formatResultErrorMessage(code, message, context), options);
         this.code = code;
         this.context = context;
@@ -61,7 +61,7 @@ export class ResultTypeError extends TypeError {
 const INVALID_RESULT_STATE_MESSAGE = 'Result is neither Ok nor Err';
 
 export class InvalidResultStateError extends ResultError {
-    constructor(context?: string, message: string = INVALID_RESULT_STATE_MESSAGE, options?: ErrorOptions) {
+    constructor(context?: string, message: string = INVALID_RESULT_STATE_MESSAGE, options?: { cause?: unknown }) {
         super(message, ERR_INVALID_RESULT_STATE, context, options);
     }
 }

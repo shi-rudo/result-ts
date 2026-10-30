@@ -143,6 +143,23 @@ try {
 
     await run('node', [join(repoRoot, 'node_modules/typescript/bin/tsc'), '-p', 'tsconfig.node16.json']);
 
+    // The declarations must not need a lib newer than the one of a consumer
+    // that checks them, such as a global type from ES2022.
+    await writeFile(join(tempDir, 'tsconfig.es2020.json'), JSON.stringify({
+        compilerOptions: {
+            strict: true,
+            target: 'ES2020',
+            lib: ['ES2020'],
+            module: 'NodeNext',
+            moduleResolution: 'NodeNext',
+            skipLibCheck: false,
+            noEmit: true,
+        },
+        include: ['esm-consumer.mts'],
+    }, null, 2));
+
+    await run('node', [join(repoRoot, 'node_modules/typescript/bin/tsc'), '-p', 'tsconfig.es2020.json']);
+
     // A consumer that is itself a library: declaration emit must be able to
     // name every type the public API returns.
     await writeFile(join(tempDir, 'tsconfig.declaration.json'), JSON.stringify({
