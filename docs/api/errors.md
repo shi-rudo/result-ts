@@ -42,7 +42,9 @@ try {
 | `ExpectOkError` | `ResultError` | `ERR_EXPECT_OK` | `.expect(message)` is called on an `Err`. | `expectedMessage: string` |
 | `ExpectErrError` | `ResultError` | `ERR_EXPECT_ERR` | `.expectErr(message)` is called on an `Ok`. | `expectedMessage: string` |
 
-The default message of `InvalidResultStateError` is "Result is neither Ok nor Err". A throw site that knows more replaces it through the second constructor argument, `new InvalidResultStateError(context?, message?)`. `sequenceRecord()` names an array and the property that holds no `Result`, and `collectFirstOkAsync()` and `collectFirstOkParallelAsync()` name the input that fulfilled with no `Result`. `fromSerialized()` names the envelope that it received. The code stays `ERR_INVALID_RESULT_STATE` in every case.
+The default message of `InvalidResultStateError` is "Result is neither Ok nor Err". A throw site that knows more replaces it through the second constructor argument, `new InvalidResultStateError(context?, message?, options?)`. `sequenceRecord()` names an array and the property that holds no `Result`, and `collectFirstOkAsync()` and `collectFirstOkParallelAsync()` name the input that fulfilled with no `Result`. `fromSerialized()` names the envelope that it received. The code stays `ERR_INVALID_RESULT_STATE` in every case.
+
+`UnwrapOnErrError`, `UnwrapErrOnOkError`, `ExpectOkError` and `ExpectErrError` carry the payload as the standard `cause`, so a logger that follows the cause chain shows the original error and its stack. An `undefined` payload sets no `cause`. `fromSerialized()` carries the exception that it caught while it read the envelope.
 
 ## Error Code Constants
 

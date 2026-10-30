@@ -28,12 +28,16 @@ const formatResultErrorMessage = (code: ResultErrorCode, message: string, contex
     return `${code}: ${message}`;
 };
 
+// The payload of a failed unwrap or expect is the cause of the thrown error.
+// An undefined payload adds no cause, so the error does not claim one.
+const causeOf = (payload: unknown): ErrorOptions | undefined => (payload === undefined ? undefined : { cause: payload });
+
 export class ResultError extends Error {
     readonly code: ResultErrorCode;
     readonly context?: string;
 
-    constructor(message: string, code: ResultErrorCode, context?: string) {
-        super(formatResultErrorMessage(code, message, context));
+    constructor(message: string, code: ResultErrorCode, context?: string, options?: ErrorOptions) {
+        super(formatResultErrorMessage(code, message, context), options);
         this.code = code;
         this.context = context;
         this.name = new.target.name;
@@ -45,8 +49,8 @@ export class ResultTypeError extends TypeError {
     readonly code: ResultErrorCode;
     readonly context?: string;
 
-    constructor(message: string, code: ResultErrorCode, context?: string) {
-        super(formatResultErrorMessage(code, message, context));
+    constructor(message: string, code: ResultErrorCode, context?: string, options?: ErrorOptions) {
+        super(formatResultErrorMessage(code, message, context), options);
         this.code = code;
         this.context = context;
         this.name = new.target.name;
@@ -57,8 +61,8 @@ export class ResultTypeError extends TypeError {
 const INVALID_RESULT_STATE_MESSAGE = 'Result is neither Ok nor Err';
 
 export class InvalidResultStateError extends ResultError {
-    constructor(context?: string, message: string = INVALID_RESULT_STATE_MESSAGE) {
-        super(message, ERR_INVALID_RESULT_STATE, context);
+    constructor(context?: string, message: string = INVALID_RESULT_STATE_MESSAGE, options?: ErrorOptions) {
+        super(message, ERR_INVALID_RESULT_STATE, context, options);
     }
 }
 
@@ -101,7 +105,7 @@ export class UnwrapOnErrError extends ResultTypeError {
     readonly errorValue: unknown;
 
     constructor(errorValue: unknown) {
-        super(`Called unwrap() on Err: ${describeValue(errorValue)}`, ERR_UNWRAP_ON_ERR);
+        super(`Called unwrap() on Err: ${describeValue(errorValue)}`, ERR_UNWRAP_ON_ERR, undefined, causeOf(errorValue));
         this.errorValue = errorValue;
     }
 }
@@ -110,7 +114,7 @@ export class UnwrapErrOnOkError extends ResultTypeError {
     readonly okValue: unknown;
 
     constructor(okValue: unknown) {
-        super(`Called unwrapErr() on Ok: ${describeValue(okValue)}`, ERR_UNWRAP_ERR_ON_OK);
+        super(`Called unwrapErr() on Ok: ${describeValue(okValue)}`, ERR_UNWRAP_ERR_ON_OK, undefined, causeOf(okValue));
         this.okValue = okValue;
     }
 }
@@ -120,10 +124,9 @@ export class ExpectOkError extends ResultError {
     readonly errorValue: unknown;
 
     constructor(expectedMessage: string, errorValue?: unknown) {
-        super(errorValue === undefined ? expectedMessage : `${expectedMessage}: ${describeValue(errorValue)}`, ERR_EXPECT_OK);
+        super(errorValue === undefined ? expectedMessage : `${expectedMessage}: ${describeValue(errorValue)}`, ERR_EXPECT_OK, undefined, causeOf(errorValue));
         this.expectedMessage = expectedMessage;
         this.errorValue = errorValue;
-        if (errorValue !== undefined) this.cause = errorValue;
     }
 }
 
@@ -132,9 +135,8 @@ export class ExpectErrError extends ResultError {
     readonly okValue: unknown;
 
     constructor(expectedMessage: string, okValue?: unknown) {
-        super(okValue === undefined ? expectedMessage : `${expectedMessage}: ${describeValue(okValue)}`, ERR_EXPECT_ERR);
+        super(okValue === undefined ? expectedMessage : `${expectedMessage}: ${describeValue(okValue)}`, ERR_EXPECT_ERR, undefined, causeOf(okValue));
         this.expectedMessage = expectedMessage;
         this.okValue = okValue;
-        if (okValue !== undefined) this.cause = okValue;
     }
 }

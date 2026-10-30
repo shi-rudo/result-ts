@@ -33,6 +33,7 @@ Version 2 removes the APIs that 1.x deprecated. `docs/migration/v2.md` lists eve
 
 - `collectFirstOkAsync()` no longer ends the Node.js process when it returns before it reaches a started promise. It returned at the first `Ok`, at a non-Result value, or at a thunk or `errorMapper` that threw, and the promise inputs after that point had no handler. A later rejection of one of them was an unhandled rejection, which ends Node.js by default. The call now discards the outcome of these promises, as `collectFirstOkParallelAsync()` already did.
 - A CommonJS project under `module: Node16` or `NodeNext` now resolves the CommonJS declarations. Each entry in `exports` named one `types` file for both conditions, so TypeScript read `.d.mts` for a `require` as well, typed the package as ESM and rejected the import with TS1479. The `import` and `require` conditions now name their own declarations, and the top-level `types` matches `main`.
+- `UnwrapOnErrError` and `UnwrapErrOnOkError` now carry the payload as `cause`, as `ExpectOkError` and `ExpectErrError` already did. `err(dbError).unwrap()` lost the original error from the cause chain, so a logger showed no stack of it. All four errors and `fromSerialized()` now set `cause` through the constructor option of `Error`, which makes it non-enumerable like a native cause. The constructors of `ResultError`, `ResultTypeError` and `InvalidResultStateError` accept that option as their last argument.
 
 ## 1.2.0 - 2026-09-22
 

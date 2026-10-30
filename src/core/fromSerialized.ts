@@ -32,9 +32,7 @@ export function fromSerialized<T, E>(data: SerializedResult<T, E>): Result<T, E>
         if (data._tag === 'Err' && !Object.hasOwn(data, 'value')) return err<E, T>(data.error as E);
         observed = describeEnvelope(data._tag);
     } catch (error) {
-        const invalid = new InvalidResultStateError('fromSerialized', `${EXPECTED_SHAPE}, but reading the payload threw`);
-        invalid.cause = error;
-        throw invalid;
+        throw new InvalidResultStateError('fromSerialized', `${EXPECTED_SHAPE}, but reading the payload threw`, { cause: error });
     }
     throw new InvalidResultStateError('fromSerialized', `${EXPECTED_SHAPE}, ${observed}`);
 }
