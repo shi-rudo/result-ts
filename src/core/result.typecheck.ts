@@ -51,6 +51,19 @@ type TryAsyncReturnsPromiseResult = Expect<
     Equal<typeof tryAsyncResult, Promise<Result<number, { type: 'async'; cause: unknown }>>>
 >;
 
+const tryResult = Result.try(
+    (): number => 1,
+    (error): { type: 'sync'; cause: unknown } => ({ type: 'sync', cause: error })
+);
+
+type TryTypesTheErrorThroughErrorMapper = Expect<
+    Equal<typeof tryResult, Result<number, { type: 'sync'; cause: unknown }>>
+>;
+
+type TryWithoutErrorMapperKeepsUnknown = Expect<
+    Equal<ReturnType<typeof Result.try<number>>, Result<number, unknown>>
+>;
+
 const namespaceSequence = Result.sequence([
     ok<number, 'number-error'>(1),
     ok<string, 'string-error'>('a'),

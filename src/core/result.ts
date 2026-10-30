@@ -266,11 +266,13 @@ export async function fromPromise<T, E>(promise: Promise<T>, errorMapper?: (erro
     }
 }
 
-export function tryFn<T>(fn: () => T): Result<T, unknown> {
+export function tryFn<T>(fn: () => T): Result<T, unknown>;
+export function tryFn<T, E>(fn: () => T, errorMapper: (error: unknown) => E): Result<T, E>;
+export function tryFn<T, E>(fn: () => T, errorMapper?: (error: unknown) => E): Result<T, E> {
     try {
-        return ok(fn());
+        return ok<T, E>(fn());
     } catch (error) {
-        return err(error);
+        return err<E, T>(errorMapper ? errorMapper(error) : (error as E));
     }
 }
 
