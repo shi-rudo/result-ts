@@ -265,16 +265,6 @@ export async function fromPromise<T, E>(promise: Promise<T>, errorMapper?: (erro
     }
 }
 
-function tryFn<T>(fn: () => T): Result<T, unknown>;
-function tryFn<T, E>(fn: () => T, errorMapper: (error: unknown) => E): Result<T, E>;
-function tryFn<T, E>(fn: () => T, errorMapper?: (error: unknown) => E): Result<T, E> {
-    try {
-        return ok<T, E>(fn());
-    } catch (error) {
-        return err<E, T>(errorMapper ? errorMapper(error) : (error as E));
-    }
-}
-
 export function fromThrowable<const Args extends readonly unknown[], T>(
     fn: (...args: Args) => T
 ): (...args: Args) => Result<T, unknown>;
@@ -311,7 +301,10 @@ export const Result: {
     fromNullable: typeof fromNullable;
     fromPromise: typeof fromPromise;
     fromThrowable: typeof fromThrowable;
-    try: typeof tryFn;
+    try: {
+        <T>(fn: () => T): Result<T, unknown>;
+        <T, E>(fn: () => T, errorMapper: (error: unknown) => E): Result<T, E>;
+    };
     tryAsync: typeof tryAsync;
     sequence: typeof sequence;
     combine: typeof combine;
@@ -321,7 +314,14 @@ export const Result: {
     fromNullable,
     fromPromise,
     fromThrowable,
-    try: tryFn,
+    // `try` is a reserved word, so this member has no standalone function.
+    try<T, E>(fn: () => T, errorMapper?: (error: unknown) => E): Result<T, E> {
+        try {
+            return ok<T, E>(fn());
+        } catch (error) {
+            return err<E, T>(errorMapper ? errorMapper(error) : (error as E));
+        }
+    },
     tryAsync,
     sequence,
     combine,
