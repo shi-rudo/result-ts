@@ -5,7 +5,7 @@
  * Result instances from various sources.
  */
 
-import { Result, flatMap, map, recover, tryFn } from '../src/index';
+import { Result, flatMap, fromNullable, map, recover } from '../src/index';
 
 const logResult = <T, E>(label: string, result: Result<T, E>) => {
     result.fold(
@@ -200,13 +200,15 @@ console.log('\n=== Static Methods vs. Standalone Functions ===\n');
 
 // Both variants work the same:
 
-// Static method (recommended)
-const result1 = Result.try(() => JSON.parse('{"a": 1}'));
+const name: string | null = 'Alice';
 
-// Standalone function (for backward compatibility)
-const result2 = tryFn(() => JSON.parse('{"a": 1}'));
+// Static method
+const result1 = Result.fromNullable(name, 'missing name');
 
-logResult('Static method:', result1); // { a: 1 }
-logResult('Standalone function:', result2); // { a: 1 }
+// Standalone function
+const result2 = fromNullable(name, 'missing name');
+
+logResult('Static method:', result1); // Alice
+logResult('Standalone function:', result2); // Alice
 
 // The static methods are more idiomatic and consistent with other languages

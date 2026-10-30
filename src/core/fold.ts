@@ -7,8 +7,8 @@ import { InvalidResultStateError } from '../errors';
  *
  * This is the pipe operator equivalent of the `.fold()` instance method.
  */
-export function fold<T, E, R>(handlers: { ok: (val: T) => R; err: (e: E) => R }) {
-    return (source: Result<T, E>): R => {
+export function fold<T, E, R1, R2 = R1>(handlers: { ok: (val: T) => R1; err: (e: E) => R2 }) {
+    return (source: Result<T, E>): R1 | R2 => {
         if (source.isOk()) {
             return handlers.ok(source.value);
         }

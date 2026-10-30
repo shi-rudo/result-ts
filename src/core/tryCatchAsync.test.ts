@@ -96,4 +96,13 @@ describe('tryCatchAsync', () => {
             expect(result.value).toBe('final');
         }
     });
+
+    it('catches the exception of a synchronous function as Err', async () => {
+        const result = await ok('input').pipeAsync(tryCatchAsync(() => JSON.parse('{') as unknown, () => 'json' as const));
+
+        expect(result.isErr()).toBe(true);
+        if (result.isErr()) {
+            expect(result.error).toBe('json');
+        }
+    });
 });

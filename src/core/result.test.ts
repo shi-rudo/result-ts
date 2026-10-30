@@ -41,12 +41,6 @@ describe('Result class', () => {
         });
 
         describe('namespace helpers', () => {
-            it('checks Result values with Result.is', () => {
-                expect(Result.is(ok(1))).toBe(true);
-                expect(Result.is(err('boom'))).toBe(true);
-                expect(Result.is({ _tag: 'Ok', value: 1, isOk: () => true, isErr: () => false })).toBe(false);
-            });
-
             it('wraps throwing functions with Result.fromThrowable', () => {
                 const parseNumber = Result.fromThrowable((input: string) => {
                     const parsed = JSON.parse(input);
@@ -230,7 +224,7 @@ describe('Result class', () => {
                 expect((expectErrError as ExpectErrError).code).toBe(ERR_EXPECT_ERR);
                 expect((expectErrError as ExpectErrError).expectedMessage).toBe('must be err');
                 expect((expectErrError as ExpectErrError).okValue).toBe(42);
-                expect((expectErrError as ExpectErrError).cause).toBe(42);
+                expect(Object.hasOwn(expectErrError as ExpectErrError, 'cause')).toBe(false);
             });
 
             it('expect throws for malformed Result state', () => {

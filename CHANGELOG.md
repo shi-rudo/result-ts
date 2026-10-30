@@ -11,6 +11,7 @@ Version 2 removes the APIs that 1.x deprecated. `docs/migration/v2.md` lists eve
 - `ERR_INVALID_STATE`, deprecated in 1.1.0. Use `ERR_INVALID_RESULT_STATE`, which holds the same string.
 - The operators `match`, `matchAsync`, `mapOr` and `mapOrElse`. `match` and `matchAsync` were identical to `fold` and `foldAsync`, and `mapOr` and `mapOrElse` computed the same value with positional arguments. Use `fold` and `foldAsync`.
 - The aliases `bimap`, `all`, `Result.all` and `gen`. Use `mapBoth`, `sequence`, `Result.sequence` and `task`.
+- The aliases `tryFn` and `Result.is`. Use `Result.try` and `isResult`. Each was a second name for one function, while the name table promises one name per concept.
 - The `.match()` method of a Result, deprecated in 1.0.0 as an alias of `.matchError()`. Use `.matchError()`, which returns the same builder, or `fold` for both states.
 
 ### Changed
@@ -28,6 +29,17 @@ Version 2 removes the APIs that 1.x deprecated. `docs/migration/v2.md` lists eve
 - `sequenceRecord()` leaves out a key that holds `undefined`, like a missing key. Before, it threw `InvalidResultStateError`, although the type of an optional key admits `undefined`. Other values that are no `Result` still throw.
 - `InvalidResultStateError` no longer starts its message with "Unreachable:". An optional second constructor argument replaces the default message. `sequenceRecord()`, `collectFirstOkAsync()` and `collectFirstOkParallelAsync()` use it to name the value that is no `Result`. The code `ERR_INVALID_RESULT_STATE` is unchanged.
 - A GitHub release of a version below the current `latest` publishes under the dist-tag `latest-<major>`, for example `latest-1`. `npm install @shirudo/result` keeps resolving to the newest major.
+- `Result.try()` takes an optional `errorMapper`, like `Result.tryAsync()`, `Result.fromThrowable()` and `Result.fromPromise()`. A typed error no longer needs a second step with `mapErr`. An exception that `errorMapper` throws is rethrown.
+- The async operators `mapAsync`, `mapErrAsync`, `flatMapAsync`, `filterAsync`, `tapAsync`, `foldAsync`, `tryCatchAsync` and `tryMapAsync` accept callbacks that return a plain value, not only a promise. A synchronous step in a `.pipeAsync()` chain needed an `async` wrapper before, and `tapAsync({ ok: console.log })` did not compile. The async matchers already accepted both.
+- The operators `fold` and `foldAsync` return the union of both branches, like the method `.fold()`. They forced one type on both handlers, so `fold({ ok: value => value, err: error => error.message })` did not compile. A call with three explicit type arguments keeps compiling, because the type of the `err` branch defaults to the type of the `ok` branch.
+- The API reference lists the data-first functions, such as `unwrap(result)` and `expectOk(result, message)`, which the root entry exports next to the instance methods. `pnpm docs:check` now checks their names as well.
+- `ExpectErrError` no longer sets `cause`. It set the Ok value there, but an Ok value is no error, and a logger that follows the cause chain showed it as the origin of the failure. The value stays in `okValue`. `UnwrapErrOnOkError` sets no `cause` either.
+
+### Fixed
+
+- `collectFirstOkAsync()` no longer ends the Node.js process when a started promise input rejects before the call awaits it. A promise input had a handler only once the loop awaited it. A rejection that arrived while the call awaited an earlier input, or after the call returned at the first `Ok`, at a non-Result value or at a throw, was an unhandled rejection, which ends Node.js by default. The call now attaches a handler to every native promise input when it starts, as `collectFirstOkParallelAsync()` already did, and the loop still collects the rejection as a failed attempt.
+- A CommonJS project under `module: Node16` or `NodeNext` now resolves the CommonJS declarations. Each entry in `exports` named one `types` file for both conditions, so TypeScript read `.d.mts` for a `require` as well, typed the package as ESM and rejected the import with TS1479. The `import` and `require` conditions now name their own declarations, and the top-level `types` matches `main`.
+- `UnwrapOnErrError` now carries the Err payload as `cause`, as `ExpectOkError` already did. `err(dbError).unwrap()` lost the original error from the cause chain, so a logger showed no stack of it. Both errors and `fromSerialized()` now set `cause` through the constructor option of `Error`, which makes it non-enumerable like a native cause. The constructors of `ResultError`, `ResultTypeError` and `InvalidResultStateError` accept that option as their last argument.
 
 ## 1.2.0 - 2026-09-22
 

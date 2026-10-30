@@ -69,6 +69,7 @@ describe('fromSerialized', () => {
         expect(caught).toBeInstanceOf(InvalidResultStateError);
         expect((caught as InvalidResultStateError).message).toContain('reading the payload threw');
         expect((caught as InvalidResultStateError).cause).toBe(trap);
+        expect(Object.getOwnPropertyDescriptor(caught, 'cause')?.enumerable).toBe(false);
     });
 
     it('rejects malformed serialized data and names the expected shape', () => {

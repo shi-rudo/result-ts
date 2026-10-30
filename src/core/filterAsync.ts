@@ -1,3 +1,4 @@
+import type { Awaitable } from './pipeable';
 import type { Result } from './result';
 import { err } from './result';
 import { InvalidResultStateError } from '../errors';
@@ -5,7 +6,7 @@ import { InvalidResultStateError } from '../errors';
 /**
  * Async version of filter.
  */
-export function filterAsync<T, E>(predicate: (val: T) => Promise<boolean>, errorFn: () => Promise<E>) {
+export function filterAsync<T, E>(predicate: (val: T) => Awaitable<boolean>, errorFn: () => Awaitable<E>) {
     return async (source: Result<T, E>): Promise<Result<T, E>> => {
         if (source.isOk()) {
             if (await predicate(source.value)) {

@@ -4,7 +4,7 @@ import { InvalidResultStateError } from '../errors';
 /**
  * Async version of tap.
  */
-export function tapAsync<T, E>(observer: { ok?: (val: T) => Promise<void>; err?: (e: E) => Promise<void> }) {
+export function tapAsync<T, E>(observer: { ok?: (val: T) => unknown; err?: (e: E) => unknown }) {
     return async (source: Result<T, E>): Promise<Result<T, E>> => {
         if (source.isOk()) {
             if (observer.ok) await observer.ok(source.value);

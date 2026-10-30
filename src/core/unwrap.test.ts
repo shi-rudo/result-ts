@@ -21,4 +21,11 @@ describe('unwrap', () => {
         expect((caughtError as UnwrapOnErrError).code).toBe(ERR_UNWRAP_ON_ERR);
         expect((caughtError as UnwrapOnErrError).message).toContain('Called unwrap() on Err: error');
     });
+
+    it('keeps the Err value as the cause of the thrown error', () => {
+        const original = new Error('db down');
+
+        expect(() => unwrap(Result.err(original))).toThrow(expect.objectContaining({ cause: original }));
+        expect(() => Result.err(original).unwrap()).toThrow(expect.objectContaining({ cause: original }));
+    });
 });

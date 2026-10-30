@@ -1,3 +1,4 @@
+import type { Awaitable } from './pipeable';
 import type { Result } from './result';
 import { ok } from './result';
 import { InvalidResultStateError } from '../errors';
@@ -5,7 +6,7 @@ import { InvalidResultStateError } from '../errors';
 /**
  * Async version of map.
  */
-export function mapAsync<T, E, U>(project: (value: T) => Promise<U>) {
+export function mapAsync<T, E, U>(project: (value: T) => Awaitable<U>) {
     return async (source: Result<T, E>): Promise<Result<U, E>> => {
         if (source.isOk()) {
             return ok(await project(source.value));
