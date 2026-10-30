@@ -21,9 +21,10 @@ type ErrValueOfInput<I> = ResolvedResult<I> extends Result<any, infer E> ? E : n
  *   with that exception.
  * - Processes inputs strictly sequentially (like `for ... of` + `await`).
  * - Returns the first `Ok` and collects all errors if no `Ok` is found.
- * - After the call ends, a thunk that it did not reach never starts, and a
- *   promise that it did not reach is not awaited. A later rejection of such a
- *   promise is discarded, so it never becomes an unhandled rejection.
+ * - No rejection of a promise input becomes an unhandled rejection. A rejection
+ *   that arrives before the call reaches its input counts when the call gets
+ *   there. A rejection that arrives after the call ends is discarded. A thunk
+ *   that the call did not reach never starts.
  * - A fulfilled value that is not a `Result` is a programmer error: the call
  *   rejects with `InvalidResultStateError`.
  * - A rejected input counts as a failed attempt. Without `errorMapper` the
@@ -46,39 +47,42 @@ export async function collectFirstOkAsync<const Inputs extends readonly CollectF
     type ErrValue = ErrValueOfInput<Inputs[number]> | F;
 
     const errors: ErrValue[] = [];
-    let consumed = 0;
 
-    try {
-        for (const [index, input] of inputs.entries()) {
-            consumed = index + 1;
-            const pendingResult = typeof input === 'function' ? input() : input;
-            let result: unknown;
-            try {
-                result = await pendingResult;
-            } catch (error) {
-                errors.push(errorMapper ? errorMapper(error) : (error as F));
-                continue;
-            }
+    // The handler marks the rejection as handled, and the loop still sees it
+    // when it awaits the input.
+    for (const input of inputs) {
+        if (isNativePromise(input)) input.catch(() => {});
+    }
 
-            if (!isResult(result)) {
-                throw new InvalidResultStateError('collectFirstOkAsync', `input ${index} fulfilled with ${describeValue(result)}, not a Result`);
-            }
-            if (result.isOk()) {
-                return ok<OkValue, ErrValue[]>(result.value as OkValue);
-            }
-            if (result.isErr()) {
-                errors.push(result.error as ErrValue);
-                continue;
-            }
-            throw new InvalidResultStateError('collectFirstOkAsync');
+    for (const [index, input] of inputs.entries()) {
+        const pendingResult = typeof input === 'function' ? input() : input;
+        let result: unknown;
+        try {
+            result = await pendingResult;
+        } catch (error) {
+            errors.push(errorMapper ? errorMapper(error) : (error as F));
+            continue;
         }
-    } finally {
-        // Only a native promise reports an unhandled rejection. A handler on a
-        // thenable would call its `then`, which starts a lazy one.
-        for (const input of inputs.slice(consumed)) {
-            if (input instanceof Promise) input.catch(() => {});
+
+        if (!isResult(result)) {
+            throw new InvalidResultStateError('collectFirstOkAsync', `input ${index} fulfilled with ${describeValue(result)}, not a Result`);
         }
+        if (result.isOk()) {
+            return ok<OkValue, ErrValue[]>(result.value as OkValue);
+        }
+        if (result.isErr()) {
+            errors.push(result.error as ErrValue);
+            continue;
+        }
+        throw new InvalidResultStateError('collectFirstOkAsync');
     }
 
     return err<ErrValue[], OkValue>(errors);
 }
+
+// Only a native promise reports an unhandled rejection. `instanceof Promise`
+// misses one from another realm, so the check reads the brand that every
+// native promise carries. A thenable gets no handler, because calling its
+// `then` would start a lazy one.
+const isNativePromise = (value: unknown): value is Promise<unknown> =>
+    Object.prototype.toString.call(value) === '[object Promise]';

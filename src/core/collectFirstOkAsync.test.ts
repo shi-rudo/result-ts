@@ -1,3 +1,4 @@
+import { runInNewContext } from 'node:vm';
 import { describe, expect, it, vi } from 'vitest';
 
 import { Result, ok, err } from './result';
@@ -206,6 +207,41 @@ describe('collectFirstOkAsync', () => {
 
         await new Promise(resolve => setTimeout(resolve, 0));
         process.removeListener('unhandledRejection', unhandled);
+        expect(unhandled).not.toHaveBeenCalled();
+    });
+
+    it('collects a rejection that arrives while it still awaits an earlier input, without an unhandled rejection', async () => {
+        const slow = deferred<Result<number, string>>();
+        const fast = Promise.reject('fast') as Promise<Result<number, string>>;
+        const unhandled = vi.fn();
+        process.once('unhandledRejection', unhandled);
+
+        const pending = collectFirstOkAsync([slow.promise, fast] as const);
+        await new Promise(resolve => setTimeout(resolve, 0));
+        slow.resolve(err('slow'));
+        const result = await pending;
+
+        process.removeListener('unhandledRejection', unhandled);
+        expect(unhandled).not.toHaveBeenCalled();
+        expect(result.isErr()).toBe(true);
+        if (result.isErr()) {
+            expect(result.error).toEqual(['slow', 'fast']);
+        }
+    });
+
+    it('handles the late rejection of an unreached promise from another realm', async () => {
+        const foreign = runInNewContext(
+            'new Promise((resolve, reject) => setTimeout(() => reject("foreign"), 0))',
+            { setTimeout },
+        ) as Promise<Result<number, string>>;
+        const unhandled = vi.fn();
+        process.once('unhandledRejection', unhandled);
+
+        const result = await collectFirstOkAsync([Promise.resolve(ok(1)), foreign] as const);
+
+        await new Promise(resolve => setTimeout(resolve, 10));
+        process.removeListener('unhandledRejection', unhandled);
+        expect(result.isOk()).toBe(true);
         expect(unhandled).not.toHaveBeenCalled();
     });
 
